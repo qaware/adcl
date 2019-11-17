@@ -1,7 +1,10 @@
-# Compiled class file
+# Workspace elements
+.idea
+*.iml
+
+# Output
 *.class
-# needed to keep the test .class files
-!src/test/resources
+target
 
 # Log file
 *.log
