@@ -6,8 +6,8 @@
 
     <groupId>de.thbingen</groupId>
     <artifactId>adcl</artifactId>
-    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
     
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -28,7 +28,7 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <!--start-class>de.thbingen.adcl.Main</start-class-->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <sonar.projectKey>ADCL</sonar.projectKey>
         <sonar.organization>thbingen</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -89,13 +89,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.7.0.1746</version>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -116,27 +112,32 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.7.201606060606</version>
+                <version>0.8.4</version>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>report</id>
-                        <phase>prepare-package</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>jacoco-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M4</version>
+                <configuration>
+                    <includes>
+                        <include>**/test/java/**/*Test.java</include>
+                        <include>**/test/java/**/Test*.java</include>
+                    </includes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
