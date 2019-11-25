@@ -1,0 +1,41 @@
+Package: testclasses 
+     ↪ Class: testclasses.Testclass
+               ↪ Referenced packages: 
+                    ↪ java.lang
+                    ↪ java.util
+                    ↪ testclasses
+               ↪ Referenced classes: 
+                    ↪ java.lang.Integer
+                    ↪ java.lang.Object
+                    ↪ java.lang.String
+                    ↪ java.util.ArrayList
+                    ↪ java.util.List
+                    ↪ java.util.TreeSet
+                    ↪ testclasses.Testclass
+                    ↪ testclasses.Testclass$InnerTest
+               ↪ Constructors: 
+                        ↪Constructor: testclasses.Testclass(java.lang.String)
+                              ↪ Referenced packages: 
+                                   ↪ java.lang
+                              ↪ Referenced classes: 
+                                   ↪ java.lang.String
+                              ↪ Referenced methods: 
+               ↪ Methods: 
+                        ↪Method: testclasses.Testclass.doSomething(java.lang.String)
+                              ↪ Referenced packages: 
+                                   ↪ java.lang
+                                   ↪ java.util
+                              ↪ Referenced classes: 
+                                   ↪ java.lang.String
+                                   ↪ java.util.ArrayList
+                                   ↪ java.util.List
+                              ↪ Referenced methods: 
+                                   ↪ java.util.ArrayList.add
+                        ↪Method: testclasses.Testclass.doSomething2()
+                              ↪ Referenced packages: 
+                                   ↪ java.util
+                              ↪ Referenced classes: 
+                                   ↪ java.util.TreeSet
+                              ↪ Referenced methods: 
+                                   ↪ java.util.TreeSet.add
+                                   ↪ java.util.TreeSet.clear
