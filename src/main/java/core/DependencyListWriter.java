@@ -41,13 +41,24 @@ public class DependencyListWriter {
      * @param fileName            the file name
      */
     public static void writeListToFile(Collection<PackageInformation> packageInformations, String destinationPath, String fileName) {
-        StringBuilder fileContent = new StringBuilder();
-        packageInformations.forEach(packageInformation -> fileContent.append(generateDeepList(packageInformation)));
+
         try (FileWriter fileWriter = new FileWriter(destinationPath + "/" + fileName + ".txt")) {
-            fileWriter.write(fileContent.toString());
+            fileWriter.write(generateDeepList(packageInformations));
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
+    }
+
+    /**
+     * Generates  a deep list expanding all {@link PackageInformation}.
+     *
+     * @param packageInformations contains multiple package information
+     * @return all information in form of a list
+     */
+    public static String generateDeepList(Collection<PackageInformation> packageInformations) {
+        StringBuilder deepList = new StringBuilder();
+        packageInformations.forEach(packageInformation -> deepList.append(generateDeepList(packageInformation)));
+        return deepList.toString();
     }
 
     /**
@@ -90,7 +101,11 @@ public class DependencyListWriter {
      */
     public static String generateDeepList(ClassInformation classInformation) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Class: ").append(classInformation.getClassName());
+        if (classInformation.isService()) {
+            stringBuilder.append("Class[Service]: ").append(classInformation.getClassName());
+        } else {
+            stringBuilder.append("Class: ").append(classInformation.getClassName());
+        }
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
         classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge)));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
@@ -111,7 +126,11 @@ public class DependencyListWriter {
      */
     public static String generateFlatList(ClassInformation classInformation) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Class: ").append(classInformation.getClassName());
+        if (classInformation.isService()) {
+            stringBuilder.append("Class[Service]: ").append(classInformation.getClassName());
+        } else {
+            stringBuilder.append("Class: ").append(classInformation.getClassName());
+        }
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
         classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge)));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));

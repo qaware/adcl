@@ -47,6 +47,14 @@ class DependencyExtractorTest {
 
     }
 
+    @Test
+    void analyseClassesWithService() {
+        List<String> classes = new ArrayList<>();
+        classes.add("src/test/resources/testclassfiles/TestService.class");
+        Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
+        assertThat(analysedClasses.iterator().next().getClassInformations().first().isService()).isTrue();
+    }
+
     static String readFile(String path, Charset encoding)
             throws IOException {
         byte[] encoded = Files.readAllBytes(Paths.get(path));

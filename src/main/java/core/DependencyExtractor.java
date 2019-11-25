@@ -100,7 +100,8 @@ public class DependencyExtractor {
         SortedSet<MethodInformation> methodInformations = new TreeSet<>();
         behaviorInformations.stream().filter(behaviorInformation -> behaviorInformation instanceof ConstructorInformation).forEach(cInformation -> constructorInformations.add((ConstructorInformation) cInformation));
         behaviorInformations.stream().filter(behaviorInformation -> behaviorInformation instanceof MethodInformation).forEach(mInformation -> methodInformations.add((MethodInformation) mInformation));
-        return new ClassInformation(ctClass.getName(), extractReferencedPackages(ctClass), extractReferencedClasses(ctClass), constructorInformations, methodInformations);
+        boolean isService = ctClass.hasAnnotation("org.springframework.stereotype.Service");
+        return new ClassInformation(ctClass.getName(), extractReferencedPackages(ctClass), extractReferencedClasses(ctClass), constructorInformations, methodInformations, isService);
     }
 
     /**
