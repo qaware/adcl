@@ -12,48 +12,53 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PackageInformationTest {
+    private static final String TEST_PACKAGE_2 = "testPackage2";
+    private static final String TEST_TEST_CLASS = "test.TestClass";
+    private static final String TEST_CLASS_TEST = "TestClass.test";
+    private static final String TEST_CLASS = "TestClass";
+    private static final String TEST_PACKAGE = "testPackage";
     private PackageInformation sut;
     private static ClassInformation classInformation;
 
     @BeforeAll
     private static void createClassInformation() {
         SortedSet<String> referencedPackages = new TreeSet<>();
-        referencedPackages.add("testPackage2");
+        referencedPackages.add(TEST_PACKAGE_2);
         SortedSet<String> referencedClasses = new TreeSet<>();
-        referencedClasses.add("test.TestClass");
+        referencedClasses.add(TEST_TEST_CLASS);
         SortedSet<String> referencedMethods = new TreeSet<>();
-        referencedMethods.add("TestClass.test");
+        referencedMethods.add(TEST_CLASS_TEST);
         SortedSet<ConstructorInformation> constructorInformations = new TreeSet<>();
-        constructorInformations.add(new ConstructorInformation("TestClass", referencedPackages, referencedClasses, referencedMethods));
+        constructorInformations.add(new ConstructorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods));
         SortedSet<MethodInformation> methodInformations = new TreeSet<>();
-        methodInformations.add(new MethodInformation("TestClass.test", referencedPackages, referencedClasses, referencedMethods));
-        classInformation = new ClassInformation("test.TestClass", referencedPackages, referencedClasses, constructorInformations, methodInformations);
+        methodInformations.add(new MethodInformation(TEST_CLASS_TEST, referencedPackages, referencedClasses, referencedMethods));
+        classInformation = new ClassInformation(TEST_TEST_CLASS, referencedPackages, referencedClasses, constructorInformations, methodInformations);
     }
 
     @BeforeEach
     void setUp() {
-        sut = new PackageInformation("testPackage");
+        sut = new PackageInformation(TEST_PACKAGE);
         sut.addClassInformation(classInformation);
     }
 
     @Test
     void getPackageName() {
-        assertThat(sut.getPackageName()).isEqualTo("testPackage");
+        assertThat(sut.getPackageName()).isEqualTo(TEST_PACKAGE);
     }
 
     @Test
     void getReferencedPackages() {
-        assertThat(sut.getReferencedPackages().first()).isEqualTo("testPackage2");
+        assertThat(sut.getReferencedPackages().first()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
     void getReferencedClasses() {
         sut.addClassInformation(classInformation);
-        assertThat(sut.getReferencedClasses().first()).isEqualTo("test.TestClass");
+        assertThat(sut.getReferencedClasses().first()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
     void getReferencedMethods() {
-        assertThat(sut.getReferencedMethods().first()).isEqualTo("TestClass.test");
+        assertThat(sut.getReferencedMethods().first()).isEqualTo(TEST_CLASS_TEST);
     }
 }

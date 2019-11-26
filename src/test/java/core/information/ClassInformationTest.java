@@ -11,36 +11,41 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ClassInformationTest {
 
+    private static final String TEST_PACKAGE_2 = "testPackage2";
+    private static final String TEST_TEST_CLASS = "test.TestClass";
+    private static final String TEST_CLASS_TEST_2 = "TestClass.test2";
+    private static final String TEST_CLASS = "TestClass";
+    private static final String TEST_CLASS_TEST_1 = "TestClass.test1";
     private ClassInformation sut;
 
     @BeforeEach
     void setUp() {
         SortedSet<String> referencedPackages = new TreeSet<>();
-        referencedPackages.add("testPackage2");
+        referencedPackages.add(TEST_PACKAGE_2);
         SortedSet<String> referencedClasses = new TreeSet<>();
-        referencedClasses.add("test.TestClass");
+        referencedClasses.add(TEST_TEST_CLASS);
         SortedSet<String> referencedMethods = new TreeSet<>();
-        referencedMethods.add("TestClass.test2");
+        referencedMethods.add(TEST_CLASS_TEST_2);
         SortedSet<ConstructorInformation> constructorInformations = new TreeSet<>();
-        constructorInformations.add(new ConstructorInformation("TestClass", referencedPackages, referencedClasses, referencedMethods));
+        constructorInformations.add(new ConstructorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods));
         SortedSet<MethodInformation> methodInformations = new TreeSet<>();
-        methodInformations.add(new MethodInformation("TestClass.test1", referencedPackages, referencedClasses, referencedMethods));
-        sut = new ClassInformation("test.TestClass", referencedPackages, referencedClasses, constructorInformations, methodInformations);
+        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedMethods));
+        sut = new ClassInformation(TEST_TEST_CLASS, referencedPackages, referencedClasses, constructorInformations, methodInformations);
     }
 
     @Test
     void getClassName() {
-        assertThat(sut.getClassName()).isEqualTo("test.TestClass");
+        assertThat(sut.getClassName()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
     void getReferencedPackages() {
-        assertThat(sut.getReferencedPackages().first()).isEqualTo("testPackage2");
+        assertThat(sut.getReferencedPackages().first()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
     void getReferencedClasses() {
-        assertThat(sut.getReferencedClasses().first()).isEqualTo("test.TestClass");
+        assertThat(sut.getReferencedClasses().first()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
@@ -55,6 +60,6 @@ class ClassInformationTest {
 
     @Test
     void getReferencedMethods() {
-        assertThat(sut.getReferencedMethods().first()).isEqualTo("TestClass.test2");
+        assertThat(sut.getReferencedMethods().first()).isEqualTo(TEST_CLASS_TEST_2);
     }
 }
