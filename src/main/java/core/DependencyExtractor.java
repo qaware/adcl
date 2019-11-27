@@ -131,6 +131,10 @@ public class DependencyExtractor {
      */
     private String extractPackageName(String completeClassName) {
         int startOfClassName = completeClassName.lastIndexOf('.');
+        //in case of default
+        if (startOfClassName == -1) {
+            return "default";
+        }
         return completeClassName.substring(0, startOfClassName);
     }
 
