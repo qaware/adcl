@@ -12,29 +12,10 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.*;
 
-class TestAlg {
-    private static final Alg ALG = new Alg("src/test/resources/algTest/out/test/PROJ_ADCL/test");
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestAlg.class);
-    public static final String EXPECTED_CLASS_LIST = "src/test/resources/txtfiles/expectedClassList.txt";
-
-    @BeforeAll
-    static void init() {
-        LOGGER.info(() -> "Test Start");
-    }
-
-    @AfterAll
-    static void afterClass() {
-        LOGGER.info(() -> "Test End!");
-    }
-
-    @Test
-    void nameTest() {
-        ALG.generateFileList();
-        for (File t : ALG.getList()) {
-            LOGGER.info(t::getName);
-        }
-    }
-
+class TestClassCollector {
+    private static final ClassCollector ALG = new ClassCollector("src/test/resources/algTest/out/test/PROJ_ADCL/test");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestClassCollector.class);
+    private static final String EXPECTED_CLASS_LIST = "src/test/resources/txtfiles/expectedClassList.txt";
 
     @Test
     void classesListPrint() {

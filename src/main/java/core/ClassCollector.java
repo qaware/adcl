@@ -9,16 +9,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Alg {
+public class ClassCollector {
     private ArrayList<File> list;
     private File folder;
     private ArrayList<Class<?>> classesList;
-    private static final Logger LOGGER = LoggerFactory.getLogger(Alg.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClassCollector.class);
 
     /**
      * @param path
      */
-    public Alg(String path) {        //if path is declared, init stream, list, file
+    public ClassCollector(String path) {        //if path is declared, init stream, list, file
         folder = new File(path);
         list = new ArrayList<>();
         classesList = new ArrayList<>();
@@ -52,9 +52,7 @@ public class Alg {
         getAllFiles(this.folder);
     }
 
-    /*
-     *
-     *
+
     public void printFile() {  //generates in the folder from the given path an file as Test.txt und write all absolute pathes from all files in it
         try (PrintWriter out = new PrintWriter(folder.getAbsolutePath() + "/Test.txt")) {
             for (File file : getList()) {
@@ -63,7 +61,7 @@ public class Alg {
         } catch (IOException ex) {
             LOGGER.info(ex.getMessage());
         }
-    }*/
+    }
 
     public File getFolder() { //return folder based on the path in the form of file
         return folder;
