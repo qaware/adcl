@@ -50,12 +50,12 @@ class ClassInformationTest {
 
     @Test
     void getConstructorInformations() {
-        assertThat(sut.getConstructorInformations().iterator().next().getConstructorSignature()).isEqualTo("TestClass");
+        assertThat(sut.getConstructorInformations().iterator().next().getConstructorSignature()).isEqualTo(TEST_CLASS);
     }
 
     @Test
     void getMethodInformations() {
-        assertThat(sut.getMethodInformations().iterator().next().getMethodName()).isEqualTo("TestClass.test1");
+        assertThat(sut.getMethodInformations().iterator().next().getMethodName()).isEqualTo(TEST_CLASS_TEST_1);
     }
 
     @Test
