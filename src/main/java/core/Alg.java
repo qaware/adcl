@@ -52,9 +52,9 @@ public class Alg {
         getAllFiles(this.folder);
     }
 
-    /**
+    /*
      *
-     */
+     *
     public void printFile() {  //generates in the folder from the given path an file as Test.txt und write all absolute pathes from all files in it
         try (PrintWriter out = new PrintWriter(folder.getAbsolutePath() + "/Test.txt")) {
             for (File file : getList()) {
@@ -63,7 +63,7 @@ public class Alg {
         } catch (IOException ex) {
             LOGGER.info(ex.getMessage());
         }
-    }
+    }*/
 
     public File getFolder() { //return folder based on the path in the form of file
         return folder;
