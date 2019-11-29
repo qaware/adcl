@@ -6,17 +6,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.TestUtil;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DependencyExtractorTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyExtractorTest.class);
@@ -28,7 +26,7 @@ class DependencyExtractorTest {
     @BeforeAll
     static void loadFiles() {
         try {
-            expectedResultText = readFile(SRC_TEST_RESOURCES_TXTFILES_EXPECTED, StandardCharsets.UTF_8);
+            expectedResultText = TestUtil.readFile(SRC_TEST_RESOURCES_TXTFILES_EXPECTED, StandardCharsets.UTF_8);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
@@ -57,10 +55,5 @@ class DependencyExtractorTest {
         classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "TestService.class");
         Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
         assertThat(analysedClasses.iterator().next().getClassInformations().first().isService()).isTrue();
-    }
-
-    static String readFile(String path, Charset encoding) throws IOException {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, encoding);
     }
 }

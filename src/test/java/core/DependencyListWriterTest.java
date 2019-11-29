@@ -9,12 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.TestUtil;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,7 +20,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class DependencyListWriterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyListWriterTest.class);
@@ -40,7 +37,7 @@ class DependencyListWriterTest {
     @BeforeAll
     static void loadFiles() {
         try {
-            expectedResultText = readFile("src/test/resources/txtfiles/expectedTextResultFromTestclass.txt", StandardCharsets.UTF_8);
+            expectedResultText = TestUtil.readFile("src/test/resources/txtfiles/expectedTextResultFromTestclass.txt", StandardCharsets.UTF_8);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
@@ -72,7 +69,7 @@ class DependencyListWriterTest {
         DependencyListWriter.writeListToFile(analysedClasses, "src/test/resources/txtfiles", "writeListToFileResult");
 
         try {
-            String generatedList = readFile("src/test/resources/txtfiles/writeListToFileResult.txt", StandardCharsets.UTF_8);
+            String generatedList = TestUtil.readFile("src/test/resources/txtfiles/writeListToFileResult.txt", StandardCharsets.UTF_8);
             assertThat(generatedList).isEqualTo(expectedResultText);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
@@ -109,10 +106,5 @@ class DependencyListWriterTest {
         assertThat(resultText).contains(TEST_CLASS);
         assertThat(resultText).contains(TEST_CLASS_TEST_2);
         assertThat(resultText).contains(TEST_PACKAGE_2);
-    }
-
-    static String readFile(String path, Charset encoding) throws IOException {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, encoding);
     }
 }
