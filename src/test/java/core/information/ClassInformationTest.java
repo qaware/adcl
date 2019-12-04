@@ -7,7 +7,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class ClassInformationTest {
 
@@ -20,17 +19,17 @@ class ClassInformationTest {
 
     @BeforeEach
     void setUp() {
-        SortedSet<String> referencedPackages = new TreeSet<>();
-        referencedPackages.add(TEST_PACKAGE_2);
-        SortedSet<String> referencedClasses = new TreeSet<>();
-        referencedClasses.add(TEST_TEST_CLASS);
-        SortedSet<String> referencedMethods = new TreeSet<>();
-        referencedMethods.add(TEST_CLASS_TEST_2);
-        SortedSet<ConstructorInformation> constructorInformations = new TreeSet<>();
-        constructorInformations.add(new ConstructorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>();
-        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedMethods));
-        sut = new ClassInformation(TEST_TEST_CLASS, referencedPackages, referencedClasses, constructorInformations, methodInformations);
+        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
+        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
+        SortedSet<BehaviorInformation> referencedBehavior = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
+        referencedBehavior.add(new BehaviorInformation(TEST_CLASS_TEST_2, false));
+        SortedSet<BehaviorInformation> behaviorInformations = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
+        behaviorInformations.add(new BehaviorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedBehavior, true));
+        behaviorInformations.add(new BehaviorInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedBehavior, false));
+
+        sut = new ClassInformation(TEST_TEST_CLASS, behaviorInformations, false);
     }
 
     @Test
@@ -40,26 +39,34 @@ class ClassInformationTest {
 
     @Test
     void getReferencedPackages() {
-        assertThat(sut.getReferencedPackages().first()).isEqualTo(TEST_PACKAGE_2);
+        assertThat(sut.getReferencedPackages().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
     void getReferencedClasses() {
-        assertThat(sut.getReferencedClasses().first()).isEqualTo(TEST_TEST_CLASS);
+        assertThat(sut.getReferencedClasses().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
     void getConstructorInformations() {
-        assertThat(sut.getConstructorInformations().iterator().next().getConstructorSignature()).isEqualTo(TEST_CLASS);
+        sut.getBehaviorInformations().forEach(behaviorInformation -> {
+            if (behaviorInformation.isConstructor()) {
+                assertThat(behaviorInformation.getName()).isEqualTo(TEST_CLASS);
+            }
+        });
     }
 
     @Test
     void getMethodInformations() {
-        assertThat(sut.getMethodInformations().iterator().next().getMethodName()).isEqualTo(TEST_CLASS_TEST_1);
+        sut.getBehaviorInformations().forEach(behaviorInformation -> {
+            if (!behaviorInformation.isConstructor()) {
+                assertThat(behaviorInformation.getName()).isEqualTo(TEST_CLASS_TEST_1);
+            }
+        });
     }
 
     @Test
-    void getReferencedMethods() {
-        assertThat(sut.getReferencedMethods().first()).isEqualTo(TEST_CLASS_TEST_2);
+    void getReferencedBehavior() {
+        assertThat(sut.getReferencedBehavior().first().getName()).isEqualTo(TEST_CLASS_TEST_2);
     }
 }

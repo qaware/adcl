@@ -1,14 +1,16 @@
 package core.information;
 
+import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
  * The type Package information contains Information about the static dependencies of a java package.
  */
-public class PackageInformation implements Comparable<PackageInformation> {
+public class PackageInformation {
     private String packageName;
     private SortedSet<ClassInformation> classInformations;
+    private boolean isInternalPackage;
 
     /**
      * Instantiates a new Package information.
@@ -17,7 +19,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
      */
     public PackageInformation(String packageName) {
         this.packageName = packageName;
-        this.classInformations = new TreeSet<>();
+        this.classInformations = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
     }
 
     /**
@@ -34,32 +36,48 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced packages
      */
-    public SortedSet<String> getReferencedPackages() {
-        SortedSet<String> referencedPackages = new TreeSet<>();
+    public SortedSet<PackageInformation> getReferencedPackages() {
+        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
         classInformations.forEach(classInformation -> referencedPackages.addAll(classInformation.getReferencedPackages()));
         return referencedPackages;
     }
 
     /**
-     * Gets referenced classes by extracting them from it's {@link ClassInformation}..
+     * Gets referenced classes by extracting them from it's {@link ClassInformation}.
      *
      * @return the referenced classes
      */
-    public SortedSet<String> getReferencedClasses() {
-        SortedSet<String> referencedClasses = new TreeSet<>();
+    public SortedSet<ClassInformation> getReferencedClasses() {
+        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
         classInformations.forEach(classInformation -> referencedClasses.addAll(classInformation.getReferencedClasses()));
         return referencedClasses;
     }
 
     /**
-     * Gets referenced methods by extracting them from it's {@link ClassInformation}..
+     * Gets referenced behavior by extracting them from it's {@link ClassInformation}.
      *
      * @return the referenced methods
      */
-    public SortedSet<String> getReferencedMethods() {
-        SortedSet<String> referencedMethods = new TreeSet<>();
-        classInformations.forEach(classInformation -> referencedMethods.addAll(classInformation.getReferencedMethods()));
-        return referencedMethods;
+    public SortedSet<BehaviorInformation> getReferencedBehaviors() {
+        SortedSet<BehaviorInformation> referencedBehaviors = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
+        classInformations.forEach(classInformation -> referencedBehaviors.addAll(classInformation.getReferencedBehavior()));
+        return referencedBehaviors;
+    }
+
+    /**
+     * Set if internal package or not.
+     *
+     * @param internalPackage true if package is interal
+     */
+    public void setInternalPackage(boolean internalPackage) {
+        isInternalPackage = internalPackage;
+    }
+
+    /**
+     * @return if internal package or not.
+     */
+    public boolean isInternalPackage() {
+        return isInternalPackage;
     }
 
     /**
@@ -80,9 +98,26 @@ public class PackageInformation implements Comparable<PackageInformation> {
         this.classInformations.add(classInformation);
     }
 
-    @java.lang.SuppressWarnings("squid:S1210")
-    @Override
-    public int compareTo(PackageInformation o) {
-        return packageName.compareTo(o.packageName);
+    /**
+     * Comparator for the type PackageInformation based on the package name.
+     */
+    public static class PackageInformationComparator implements Comparator<PackageInformation> {
+
+        private static PackageInformationComparator instance;
+
+        public static PackageInformationComparator getInstance() {
+            if (instance == null) {
+                instance = new PackageInformationComparator();
+            }
+            return instance;
+        }
+
+        private PackageInformationComparator() {
+        }
+
+        @Override
+        public int compare(PackageInformation packageInformation, PackageInformation otherPackageInformation) {
+            return packageInformation.packageName.compareTo(otherPackageInformation.packageName);
+        }
     }
 }

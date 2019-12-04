@@ -1,52 +1,51 @@
 package core.information;
 
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
  * The type Class information contains Information about the static dependencies of a java class.
  */
-public class ClassInformation implements Comparable<ClassInformation> {
+public class ClassInformation {
 
     private String className;
-    private SortedSet<String> referencedPackages;
-    private SortedSet<String> referencedClasses;
-    private SortedSet<ConstructorInformation> constructorInformations;
-    private SortedSet<MethodInformation> methodInformations;
+    private SortedSet<BehaviorInformation> behaviorInformations;
     private boolean isService;
 
+
     /**
      * Instantiates a new Class information.
      *
-     * @param className               the name of the java class
-     * @param referencedPackages      the referenced packages of the java class
-     * @param referencedClasses       the referenced classes of the java class
-     * @param constructorInformations the constructor informations of the java class
-     * @param methodInformations      the method informations of the java class
+     * @param className the name of the java class
      */
-    public ClassInformation(String className, SortedSet<String> referencedPackages, SortedSet<String> referencedClasses, SortedSet<ConstructorInformation> constructorInformations, SortedSet<MethodInformation> methodInformations) {
-        this(className, referencedPackages, referencedClasses, constructorInformations, methodInformations, false);
+    public ClassInformation(String className) {
+        this(className, new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance()), false);
     }
 
     /**
      * Instantiates a new Class information.
      *
-     * @param className               the name of the java class
-     * @param referencedPackages      the referenced packages of the java class
-     * @param referencedClasses       the referenced classes of the java class
-     * @param constructorInformations the constructor informations of the java class
-     * @param methodInformations      the method informations of the java class
-     * @param isService               true if Class has service annotation
+     * @param className the name of the java class
+     * @param isService true if this class is a Service
      */
-    public ClassInformation(String className, SortedSet<String> referencedPackages, SortedSet<String> referencedClasses, SortedSet<ConstructorInformation> constructorInformations, SortedSet<MethodInformation> methodInformations, boolean isService) {
+    public ClassInformation(String className, boolean isService) {
+        this(className, new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance()), isService);
+    }
+
+    /**
+     * Instantiates a new Class information.
+     *
+     * @param className            the name of the java class
+     * @param behaviorInformations the behavior informations of the java class
+     * @param isService            true if Class has service annotation
+     */
+    public ClassInformation(String className, SortedSet<BehaviorInformation> behaviorInformations, boolean isService) {
         this.className = className;
-        this.referencedPackages = referencedPackages;
-        this.referencedClasses = referencedClasses;
-        this.constructorInformations = constructorInformations;
-        this.methodInformations = methodInformations;
+        this.behaviorInformations = behaviorInformations;
         this.isService = isService;
     }
+
     /**
      * Gets the class name.
      *
@@ -57,51 +56,52 @@ public class ClassInformation implements Comparable<ClassInformation> {
     }
 
     /**
-     * Gets referenced packages.
+     * Gets all referenced packages by extracting them from it's {@link BehaviorInformation}.
      *
      * @return the referenced packages
      */
-    public SortedSet<String> getReferencedPackages() {
+    public SortedSet<PackageInformation> getReferencedPackages() {
+        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        behaviorInformations.forEach(behaviorInformation -> referencedPackages.addAll(behaviorInformation.getReferencedPackages()));
         return referencedPackages;
     }
 
     /**
-     * Gets referenced classes.
+     * Gets all referenced classes by extracting them from it's {@link BehaviorInformation}.
      *
      * @return the referenced classes
      */
-    public SortedSet<String> getReferencedClasses() {
+    public SortedSet<ClassInformation> getReferencedClasses() {
+        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformationComparator.getInstance());
+        behaviorInformations.forEach(behaviorInformation -> referencedClasses.addAll(behaviorInformation.getReferencedClasses()));
         return referencedClasses;
     }
 
     /**
-     * Gets constructor informations.
+     * Gets Behavior information owned by the described class.
      *
-     * @return the constructor informations
+     * @return a set of the behavior information
      */
-    public Collection<ConstructorInformation> getConstructorInformations() {
-        return constructorInformations;
+    public SortedSet<BehaviorInformation> getBehaviorInformations() {
+        return behaviorInformations;
     }
 
     /**
-     * Gets method informations.
-     *
-     * @return the method informations
-     */
-    public Collection<MethodInformation> getMethodInformations() {
-        return methodInformations;
-    }
-
-    /**
-     * Gets all referenced methods by extracting them from it's {@link MethodInformation} and {@link ConstructorInformation}.
+     * Gets all referenced Behavior by extracting them from it's {@link BehaviorInformation}.
      *
      * @return the referenced methods
      */
-    public SortedSet<String> getReferencedMethods() {
-        SortedSet<String> referencedMethods = new TreeSet<>();
-        methodInformations.forEach(methodInformation -> referencedMethods.addAll(methodInformation.getReferencedMethods()));
-        constructorInformations.forEach(constructorInformation -> referencedMethods.addAll(constructorInformation.getReferencedMethods()));
-        return referencedMethods;
+    public SortedSet<BehaviorInformation> getReferencedBehavior() {
+        SortedSet<BehaviorInformation> referencedBehaviors = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
+        behaviorInformations.forEach(behaviorInformation -> referencedBehaviors.addAll(behaviorInformation.getReferencedBehavior()));
+        return referencedBehaviors;
+    }
+
+    /**
+     * Adds a BehaviorInformation to the set of BehaviorInformation owned by the described class.
+     */
+    public void addBehaviorInformation(BehaviorInformation behaviorInformation) {
+        behaviorInformations.add(behaviorInformation);
     }
 
     /**
@@ -111,16 +111,41 @@ public class ClassInformation implements Comparable<ClassInformation> {
         return isService;
     }
 
-    @java.lang.SuppressWarnings("squid:S1210")
-    @Override
-    public int compareTo(ClassInformation o) {
-        if (isService && !o.isService) {
-            return 1;
-        }
-        if (!isService && o.isService) {
-            return -1;
-        }
-        return className.compareTo(o.className);
+    /**
+     * Set true if class is also a spring boot service
+     *
+     * @param isService set true if Class is spring boot service
+     */
+    public void setService(boolean isService) {
+        this.isService = isService;
     }
 
+    /**
+     * Comparator for the type ClassInformation based on the class name.
+     */
+    public static class ClassInformationComparator implements Comparator<ClassInformation> {
+
+        private static ClassInformation.ClassInformationComparator instance;
+
+        public static ClassInformation.ClassInformationComparator getInstance() {
+            if (instance == null) {
+                instance = new ClassInformation.ClassInformationComparator();
+            }
+            return instance;
+        }
+
+        private ClassInformationComparator() {
+        }
+
+        @Override
+        public int compare(ClassInformation classInformation, ClassInformation otherClassInformation) {
+            if (classInformation.isService && !otherClassInformation.isService) {
+                return 1;
+            }
+            if (!classInformation.isService && otherClassInformation.isService) {
+                return -1;
+            }
+            return classInformation.className.compareTo(otherClassInformation.className);
+        }
+    }
 }
