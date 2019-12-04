@@ -1,8 +1,7 @@
 package core;
 
+import core.information.BehaviorInformation;
 import core.information.ClassInformation;
-import core.information.ConstructorInformation;
-import core.information.MethodInformation;
 import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,17 +44,18 @@ class DependencyListWriterTest {
 
     @BeforeEach
     void setUp() {
-        SortedSet<String> referencedPackages = new TreeSet<>();
-        referencedPackages.add(TEST_PACKAGE_2);
-        SortedSet<String> referencedClasses = new TreeSet<>();
-        referencedClasses.add(TEST_TEST_CLASS);
-        SortedSet<String> referencedMethods = new TreeSet<>();
-        referencedMethods.add(TEST_CLASS_TEST_2);
-        SortedSet<ConstructorInformation> constructorInformations = new TreeSet<>();
-        constructorInformations.add(new ConstructorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>();
-        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedMethods));
-        classInformation = new ClassInformation(TEST_TEST_CLASS, referencedPackages, referencedClasses, constructorInformations, methodInformations);
+
+        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
+        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
+        SortedSet<BehaviorInformation> referencedBehavior = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
+        referencedBehavior.add(new BehaviorInformation(TEST_CLASS_TEST_2, false));
+        SortedSet<BehaviorInformation> behaviorInformations = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
+        behaviorInformations.add(new BehaviorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedBehavior, true));
+        behaviorInformations.add(new BehaviorInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedBehavior, false));
+
+        classInformation = new ClassInformation(TEST_TEST_CLASS, behaviorInformations, false);
         packageInformation = new PackageInformation(TEST_PACKAGE);
         packageInformation.addClassInformation(classInformation);
         dependencyExtractor = new DependencyExtractor();
@@ -88,7 +88,7 @@ class DependencyListWriterTest {
         String resultText = DependencyListWriter.generateFlatList(packageInformation);
         assertThat(resultText).contains(TEST_PACKAGE);
         assertThat(resultText).contains(classInformation.getClassName());
-        classInformation.getReferencedMethods().forEach(refMethod -> assertThat(resultText).contains(refMethod));
+        classInformation.getReferencedBehavior().forEach(behaviorInformation -> assertThat(resultText).contains(behaviorInformation.getName()));
     }
 
     @Test
