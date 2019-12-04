@@ -7,8 +7,11 @@ import core.information.PackageInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -41,8 +44,7 @@ public class DependencyListWriter {
      * @param fileName            the file name
      */
     public static void writeListToFile(Collection<PackageInformation> packageInformations, String destinationPath, String fileName) {
-
-        try (FileWriter fileWriter = new FileWriter(destinationPath + "/" + fileName + ".txt")) {
+        try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(destinationPath + "/" + fileName + ".txt"), StandardCharsets.UTF_8)) {
             fileWriter.write(generateDeepList(packageInformations));
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
