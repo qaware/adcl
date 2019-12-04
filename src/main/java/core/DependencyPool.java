@@ -91,9 +91,11 @@ public class DependencyPool {
         return behaviorInformation;
     }
 
-    public Collection<PackageInformation> retrieveData() {
-        Collection<PackageInformation> data = packageInformationMap.values();
+    public void resetDataStorage() {
         initializeDataStorage();
-        return data;
+    }
+
+    public Collection<PackageInformation> retrievePackageInformation() {
+        return packageInformationMap.values();
     }
 }

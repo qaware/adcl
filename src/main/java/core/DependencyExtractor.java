@@ -37,6 +37,7 @@ public class DependencyExtractor {
     public DependencyExtractor() {
         this.classPool = new ClassPool(true);
         this.dependencyPool = DependencyPool.getInstance();
+        dependencyPool.resetDataStorage();
     }
 
     /**
@@ -53,7 +54,7 @@ public class DependencyExtractor {
                 LOGGER.error(e.getMessage());
             }
         });
-        return DependencyPool.getInstance().retrieveData();
+        return dependencyPool.retrievePackageInformation();
     }
 
     /**
