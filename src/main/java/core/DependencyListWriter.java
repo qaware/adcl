@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
@@ -44,9 +45,8 @@ public class DependencyListWriter {
      * @param fileName            the file name
      */
     public static void writeListToFile(Collection<PackageInformation> packageInformations, String destinationPath, String fileName) {
-
-        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(destinationPath + "/" + fileName + ".txt"), StandardCharsets.UTF_8)) {
-            writer.write(generateDeepList(packageInformations));
+        try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(destinationPath + "/" + fileName + ".txt"), StandardCharsets.UTF_8)) {
+            fileWriter.write(generateDeepList(packageInformations));
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
