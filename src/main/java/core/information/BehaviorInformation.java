@@ -1,5 +1,10 @@
 package core.information;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -7,10 +12,18 @@ import java.util.TreeSet;
 /**
  * The class Behavior information contains static dependency information about {@link javassist.CtBehavior}.
  */
-public class BehaviorInformation {
+@NodeEntity
+public class BehaviorInformation implements Comparable<BehaviorInformation> {
+
+    @Id
+    @GeneratedValue
+    private Long id;
     private String name;
+    @Relationship(type = "USES")
     private SortedSet<PackageInformation> referencedPackages;
+    @Relationship(type = "USES")
     private SortedSet<ClassInformation> referencedClasses;
+    @Relationship(type = "USES")
     private SortedSet<BehaviorInformation> referencedBehavior;
 
     private boolean isConstructor;
@@ -23,6 +36,23 @@ public class BehaviorInformation {
      */
     public BehaviorInformation(String name, boolean isConstructor) {
         this(name, new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance()), new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance()), new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance()), isConstructor);
+    }
+
+    /**
+     * Instantiates a new Behavior information.
+     *
+     * @param name               the name of the behavior
+     * @param referencedPackages the referenced packages
+     * @param referencedClasses  the referenced classes
+     * @param referencedBehavior the referenced behavior
+     * @param isConstructor      true if behavior is constructor
+     */
+    public BehaviorInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<BehaviorInformation> referencedBehavior, boolean isConstructor) {
+        this.name = name;
+        this.referencedPackages = referencedPackages;
+        this.referencedClasses = referencedClasses;
+        this.referencedBehavior = referencedBehavior;
+        this.isConstructor = isConstructor;
     }
 
     /**
@@ -53,23 +83,6 @@ public class BehaviorInformation {
     }
 
     /**
-     * Instantiates a new Behavior information.
-     *
-     * @param name               the name of the behavior
-     * @param referencedPackages the referenced packages
-     * @param referencedClasses  the referenced classes
-     * @param referencedBehavior the referenced behavior
-     * @param isConstructor      true if behavior is constructor
-     */
-    public BehaviorInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<BehaviorInformation> referencedBehavior, boolean isConstructor) {
-        this.name = name;
-        this.referencedPackages = referencedPackages;
-        this.referencedClasses = referencedClasses;
-        this.referencedBehavior = referencedBehavior;
-        this.isConstructor = isConstructor;
-    }
-
-    /**
      * Gets name of the behavior.
      *
      * @return the name of the behavior
@@ -92,6 +105,25 @@ public class BehaviorInformation {
 
     public boolean isConstructor() {
         return isConstructor;
+    }
+
+    @Override
+    public int compareTo(BehaviorInformation behaviorInformation) {
+        return BehaviorInformationComparator.getInstance().compare(this, behaviorInformation);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof BehaviorInformation) {
+            BehaviorInformation behaviorInformation = (BehaviorInformation) obj;
+            return behaviorInformation.compareTo(this) == 0 && isConstructor == behaviorInformation.isConstructor();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /**

@@ -1,5 +1,10 @@
 package core.information;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -7,12 +12,17 @@ import java.util.TreeSet;
 /**
  * The type Class information contains Information about the static dependencies of a java class.
  */
-public class ClassInformation {
+@NodeEntity
+public class ClassInformation implements Comparable<ClassInformation> {
 
+    @Id
+    @GeneratedValue
+    private Long id;
     private String className;
+    @Relationship(type = "IS_BEHAVIOR_OF")
     private SortedSet<BehaviorInformation> behaviorInformations;
-    private boolean isService;
 
+    private boolean isService;
 
     /**
      * Instantiates a new Class information.
@@ -118,6 +128,23 @@ public class ClassInformation {
      */
     public void setService(boolean isService) {
         this.isService = isService;
+    }
+
+    @Override
+    public int compareTo(ClassInformation classInformation) {
+        return ClassInformationComparator.getInstance().compare(this, classInformation);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ClassInformation)
+            return this.compareTo((ClassInformation) obj) == 0 && isService == ((ClassInformation) obj).isService;
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /**
