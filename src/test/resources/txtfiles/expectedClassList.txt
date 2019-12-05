@@ -1,6 +1,6 @@
-F.class
 A.class
-D.class
 B.class
 C.class
+D.class
 E.class
+F.class

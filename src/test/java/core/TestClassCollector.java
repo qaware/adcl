@@ -22,7 +22,7 @@ class TestClassCollector {
         try {
             StringBuilder builder = new StringBuilder();
             ALG.generateFileList();
-            ALG.getList().stream().map(File::getName).forEach(path -> builder.append(path).append(String.format("%n")));
+            ALG.getList().stream().map(File::getName).sorted().forEach(path -> builder.append(path).append(String.format("%n")));
             assertThat(builder.toString()).isEqualTo(TestUtil.readFile(EXPECTED_CLASS_LIST, StandardCharsets.UTF_8));
         } catch (IOException ex) {
             LOGGER.error(ex::getMessage);
