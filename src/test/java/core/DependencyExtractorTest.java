@@ -43,7 +43,7 @@ class DependencyExtractorTest {
         classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "Testclass.class");
         Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
         StringBuilder resultText = new StringBuilder();
-        analysedClasses.forEach(packageInformation -> resultText.append(DependencyListWriter.generateDeepList(packageInformation)));
+        analysedClasses.forEach(packageInformation -> resultText.append(String.format("%s %n", DependencyListWriter.generateDeepList(packageInformation))));
 
         assertThat(resultText.toString()).isEqualTo(expectedResultText);
 

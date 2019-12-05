@@ -1,8 +1,7 @@
 package core;
 
+import core.information.BehaviorInformation;
 import core.information.ClassInformation;
-import core.information.ConstructorInformation;
-import core.information.MethodInformation;
 import core.information.PackageInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +27,8 @@ public class DependencyListWriter {
     private static String refMethods = "Referenced methods: ";
     private static String refClasses = "Referenced classes: ";
     private static String refPackages = "Referenced packages: ";
+    private static String formatStringMethod = "%n%25sMethod: %s";
+    private static String formatStringConstructor = "%n%25sConstructor: %s";
 
     /**
      * Prevent initialisation.
@@ -59,7 +60,7 @@ public class DependencyListWriter {
      */
     public static String generateDeepList(Collection<PackageInformation> packageInformations) {
         StringBuilder deepList = new StringBuilder();
-        packageInformations.forEach(packageInformation -> deepList.append(generateDeepList(packageInformation)));
+        packageInformations.forEach(packageInformation -> deepList.append(String.format("%s %n", generateDeepList(packageInformation))));
         return deepList.toString();
     }
 
@@ -86,17 +87,17 @@ public class DependencyListWriter {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Package: ").append(packageInformation.getPackageName());
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
-        packageInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge)));
+        packageInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
-        packageInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz)));
+        packageInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refMethods));
-        packageInformation.getReferencedMethods().forEach(method -> stringBuilder.append(String.format(formatString20, arrowDownRight, method)));
+        packageInformation.getReferencedBehaviors().forEach(behavior -> stringBuilder.append(String.format(formatString20, arrowDownRight, behavior.getName())));
 
         return stringBuilder.toString();
     }
 
     /**
-     * Generates a deep list expanding all {@link ConstructorInformation} and {@link MethodInformation}.
+     * Generates a deep list expanding all {@link BehaviorInformation}.
      *
      * @param classInformation the class information
      * @return all information in form of a list
@@ -109,13 +110,21 @@ public class DependencyListWriter {
             stringBuilder.append("Class: ").append(classInformation.getClassName());
         }
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
-        classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge)));
+        classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
-        classInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz)));
+        classInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, "Constructors: "));
-        classInformation.getConstructorInformations().forEach(constructorInformation -> stringBuilder.append(generateFlatList(constructorInformation)));
+        classInformation.getBehaviorInformations().forEach(behaviorInformation -> {
+            if (behaviorInformation.isConstructor()) {
+                stringBuilder.append(generateFlatList(behaviorInformation, formatStringConstructor));
+            }
+        });
         stringBuilder.append(String.format(formatString15, arrowDownRight, "Methods: "));
-        classInformation.getMethodInformations().forEach(methodInformation -> stringBuilder.append(generateFlatList(methodInformation)));
+        classInformation.getBehaviorInformations().forEach(behaviorInformation -> {
+            if (!behaviorInformation.isConstructor()) {
+                stringBuilder.append(generateFlatList(behaviorInformation, formatStringMethod));
+            }
+        });
 
         return stringBuilder.toString();
     }
@@ -134,49 +143,30 @@ public class DependencyListWriter {
             stringBuilder.append("Class: ").append(classInformation.getClassName());
         }
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
-        classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge)));
+        classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
-        classInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz)));
+        classInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, "Referenced Method: "));
-        classInformation.getReferencedMethods().forEach(method -> stringBuilder.append(String.format(formatString20, arrowDownRight, method)));
+        classInformation.getReferencedBehavior().forEach(behavior -> stringBuilder.append(String.format(formatString20, arrowDownRight, behavior.getName())));
 
         return stringBuilder.toString();
     }
 
     /**
-     * Generates a list giving a short overview about all packages,classes,methods referenced in this method.
+     * Generates a list giving a short overview about all packages,classes,methods referenced in this behavior.
      *
-     * @param methodInformation the method information
+     * @param behaviorInformation the behavior information
      * @return a list containing a short overview about all packages,classes,methods referenced in this method
      */
-    public static String generateFlatList(MethodInformation methodInformation) {
+    public static String generateFlatList(BehaviorInformation behaviorInformation, String formatString) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(String.format("%n%25sMethod: %s", arrowDownRight, methodInformation.getMethodName()));
+        stringBuilder.append(String.format(formatString, arrowDownRight, behaviorInformation.getName()));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refPackages));
-        methodInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString35, arrowDownRight, packAge)));
+        behaviorInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString35, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refClasses));
-        methodInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString35, arrowDownRight, clazz)));
+        behaviorInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString35, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refMethods));
-        methodInformation.getReferencedMethods().forEach(method -> stringBuilder.append(String.format(formatString35, arrowDownRight, method)));
-        return stringBuilder.toString();
-    }
-
-    /**
-     * Generates a list giving a short overview about all packages,classes,methods referenced in this constructor.
-     *
-     * @param constructorInformation the constructor information
-     * @return a list containing a short overview about all packages,classes,methods referenced in this constructor
-     */
-    public static String generateFlatList(ConstructorInformation constructorInformation) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(String.format("%n%25sConstructor: %s", arrowDownRight, constructorInformation.getConstructorSignature()));
-        stringBuilder.append(String.format(formatString30, arrowDownRight, refPackages));
-        constructorInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString35, arrowDownRight, packAge)));
-        stringBuilder.append(String.format(formatString30, arrowDownRight, refClasses));
-        constructorInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString35, arrowDownRight, clazz)));
-        stringBuilder.append(String.format(formatString30, arrowDownRight, refMethods));
-        constructorInformation.getReferencedMethods().forEach(method -> stringBuilder.append(String.format(formatString35, arrowDownRight, method)));
-
+        behaviorInformation.getReferencedBehavior().forEach(behavior -> stringBuilder.append(String.format(formatString35, arrowDownRight, behavior.getName())));
         return stringBuilder.toString();
     }
 }

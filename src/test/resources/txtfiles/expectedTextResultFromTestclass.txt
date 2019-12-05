@@ -1,18 +1,56 @@
+Package: java.lang 
+     ↪ Class: java.lang.Object
+               ↪ Referenced packages: 
+               ↪ Referenced classes: 
+               ↪ Constructors: 
+                        ↪Constructor: java.lang.Object()
+                              ↪ Referenced packages: 
+                              ↪ Referenced classes: 
+                              ↪ Referenced methods: 
+               ↪ Methods: 
+     ↪ Class: java.lang.String
+               ↪ Referenced packages: 
+               ↪ Referenced classes: 
+               ↪ Constructors: 
+               ↪ Methods:  
+Package: java.util 
+     ↪ Class: java.util.ArrayList
+               ↪ Referenced packages: 
+               ↪ Referenced classes: 
+               ↪ Constructors: 
+               ↪ Methods: 
+                        ↪Method: java.util.ArrayList.add
+                              ↪ Referenced packages: 
+                              ↪ Referenced classes: 
+                              ↪ Referenced methods: 
+     ↪ Class: java.util.List
+               ↪ Referenced packages: 
+               ↪ Referenced classes: 
+               ↪ Constructors: 
+               ↪ Methods: 
+     ↪ Class: java.util.TreeSet
+               ↪ Referenced packages: 
+               ↪ Referenced classes: 
+               ↪ Constructors: 
+               ↪ Methods: 
+                        ↪Method: java.util.TreeSet.add
+                              ↪ Referenced packages: 
+                              ↪ Referenced classes: 
+                              ↪ Referenced methods: 
+                        ↪Method: java.util.TreeSet.clear
+                              ↪ Referenced packages: 
+                              ↪ Referenced classes: 
+                              ↪ Referenced methods:  
 Package: testclasses 
      ↪ Class: testclasses.Testclass
                ↪ Referenced packages: 
                     ↪ java.lang
                     ↪ java.util
-                    ↪ testclasses
                ↪ Referenced classes: 
-                    ↪ java.lang.Integer
-                    ↪ java.lang.Object
                     ↪ java.lang.String
                     ↪ java.util.ArrayList
                     ↪ java.util.List
                     ↪ java.util.TreeSet
-                    ↪ testclasses.Testclass
-                    ↪ testclasses.Testclass$InnerTest
                ↪ Constructors: 
                         ↪Constructor: testclasses.Testclass(java.lang.String)
                               ↪ Referenced packages: 
@@ -20,6 +58,7 @@ Package: testclasses
                               ↪ Referenced classes: 
                                    ↪ java.lang.String
                               ↪ Referenced methods: 
+                                   ↪ java.lang.Object()
                ↪ Methods: 
                         ↪Method: testclasses.Testclass.doSomething(java.lang.String)
                               ↪ Referenced packages: 
@@ -38,4 +77,4 @@ Package: testclasses
                                    ↪ java.util.TreeSet
                               ↪ Referenced methods: 
                                    ↪ java.util.TreeSet.add
-                                   ↪ java.util.TreeSet.clear
+                                   ↪ java.util.TreeSet.clear 
