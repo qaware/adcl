@@ -1,5 +1,10 @@
 package core.information;
 
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -7,9 +12,16 @@ import java.util.TreeSet;
 /**
  * The type Package information contains Information about the static dependencies of a java package.
  */
-public class PackageInformation {
+@NodeEntity
+public class PackageInformation implements Comparable<PackageInformation> {
+
+    @Id
+    @GeneratedValue
+    private Long id;
     private String packageName;
+    @Relationship(type = "IS_CLASS_OF", direction = Relationship.INCOMING)
     private SortedSet<ClassInformation> classInformations;
+
     private boolean isInternalPackage;
 
     /**
@@ -96,6 +108,25 @@ public class PackageInformation {
      */
     public void addClassInformation(ClassInformation classInformation) {
         this.classInformations.add(classInformation);
+    }
+
+    @Override
+    public int compareTo(PackageInformation packageInformation) {
+        return PackageInformationComparator.getInstance().compare(this, packageInformation);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof PackageInformation) {
+            PackageInformation packageInformation = (PackageInformation) obj;
+            return packageInformation.compareTo(this) == 0 && packageInformation.isInternalPackage == isInternalPackage;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /**
