@@ -1,9 +1,9 @@
-package core.services;
+package database.services;
 
 import core.information.PackageInformation;
-import core.repositories.BehaviorRepository;
-import core.repositories.ClassRepository;
-import core.repositories.PackageRepository;
+import database.repositories.BehaviorRepository;
+import database.repositories.ClassRepository;
+import database.repositories.PackageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

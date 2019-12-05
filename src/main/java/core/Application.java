@@ -1,11 +1,12 @@
 package core;
 
 import core.information.PackageInformation;
-import core.services.GraphDBService;
+import database.services.GraphDBService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 import java.io.File;
@@ -13,8 +14,9 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
-@EnableNeo4jRepositories("core.repositories")
+@EnableNeo4jRepositories("database.repositories")
 @SpringBootConfiguration
+@ComponentScan(basePackages = "database.*")
 public class Application {
 
     public static void main(String[] args) {

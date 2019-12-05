@@ -1,4 +1,4 @@
-package core.repositories;
+package database.repositories;
 
 import core.information.BehaviorInformation;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
