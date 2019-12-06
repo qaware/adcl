@@ -24,6 +24,7 @@ before_script: #localhost:7474
   - sudo apt-get update
   - sudo apt-get install neo4j=1:3.5.12
   - mkdir nconf
+  - cp /etc/neo4j/neo4j.conf ./nconf
   - echo "dbms.security.auth_enabled=false" >> ./nconf/neo4j.conf
   - sudo neo4j start
 
