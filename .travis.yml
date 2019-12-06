@@ -16,7 +16,7 @@ git:
   depth: false
 
 before_script: #localhost:7474
-  - service neo4j start
+  - bundle exec rake neo4j:install['3.2.2'] neo4j:start default --trace
 
 script:
   # clean, run sonar, generate javadoc jar
