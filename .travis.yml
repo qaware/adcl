@@ -16,7 +16,7 @@ git:
   depth: false
 
 before_script: #localhost:7474
-  - neo4j start
+  - service neo4j start
 
 script:
   # clean, run sonar, generate javadoc jar
