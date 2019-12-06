@@ -16,7 +16,7 @@ git:
   depth: false
 
 before_script: #localhost:7474
-  - bundle exec rake neo4j:install['3.2.2'] neo4j:start default --trace
+  - travis_retry bin/rake neo4j:install['3.2.2'] neo4j:start default --trace
 
 script:
   # clean, run sonar, generate javadoc jar
