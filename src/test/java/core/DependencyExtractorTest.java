@@ -1,5 +1,6 @@
 package core;
 
+import core.information.BehaviorInformation;
 import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +11,7 @@ import util.TestUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,5 +57,14 @@ class DependencyExtractorTest {
         classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "TestService.class");
         Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
         assertThat(analysedClasses.iterator().next().getClassInformations().first().isService()).isTrue();
+    }
+
+    @Test
+    void analyseClassesWithConstructorSignature() {
+        List<String> classes = new ArrayList<>();
+        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "H.class");
+        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "K.class");
+        Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
+        assertThat(analysedClasses.iterator().next().getClassInformations().last().getReferencedBehavior()).contains(new BehaviorInformation("core.H(java.lang.String,java.util.ArrayList)", true));
     }
 }

@@ -60,7 +60,8 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
 
     @Override
     public void edit(NewExpr newExpr) {
-        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(newExpr.getClassName() + "(...)", true));
+        String signature = newExpr.getSignature().replace("(L", "(").replace("/", ".").replace(";L", ",").replace(";)V", ")").replace(")V", ")");
+        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(newExpr.getClassName() + signature, true));
         referencedClasses.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
     }
 
