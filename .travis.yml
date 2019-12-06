@@ -16,7 +16,7 @@ git:
   depth: false
 
 before_script: #localhost:7474
-  - travis_retry bin/rake neo4j:install['3.2.2'] neo4j:start default --trace
+  - sudo apt-get install neo4j=1:3.2.2
 
 script:
   # clean, run sonar, generate javadoc jar
