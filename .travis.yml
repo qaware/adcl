@@ -11,6 +11,9 @@ addons:
   sonarcloud:
     organization: "thbingen"
 
+services:
+  - neo4j #localhost:7474
+
 # disable shallow clone so sonar won't get messed up
 git:
   depth: false
