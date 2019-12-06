@@ -6,11 +6,9 @@ import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtMethod;
 import javassist.NotFoundException;
-import javassist.expr.ConstructorCall;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javassist.expr.NewExpr;
 
 import java.util.Arrays;
 import java.util.SortedSet;
@@ -20,7 +18,6 @@ import java.util.TreeSet;
  * The  CtBehaviorBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
  */
 public class CtBehaviorBodyAnalyzer extends ExprEditor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CtBehaviorBodyAnalyzer.class);
 
     private SortedSet<BehaviorInformation> referencedBehavior;
     private SortedSet<ClassInformation> referencedClasses;
@@ -62,12 +59,9 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
     }
 
     @Override
-    public void edit(ConstructorCall c) {
-        try {
-            referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(c.getConstructor().getLongName(), true));
-        } catch (NotFoundException e) {
-            LOGGER.error(e.getMessage());
-        }
+    public void edit(NewExpr newExpr) {
+        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(newExpr.getClassName() + "(...)", true));
+        referencedClasses.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
     }
 
     /**

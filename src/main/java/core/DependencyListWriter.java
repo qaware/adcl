@@ -24,7 +24,7 @@ public class DependencyListWriter {
     private static String formatString30 = "%n %30s %s";
     private static String formatString35 = "%n %35s %s";
     private static String arrowDownRight = "↪";
-    private static String refMethods = "Referenced methods: ";
+    private static String refMethods = "Referenced behavior: ";
     private static String refClasses = "Referenced classes: ";
     private static String refPackages = "Referenced packages: ";
     private static String formatStringMethod = "%n%25sMethod: %s";
