@@ -2,11 +2,6 @@ language: java
 # skip the default installation phase
 install: true
 
-#disabled for testing
-#branches:
-#  only:
-#    - master
-
 addons:
   sonarcloud:
     organization: "thbingen"
@@ -18,7 +13,8 @@ git:
 env:
   - NEO4J_CONF=/home/travis/build/qaware/adcl/nconf
 
-before_script: #localhost:7474
+before_script:
+  #install neo4j
   - wget -O - https://debian.neo4j.org/neotechnology.gpg.key | sudo apt-key add -
   - echo 'deb https://debian.neo4j.org/repo stable/' | sudo tee -a /etc/apt/sources.list.d/neo4j.list
   - sudo apt-get update
@@ -32,7 +28,7 @@ script:
   # clean, run sonar, generate javadoc jar
   - mvn clean verify sonar:sonar javadoc:jar
   # sonar quality gate breaker
-  - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
+  - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN -Dsqbb.branch=$CI_BUILD_REF_NAME
 
 before_deploy:
   # Set up git user name and tag this commit
