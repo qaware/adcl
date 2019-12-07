@@ -54,15 +54,27 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
 
     @Override
     public void edit(MethodCall m) {
-        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(m.getClassName() + "." + m.getMethodName(), false));
+        String signature = parseSignature(m.getSignature());
+        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
         referencedClasses.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
     }
 
     @Override
     public void edit(NewExpr newExpr) {
-        String signature = newExpr.getSignature().replace("(L", "(").replace("/", ".").replace(";L", ",").replace(";)V", ")").replace(")V", ")");
+        String signature = parseSignature(newExpr.getSignature());
         referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(newExpr.getClassName() + signature, true));
         referencedClasses.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
+    }
+
+    /**
+     * Parses the jvm style into a more readable format
+     *
+     * @param signature the jvm style signature
+     * @return formatted signature
+     */
+    private String parseSignature(String signature) {
+        return signature.replace("(L", "(").replace("/", ".").replace(";L", ",")
+                .replace(";)Z", ")").replace(";)V", ")").replace(")V", ")");
     }
 
     /**

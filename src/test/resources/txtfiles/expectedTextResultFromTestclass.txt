@@ -1,4 +1,4 @@
-Package: java.lang
+Package: java.lang 
      ↪ Class: java.lang.String
                ↪ Referenced packages: 
                ↪ Referenced classes: 
@@ -10,14 +10,14 @@ Package: java.util
                ↪ Referenced classes: 
                ↪ Constructors: 
                         ↪Constructor: java.util.ArrayList()
-                              ↪ Referenced packages:
-                              ↪ Referenced classes:
-                              ↪ Referenced behavior:
-               ↪ Methods:
-                        ↪Method: java.util.ArrayList.add
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced behavior:
+                              ↪ Referenced behavior: 
+               ↪ Methods: 
+                        ↪Method: java.util.ArrayList.add(java.lang.Object)
+                              ↪ Referenced packages: 
+                              ↪ Referenced classes: 
+                              ↪ Referenced behavior: 
      ↪ Class: java.util.List
                ↪ Referenced packages: 
                ↪ Referenced classes: 
@@ -28,18 +28,18 @@ Package: java.util
                ↪ Referenced classes: 
                ↪ Constructors: 
                         ↪Constructor: java.util.TreeSet()
-                              ↪ Referenced packages:
-                              ↪ Referenced classes:
-                              ↪ Referenced behavior:
-               ↪ Methods:
-                        ↪Method: java.util.TreeSet.add
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced behavior:
-                        ↪Method: java.util.TreeSet.clear
+                              ↪ Referenced behavior: 
+               ↪ Methods: 
+                        ↪Method: java.util.TreeSet.add(java.lang.Object)
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced behavior:
+                              ↪ Referenced behavior: 
+                        ↪Method: java.util.TreeSet.clear()
+                              ↪ Referenced packages: 
+                              ↪ Referenced classes: 
+                              ↪ Referenced behavior:  
 Package: testclasses 
      ↪ Class: testclasses.Testclass
                ↪ Referenced packages: 
@@ -56,7 +56,7 @@ Package: testclasses
                                    ↪ java.lang
                               ↪ Referenced classes: 
                                    ↪ java.lang.String
-                              ↪ Referenced behavior:
+                              ↪ Referenced behavior: 
                ↪ Methods: 
                         ↪Method: testclasses.Testclass.doSomething(java.lang.String)
                               ↪ Referenced packages: 
@@ -66,15 +66,15 @@ Package: testclasses
                                    ↪ java.lang.String
                                    ↪ java.util.ArrayList
                                    ↪ java.util.List
-                              ↪ Referenced behavior:
+                              ↪ Referenced behavior: 
                                    ↪ java.util.ArrayList()
-                                   ↪ java.util.ArrayList.add
+                                   ↪ java.util.ArrayList.add(java.lang.Object)
                         ↪Method: testclasses.Testclass.doSomething2()
                               ↪ Referenced packages: 
                                    ↪ java.util
                               ↪ Referenced classes: 
                                    ↪ java.util.TreeSet
-                              ↪ Referenced behavior:
+                              ↪ Referenced behavior: 
                                    ↪ java.util.TreeSet()
-                                   ↪ java.util.TreeSet.add
-                                   ↪ java.util.TreeSet.clear 
+                                   ↪ java.util.TreeSet.add(java.lang.Object)
+                                   ↪ java.util.TreeSet.clear() 
