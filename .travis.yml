@@ -27,6 +27,7 @@ before_script:
 script:
   # set current branch variable
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - echo "$BRANCH"
   # clean, run sonar, generate javadoc jar
   - mvn clean verify sonar:sonar javadoc:jar
   # sonar quality gate breaker
