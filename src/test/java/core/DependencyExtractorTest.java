@@ -54,7 +54,7 @@ class DependencyExtractorTest {
     @Test
     void analyseClassesWithService() {
         List<String> classes = new ArrayList<>();
-        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "TestService.class");
+        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "Testservice.class");
         Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
         assertThat(analysedClasses.iterator().next().getClassInformations().first().isService()).isTrue();
     }

@@ -1,1 +1,57 @@
 language: java
+# skip the default installation phase
+install: true
+
+branches:
+  only:
+    - master
+
+addons:
+  sonarcloud:
+    organization: "thbingen"
+
+# disable shallow clone so sonar won't get messed up
+git:
+  depth: false
+
+env:
+  - NEO4J_CONF=/home/travis/build/qaware/adcl/nconf
+
+before_script:
+  #install neo4j
+  - wget -O - https://debian.neo4j.org/neotechnology.gpg.key | sudo apt-key add -
+  - echo 'deb https://debian.neo4j.org/repo stable/' | sudo tee -a /etc/apt/sources.list.d/neo4j.list
+  - sudo apt-get update
+  - sudo apt-get install neo4j=1:3.5.12
+  - mkdir nconf
+  - cp /etc/neo4j/neo4j.conf ./nconf
+  - echo "dbms.security.auth_enabled=false" >> ./nconf/neo4j.conf
+  - sudo neo4j start
+
+script:
+  # clean, run sonar, generate javadoc jar
+  - mvn clean verify sonar:sonar javadoc:jar
+  # sonar quality gate breaker
+  - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
+
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name adclTeam
+  - git config --local user.email adclTeam@gmail.com
+  - export TRAVIS_TAG=${TRAVIS_TAG:-Build$TRAVIS_BUILD_NUMBER}
+  - git tag "$TRAVIS_TAG"
+
+deploy:
+  # Deploying to GitHub Releases
+  provider: releases
+  api_key:
+    secure: cSgbgCOMFTDs7pTX2TxXxEsMJn823S4xJEsdozwbghJgqcqqQ5KpjlTUVQ7v4Enr+J8DqiG+tEcurlqtTzSRa1wz+GrOp+qa4oDf4PbCADoyjGrYK15jiTQfOrsMFeOtxG14FqIlAFB0BBEKePE3UxwpxpTiac9XFQh41BJHukTN7pL0rKYGQRUEMpZe0VoYE2kJlLeRd/36UuiWMJHIC4jmVBwtOCKDbtEDPQXKfRvi2G/hdneCsAlkA+YBSHRXaLKFVyLdVx1tDiBjqQUvfsLjAC8r5q3GhwxET78HfGK4AE8mt61w/8SY8C+Befw/pSSb/WlZ62FzIca8ZEelV1AKLKOd4EiGHG2XpViBNC+aUYYEVUUKMnQeScskY/kXT7Cwp9YMGbKPvxLigboO24h8PQC5hIViLexYTJGic/Spp5F+w34D8+vmnYg9Rldv3DW7ht9S1nICU8aMhE08ZIyK7v8a0vHk4y7WdaQZVRqT5Q2ouV1sNQx3pllCW58ReXhXY+ylJc1uGtKvlWpNZ1da24sDJQM3wF5cJueMM9SqhPH/9xOesvdNcTiZxD8PArfeV0pwH0n8GYr1at83q88mCrjBtYLlNp4SNHys+fpWrV+CemtKv+oNGp+Uhm6t+4ycAzV72pXtDCdAV+1jTcw6KZaVnAiyXYBHi2MKkhE=
+  file_glob: true
+  # JAR, JavaDoc JAR and Sources JAR
+  file: target/*.jar
+  skip_cleanup: true
+
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
