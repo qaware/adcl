@@ -109,6 +109,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
 
     /**
      * Adds a BehaviorInformation to the set of BehaviorInformation owned by the described class.
+     * @param behaviorInformation that will be added
      */
     public void addBehaviorInformation(BehaviorInformation behaviorInformation) {
         behaviorInformations.add(behaviorInformation);

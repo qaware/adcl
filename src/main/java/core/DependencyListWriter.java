@@ -16,7 +16,7 @@ import java.util.Collection;
 /**
  * The DependencyListWriter formats the extracted information and writes them into a file.
  */
-public class DependencyListWriter {
+class DependencyListWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyListWriter.class);
     private static String formatString15 = "%n %15s %s";
@@ -44,7 +44,7 @@ public class DependencyListWriter {
      * @param destinationPath     the destination path
      * @param fileName            the file name
      */
-    public static void writeListToFile(Collection<PackageInformation> packageInformations, String destinationPath, String fileName) {
+    static void writeListToFile(Collection<PackageInformation> packageInformations, String destinationPath, String fileName) {
         try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(destinationPath + "/" + fileName + ".txt"), StandardCharsets.UTF_8)) {
             fileWriter.write(generateDeepList(packageInformations));
         } catch (IOException e) {
@@ -70,7 +70,7 @@ public class DependencyListWriter {
      * @param packageInformation the package information
      * @return all information in form of a list
      */
-    public static String generateDeepList(PackageInformation packageInformation) {
+    static String generateDeepList(PackageInformation packageInformation) {
         StringBuilder deepList = new StringBuilder();
         deepList.append(String.format("Package: %s ", packageInformation.getPackageName()));
         packageInformation.getClassInformations().forEach(classInformation -> deepList.append(String.format("%n %5s %s", arrowDownRight, generateDeepList(classInformation))));
@@ -83,7 +83,7 @@ public class DependencyListWriter {
      * @param packageInformation the package information
      * @return a list containing a short overview about all packages,classes,methods referenced in this package
      */
-    public static String generateFlatList(PackageInformation packageInformation) {
+    static String generateFlatList(PackageInformation packageInformation) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Package: ").append(packageInformation.getPackageName());
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
@@ -102,7 +102,7 @@ public class DependencyListWriter {
      * @param classInformation the class information
      * @return all information in form of a list
      */
-    public static String generateDeepList(ClassInformation classInformation) {
+    static String generateDeepList(ClassInformation classInformation) {
         StringBuilder stringBuilder = new StringBuilder();
         if (classInformation.isService()) {
             stringBuilder.append("Class[Service]: ").append(classInformation.getClassName());
@@ -135,7 +135,7 @@ public class DependencyListWriter {
      * @param classInformation the class information
      * @return a list containing a short overview about all packages,classes,methods referenced in this class
      */
-    public static String generateFlatList(ClassInformation classInformation) {
+    static String generateFlatList(ClassInformation classInformation) {
         StringBuilder stringBuilder = new StringBuilder();
         if (classInformation.isService()) {
             stringBuilder.append("Class[Service]: ").append(classInformation.getClassName());
@@ -156,9 +156,10 @@ public class DependencyListWriter {
      * Generates a list giving a short overview about all packages,classes,methods referenced in this behavior.
      *
      * @param behaviorInformation the behavior information
+     * @param formatString that sholud ne used
      * @return a list containing a short overview about all packages,classes,methods referenced in this method
      */
-    public static String generateFlatList(BehaviorInformation behaviorInformation, String formatString) {
+    private static String generateFlatList(BehaviorInformation behaviorInformation, String formatString) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(String.format(formatString, arrowDownRight, behaviorInformation.getName()));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refPackages));

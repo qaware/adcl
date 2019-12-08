@@ -59,6 +59,9 @@ public class DependencyExtractor {
 
     /**
      * Gets CtClass from the ClassPool, if the Class is not contained in the ClassPool it gets created and added to the ClassPool.
+     * @param classFile path to the classfile
+     * @return the corresponding CTClass
+     * @throws IOException then the class file on the given is not found
      */
     private CtClass getOrCreateCtClass(String classFile) throws IOException {
         CtClass ctClass = classPool.getOrNull(classFile);
