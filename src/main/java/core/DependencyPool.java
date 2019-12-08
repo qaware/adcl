@@ -3,7 +3,7 @@ package core;
 import core.information.BehaviorInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
-import util.StringNameUtil;
+import util.NameParserUtil;
 
 import java.util.Collection;
 import java.util.TreeMap;
@@ -52,7 +52,7 @@ public class DependencyPool {
      * @param packageName the name of the package
      * @return the PackageInformation for the given name
      */
-    public PackageInformation getOrCreatePackageInformation(String packageName) {
+    PackageInformation getOrCreatePackageInformation(String packageName) {
         return getOrCreatePackageInformation(packageName, false);
     }
 
@@ -64,7 +64,7 @@ public class DependencyPool {
      * @param isInternal  set true if the given package is internal to the analysed project
      * @return the PackageInformation for the given name
      */
-    public PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
+    private PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
         if (packageInformationMap.containsKey(packageName)) {
             if (isInternal) {
                 PackageInformation packageInformation = packageInformationMap.get(packageName);
@@ -85,7 +85,7 @@ public class DependencyPool {
      * @param className the name of the class
      * @return the ClassInformation for the given name
      */
-    public ClassInformation getOrCreateClassInformation(String className) {
+    ClassInformation getOrCreateClassInformation(String className) {
         return getOrCreateClassInformation(className, false, false);
     }
 
@@ -97,7 +97,7 @@ public class DependencyPool {
      * @param packageInternal set true if the given class is internal to the analysed project
      * @return the ClassInformation for the given name
      */
-    public ClassInformation getOrCreateClassInformation(String className, boolean isService, boolean packageInternal) {
+    ClassInformation getOrCreateClassInformation(String className, boolean isService, boolean packageInternal) {
         if (classInformationMap.containsKey(className)) {
             if (isService) {
                 ClassInformation classInformation = classInformationMap.get(className);
@@ -106,7 +106,7 @@ public class DependencyPool {
             }
             return classInformationMap.get(className);
         }
-        PackageInformation packageInformation = getOrCreatePackageInformation(StringNameUtil.extractPackageName(className), packageInternal);
+        PackageInformation packageInformation = getOrCreatePackageInformation(NameParserUtil.extractPackageName(className), packageInternal);
 
         ClassInformation classInformation = new ClassInformation(className, isService);
         packageInformation.addClassInformation(classInformation);
@@ -121,15 +121,15 @@ public class DependencyPool {
      * @param isConstructor set true if the behavior is a constructor
      * @return the BehaviorInformation for the given name
      */
-    public BehaviorInformation getOrCreateBehaviorInformation(String behaviorName, boolean isConstructor) {
+    BehaviorInformation getOrCreateBehaviorInformation(String behaviorName, boolean isConstructor) {
         if (behaviorInformationMap.containsKey(behaviorName)) {
             return behaviorInformationMap.get(behaviorName);
         }
         ClassInformation classInformation;
         if (isConstructor) {
-            classInformation = getOrCreateClassInformation(StringNameUtil.cutOffParamaterList(behaviorName));
+            classInformation = getOrCreateClassInformation(NameParserUtil.cutOffParamaterList(behaviorName));
         } else {
-            classInformation = getOrCreateClassInformation(StringNameUtil.extractClassName(StringNameUtil.cutOffParamaterList(behaviorName)));
+            classInformation = getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(behaviorName)));
         }
         BehaviorInformation behaviorInformation = new BehaviorInformation(behaviorName, isConstructor);
         classInformation.addBehaviorInformation(behaviorInformation);
@@ -140,16 +140,16 @@ public class DependencyPool {
     /**
      * removes all acquired PackageInformation, ClassInformation and BehaviorInformation
      */
-    public void resetDataStorage() {
+    void resetDataStorage() {
         initializeDataStorage();
     }
 
     /**
      * Retrieve all acquired PackageInformation.
      *
-     * @return the PackageInformation.
+     * @return all created PackageInformation.
      */
-    public Collection<PackageInformation> retrievePackageInformation() {
+    Collection<PackageInformation> retrievePackageInformation() {
         return packageInformationMap.values();
     }
 }

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.TestUtil;
+import util.IOUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +36,7 @@ class DependencyListWriterTest {
     @BeforeAll
     static void loadFiles() {
         try {
-            expectedResultText = TestUtil.readFile("src/test/resources/txtfiles/expectedTextResultFromTestclass.txt", StandardCharsets.UTF_8);
+            expectedResultText = IOUtil.readFile("src/test/resources/txtfiles/expectedTextResultFromTestclass.txt", StandardCharsets.UTF_8);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
@@ -69,7 +69,7 @@ class DependencyListWriterTest {
         DependencyListWriter.writeListToFile(analysedClasses, "src/test/resources/txtfiles", "writeListToFileResult");
 
         try {
-            String generatedList = TestUtil.readFile("src/test/resources/txtfiles/writeListToFileResult.txt", StandardCharsets.UTF_8);
+            String generatedList = IOUtil.readFile("src/test/resources/txtfiles/writeListToFileResult.txt", StandardCharsets.UTF_8);
             assertThat(generatedList).isEqualTo(expectedResultText);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());

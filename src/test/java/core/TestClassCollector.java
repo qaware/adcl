@@ -4,7 +4,7 @@ package core;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
-import util.TestUtil;
+import util.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ class TestClassCollector {
             StringBuilder builder = new StringBuilder();
             ALG.generateFileList();
             ALG.getList().stream().map(File::getName).sorted().forEach(path -> builder.append(path).append(String.format("%n")));
-            assertThat(builder.toString()).isEqualTo(TestUtil.readFile(EXPECTED_CLASS_LIST, StandardCharsets.UTF_8));
+            assertThat(builder.toString()).isEqualTo(IOUtil.readFile(EXPECTED_CLASS_LIST, StandardCharsets.UTF_8));
         } catch (IOException ex) {
             LOGGER.error(ex::getMessage);
         }
