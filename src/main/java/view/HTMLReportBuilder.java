@@ -103,7 +103,8 @@ class HTMLReportBuilder {
      */
     private static ContainerTag createBehaviorItem(BehaviorInformation behaviorInformation) {
         List<ContainerTag> dependencyItems = new ArrayList<>();
-        behaviorInformation.getReferencedBehavior().forEach(dependencyInformation -> dependencyItems.add(HTMLReportBuilder.createDependencyItem(dependencyInformation.getName(), ((ChangelogDependencyInformation) dependencyInformation).getChangeStatus())));
+        behaviorInformation.getReferencedBehavior().stream().filter(ref -> ref instanceof ChangelogDependencyInformation).map(ref -> (ChangelogDependencyInformation) ref)
+                .forEach(dependencyInformation -> dependencyItems.add(HTMLReportBuilder.createDependencyItem(dependencyInformation.getName(), dependencyInformation.getChangeStatus())));
         return createLiWithNestedUl(behaviorInformation.isConstructor() ? "Constructor" : "Method", NameParserUtil.extractBehaviorName(behaviorInformation.getName()), dependencyItems);
     }
 
