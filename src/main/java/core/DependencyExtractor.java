@@ -20,7 +20,7 @@ import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.StringNameUtil;
+import util.NameParserUtil;
 
 /**
  * The DependencyExtractor can extract static dependencies from class files such as referenced packages, classes, methods.
@@ -59,6 +59,9 @@ public class DependencyExtractor {
 
     /**
      * Gets CtClass from the ClassPool, if the Class is not contained in the ClassPool it gets created and added to the ClassPool.
+     * @param classFile path to the classfile
+     * @return the corresponding CTClass
+     * @throws IOException then the class file on the given is not found
      */
     private CtClass getOrCreateCtClass(String classFile) throws IOException {
         CtClass ctClass = classPool.getOrNull(classFile);
@@ -119,7 +122,7 @@ public class DependencyExtractor {
         behaviorInformation.setReferencedBehavior(ctBehaviorBodyAnalyzer.getReferencedBehavior());
 
         SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        ctBehaviorBodyAnalyzer.getReferencedClasses().forEach(referencedClass -> referencedPackages.add(dependencyPool.getOrCreatePackageInformation(StringNameUtil.extractPackageName(referencedClass.getClassName()))));
+        ctBehaviorBodyAnalyzer.getReferencedClasses().forEach(referencedClass -> referencedPackages.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(referencedClass.getClassName()))));
         behaviorInformation.setReferencedPackages(referencedPackages);
     }
 }
