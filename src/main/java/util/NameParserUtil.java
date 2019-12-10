@@ -53,7 +53,7 @@ public class NameParserUtil {
      * @param completeClassName a complete class name
      * @return a simple class name without package name
      */
-    public static String extractSimpleClassNameFromCompleteCLassName(String completeClassName) {
+    public static String extractSimpleClassNameFromCompleteClassName(String completeClassName) {
         int startOfSimpleClassName = completeClassName.lastIndexOf('.');
         return completeClassName.substring(startOfSimpleClassName + 1);
     }

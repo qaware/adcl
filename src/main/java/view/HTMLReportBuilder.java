@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +55,7 @@ class HTMLReportBuilder {
                 ),
                 body(
                         div(
-                                h3("Dependency changelog from " + java.time.LocalDate.now()),
+                                h3("Dependency changelog from " + LocalDate.now()),
                                 ul(
                                         packageItems.toArray(new ContainerTag[0])
                                 ).attr("id", "parentUL"),
@@ -91,12 +92,7 @@ class HTMLReportBuilder {
                 behaviorItems.add(HTMLReportBuilder.createBehaviorItem(behaviorInformation));
             }
         });
-
-        if (classInformation.isService()) {
-            return createLiWithNestedUl("Class[Service]", NameParserUtil.extractSimpleClassNameFromCompleteCLassName(classInformation.getClassName()), behaviorItems);
-        }
-
-        return createLiWithNestedUl("Class", NameParserUtil.extractSimpleClassNameFromCompleteCLassName(classInformation.getClassName()), behaviorItems);
+        return createLiWithNestedUl(classInformation.isService() ? "Class[Service]" : "Class", NameParserUtil.extractSimpleClassNameFromCompleteClassName(classInformation.getClassName()), behaviorItems);
     }
 
     /**
@@ -108,10 +104,7 @@ class HTMLReportBuilder {
     private static ContainerTag createBehaviorItem(BehaviorInformation behaviorInformation) {
         List<ContainerTag> dependencyItems = new ArrayList<>();
         behaviorInformation.getReferencedBehavior().forEach(dependencyInformation -> dependencyItems.add(HTMLReportBuilder.createDependencyItem(dependencyInformation.getName(), ((ChangelogDependencyInformation) dependencyInformation).getChangeStatus())));
-        if (behaviorInformation.isConstructor()) {
-            return createLiWithNestedUl("Constructor", NameParserUtil.extractBehaviorName(behaviorInformation.getName()), dependencyItems);
-        }
-        return createLiWithNestedUl("Method", NameParserUtil.extractBehaviorName(behaviorInformation.getName()), dependencyItems);
+        return createLiWithNestedUl(behaviorInformation.isConstructor() ? "Constructor" : "Method", NameParserUtil.extractBehaviorName(behaviorInformation.getName()), dependencyItems);
     }
 
     /**
@@ -151,7 +144,7 @@ class HTMLReportBuilder {
      * @param destinationPath the destination folder for the created file.
      */
     private static void writeHTMLFile(String html, String destinationPath) {
-        try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(destinationPath + "/" + "changelog_" + java.time.LocalDate.now() + ".html"), StandardCharsets.UTF_8)) {
+        try (Writer fileWriter = new OutputStreamWriter(new FileOutputStream(destinationPath + "/" + "changelog_" + LocalDate.now() + ".html"), StandardCharsets.UTF_8)) {
             fileWriter.write(html);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
@@ -165,7 +158,7 @@ class HTMLReportBuilder {
      */
     private static String readCSSFile() {
         try {
-            return IOUtil.readFile("src/main/resources/view/treeviewCSS.html");
+            return IOUtil.readResourceIntoString("view/treeviewCSS.html");
         } catch (IOException e) {
             LOGGER.error("CSS File not found");
         }
@@ -179,7 +172,7 @@ class HTMLReportBuilder {
      */
     private static String readJSFile() {
         try {
-            return IOUtil.readFile("src/main/resources/view/treeviewJS.html");
+            return IOUtil.readResourceIntoString("view/treeviewJS.html");
         } catch (IOException e) {
             LOGGER.error("javascript File not found");
         }

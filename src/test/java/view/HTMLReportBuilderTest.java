@@ -10,11 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.IOUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -88,15 +91,14 @@ class HTMLReportBuilderTest {
     }
 
     @Test
-    void createHTMLReport() {
-        try {
-            Path path = Files.createTempDirectory("html");
-            HTMLReportBuilder.createHTMLReport(packages, path.toString() + "/");
-            String result = IOUtil.readFile(path.toString() + "/" + "changelog_" + java.time.LocalDate.now() + ".html").replace(java.time.LocalDate.now().toString(), "");
-            String expected = IOUtil.readFile("src/test/resources/html/" + "changelog_expected.html");
-            assertThat(result).isEqualToIgnoringWhitespace(expected);
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
+    void createHTMLReport() throws IOException {
+        Path path = Files.createTempDirectory("html");
+        HTMLReportBuilder.createHTMLReport(packages, path.toString());
+        File resultFile = Objects.requireNonNull(new File(path.toString()).listFiles())[0];
+
+        String result = IOUtil.readFile(resultFile.getPath()).replace(LocalDate.now().toString(), "");
+        String expected = IOUtil.readFile("src/test/resources/html/" + "changelog_expected.html");
+
+        assertThat(result).isEqualToIgnoringWhitespace(expected);
     }
 }

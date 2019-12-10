@@ -12,6 +12,9 @@ import util.IOUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -62,18 +65,17 @@ class DependencyListWriterTest {
     }
 
     @Test
-    void writeListToFile() {
+    void writeListToFile() throws IOException {
         List<String> classes = new ArrayList<>();
+        Path path = Files.createTempDirectory("DependencyWriterTest");
+
         classes.add("src/test/resources/testclassfiles/Testclass.class");
         Collection<PackageInformation> analysedClasses = dependencyExtractor.analyseClasses(classes);
-        DependencyListWriter.writeListToFile(analysedClasses, "src/test/resources/txtfiles", "writeListToFileResult");
 
-        try {
-            String generatedList = IOUtil.readFile("src/test/resources/txtfiles/writeListToFileResult.txt", StandardCharsets.UTF_8);
-            assertThat(generatedList).isEqualTo(expectedResultText);
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
+        DependencyListWriter.writeListToFile(analysedClasses, path.toString(), "writeListToFileResult");
+        String generatedList = IOUtil.readFile(Paths.get(path.toString(), "writeListToFileResult.txt").toString(), StandardCharsets.UTF_8);
+
+        assertThat(generatedList).isEqualTo(expectedResultText);
     }
 
     @Test

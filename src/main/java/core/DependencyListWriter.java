@@ -156,7 +156,7 @@ class DependencyListWriter {
      * Generates a list giving a short overview about all packages,classes,methods referenced in this behavior.
      *
      * @param behaviorInformation the behavior information
-     * @param formatString that sholud ne used
+     * @param formatString        that should be used
      * @return a list containing a short overview about all packages,classes,methods referenced in this method
      */
     private static String generateFlatList(BehaviorInformation behaviorInformation, String formatString) {

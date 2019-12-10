@@ -1,9 +1,10 @@
 package core.information;
 
+import java.util.Objects;
 import java.util.SortedSet;
 
 /**
- * Used then creating cheating to add additional meta information about the behavior, whenever it was added or deleted.
+ * * BehaviorInformation with additional change meta (whether it was added or deleted).
  */
 public class ChangelogDependencyInformation extends BehaviorInformation {
 
@@ -73,7 +74,7 @@ public class ChangelogDependencyInformation extends BehaviorInformation {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(super.hashCode(), changeStatus);
     }
 
     /**
