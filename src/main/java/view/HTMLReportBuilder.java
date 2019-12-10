@@ -4,6 +4,7 @@ import core.information.BehaviorInformation;
 import core.information.ChangelogDependencyInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
+import j2html.TagCreator;
 import j2html.tags.ContainerTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +23,12 @@ import java.util.List;
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;
+import static j2html.TagCreator.document;
 import static j2html.TagCreator.h3;
 import static j2html.TagCreator.head;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.li;
+import static j2html.TagCreator.meta;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.span;
 import static j2html.TagCreator.title;
@@ -48,21 +51,26 @@ class HTMLReportBuilder {
     static void createHTMLReport(Collection<PackageInformation> packageInformations, String destinationPath) {
         List<ContainerTag> packageItems = new ArrayList<>();
         packageInformations.stream().filter(PackageInformation::isInternalPackage).forEach(packageInformation -> packageItems.add(HTMLReportBuilder.createPackageItem(packageInformation)));
-        writeHTMLFile(html(
-                head(
-                        title("ADCL-Report"),
-                        rawHtml(readCSSFile())
-                ),
-                body(
-                        div(
-                                h3("Dependency changelog from " + LocalDate.now()),
-                                ul(
-                                        packageItems.toArray(new ContainerTag[0])
-                                ).attr("id", "parentUL"),
-                                rawHtml(readJSFile())
-                        ).attr(CSS_CLASS, "content")
-                )
-                ).renderFormatted(),
+        writeHTMLFile(
+                TagCreator.join(
+                        document(),
+                        html(
+                                head(
+                                        title("ADCL-Report"),
+                                        meta().withCharset("UTF-8"),
+                                        rawHtml(readCSSFile())
+                                ),
+                                body(
+                                        div(
+                                                h3("Dependency changelog from " + LocalDate.now()),
+                                                ul(
+                                                        packageItems.toArray(new ContainerTag[0])
+                                                ).attr("id", "parentUL"),
+                                                rawHtml(readJSFile())
+                                        ).attr(CSS_CLASS, "content")
+                                )
+                        ).renderFormatted()
+                ).render(),
                 destinationPath
         );
     }

@@ -96,8 +96,8 @@ class HTMLReportBuilderTest {
         HTMLReportBuilder.createHTMLReport(packages, path.toString());
         File resultFile = Objects.requireNonNull(new File(path.toString()).listFiles())[0];
 
-        String result = IOUtil.readFile(resultFile.getPath()).replace(LocalDate.now().toString(), "");
-        String expected = IOUtil.readFile("src/test/resources/html/" + "changelog_expected.html");
+        String result = IOUtil.readFile(resultFile.getPath()).replaceFirst("Dependency changelog from .+", "Dependency changelog from");
+        String expected = IOUtil.readFile("src/test/resources/html/changelog_expected.html");
 
         assertThat(result).isEqualToIgnoringWhitespace(expected);
     }
