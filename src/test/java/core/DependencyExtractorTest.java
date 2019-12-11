@@ -7,11 +7,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.TestUtil;
+import util.IOUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,7 +27,7 @@ class DependencyExtractorTest {
     @BeforeAll
     static void loadFiles() {
         try {
-            expectedResultText = TestUtil.readFile(SRC_TEST_RESOURCES_TXTFILES_EXPECTED, StandardCharsets.UTF_8);
+            expectedResultText = IOUtil.readFile(SRC_TEST_RESOURCES_TXTFILES_EXPECTED, StandardCharsets.UTF_8);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }

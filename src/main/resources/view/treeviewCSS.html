@@ -1,0 +1,92 @@
+<style>
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        text-align: left;
+        background-color: #fff;
+    }
+
+    .content {
+        max-width: 700px;
+        margin: auto;
+    }
+
+    .bold {
+        font-weight: bold
+    }
+
+    *, ::after, ::before {
+        box-sizing: border-box;
+    }
+
+    /* Remove the default bullets */
+    ul, #parentUL {
+        list-style-type: none;
+    }
+
+    /* Remove margins and padding from the parent ul */
+    #parentUL {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Style the arrow */
+    .arrow {
+        cursor: pointer;
+        /* user-select: none;  Prevent text selection */
+    }
+
+    /* Create the arrow with a unicode, and style it */
+    .arrow::before {
+        content: "\25B6";
+        color: black;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    /* Rotate the arrow icon when clicked on (using JavaScript) */
+    .arrow-down::before {
+        transform: rotate(90deg);
+    }
+
+    .dependency-added {
+        display: inline-block;
+        background-color: lightgreen;
+    }
+
+    .dependency-added::before {
+        color: black;
+        display: inline-block;
+        margin-right: 6px;
+        content: "+ added:";
+        background-color: lightgreen;
+    }
+
+    .dependency-deleted {
+        display: inline-block;
+        background-color: #fd7c6e;
+    }
+
+    .dependency-deleted::before {
+        color: black;
+        display: inline-block;
+        margin-right: 6px;
+        content: "- deleted:";
+        background-color: #fd7c6e;
+    }
+
+    /* Hide the nested list */
+    .nested {
+        display: none;
+    }
+
+    /* Show the nested list when the user clicks on the arrow (with JavaScript) */
+    .active {
+        display: block;
+    }
+</style>

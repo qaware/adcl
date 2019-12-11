@@ -8,10 +8,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.TestUtil;
+import util.IOUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +39,7 @@ class DependencyListWriterTest {
     @BeforeAll
     static void loadFiles() {
         try {
-            expectedResultText = TestUtil.readFile("src/test/resources/txtfiles/expectedTextResultFromTestclass.txt", StandardCharsets.UTF_8);
+            expectedResultText = IOUtil.readFile("src/test/resources/txtfiles/expectedTextResultFromTestclass.txt", StandardCharsets.UTF_8);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
@@ -62,18 +65,17 @@ class DependencyListWriterTest {
     }
 
     @Test
-    void writeListToFile() {
+    void writeListToFile() throws IOException {
         List<String> classes = new ArrayList<>();
+        Path path = Files.createTempDirectory("DependencyWriterTest");
+
         classes.add("src/test/resources/testclassfiles/Testclass.class");
         Collection<PackageInformation> analysedClasses = dependencyExtractor.analyseClasses(classes);
-        DependencyListWriter.writeListToFile(analysedClasses, "src/test/resources/txtfiles", "writeListToFileResult");
 
-        try {
-            String generatedList = TestUtil.readFile("src/test/resources/txtfiles/writeListToFileResult.txt", StandardCharsets.UTF_8);
-            assertThat(generatedList).isEqualTo(expectedResultText);
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
+        DependencyListWriter.writeListToFile(analysedClasses, path.toString(), "writeListToFileResult");
+        String generatedList = IOUtil.readFile(Paths.get(path.toString(), "writeListToFileResult.txt").toString(), StandardCharsets.UTF_8);
+
+        assertThat(generatedList).isEqualTo(expectedResultText);
     }
 
     @Test
