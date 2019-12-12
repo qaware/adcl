@@ -2,9 +2,9 @@ language: java
 # skip the default installation phase
 install: true
 
-#branches:
-#  only:
-#    - master
+branches:
+  only:
+    - master
 
 addons:
   sonarcloud:
