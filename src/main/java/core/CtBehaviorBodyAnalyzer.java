@@ -47,14 +47,14 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
 
     @Override
     public void edit(MethodCall m) {
-        String signature = parseSignature(m.getSignature());
+        String signature = parseJVMSignatureIntoMethodSignature(m.getSignature());
         referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
         referencedClasses.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
     }
 
     @Override
     public void edit(NewExpr newExpr) {
-        String signature = parseSignature(newExpr.getSignature());
+        String signature = parseJVMSignatureIntoMethodSignature(newExpr.getSignature());
         referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(newExpr.getClassName() + signature, true));
         referencedClasses.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
     }
@@ -65,7 +65,7 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
      * @param signature the jvm style signature
      * @return list of types
      */
-    private List<String> parseSignatureIntoParameterTypes(String signature) {
+    private List<String> parseJVMSignatureIntoParameterTypeList(String signature) {
         String[] split = signature.replace("/", ".").replace("(", "").replace(")", "").split(";");
 
         Pattern pattern = Pattern.compile("[a-z]");
@@ -85,8 +85,8 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
      * @param signature the jvm style signature
      * @return types in style of (Type,Type,Type,...)
      */
-    private String parseSignature(String signature) {
-        return parseSignatureIntoParameterTypes(signature.substring(signature.indexOf('('), signature.lastIndexOf(')'))).toString().replace("[", "(").replace("]", ")").replace(" ", "");
+    private String parseJVMSignatureIntoMethodSignature(String signature) {
+        return parseJVMSignatureIntoParameterTypeList(signature.substring(signature.indexOf('('), signature.lastIndexOf(')'))).toString().replace("[", "(").replace("]", ")").replace(" ", "");
     }
 
     /**
@@ -95,7 +95,7 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
      * @param signature in JVM Type signature
      */
     private void addParameterTypesAsDependencies(String signature) {
-        List<String> parameterTypes = parseSignatureIntoParameterTypes(signature);
+        List<String> parameterTypes = parseJVMSignatureIntoParameterTypeList(signature);
         parameterTypes.forEach(parameterType -> referencedClasses.add(dependencyPool.getOrCreateClassInformation(parameterType)));
     }
 
