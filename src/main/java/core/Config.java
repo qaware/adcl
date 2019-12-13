@@ -29,7 +29,8 @@ import java.util.function.Function;
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
-    private static Properties properties;
+    @NotNull
+    private static Properties properties = new Properties();
 
     /**
      * To be called from the main class. Loads all config sources
