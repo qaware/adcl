@@ -58,7 +58,7 @@ public class Config {
         }
 
         // Prio 3: properties file
-        Path configPath = get("configPath", Paths.get("config.properties"));
+        Path configPath = getPath("configPath", Paths.get("config.properties"));
 
         if (Files.exists(configPath)) {
             Properties tmp = properties;
@@ -205,7 +205,7 @@ public class Config {
      * @param def the default value if not present or invalid value
      * @return the option value
      */
-    private static Path get(String key, Path def) {
+    public static Path getPath(String key, Path def) {
         return tryParse(key, s -> {
             try {
                 return Paths.get(s);
@@ -217,7 +217,7 @@ public class Config {
 
     private static <T> T tryParse(String key, @NotNull Function<String, T> parser, T def) {
         try {
-            String raw = properties.getProperty(key);
+            String raw = key == null ? null : properties.getProperty(key);
             if (raw == null) return def;
             T res = parser.apply(raw);
             return res == null ? def : res;
