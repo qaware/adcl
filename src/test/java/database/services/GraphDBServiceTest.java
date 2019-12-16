@@ -5,15 +5,22 @@ import core.DependencyExtractor;
 import core.information.BehaviorInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.kernel.configuration.BoltConnector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -23,17 +30,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 @ActiveProfiles(profiles = "test")
 public class GraphDBServiceTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GraphDBServiceTest.class);
     private static final String SRC_TEST_RESOURCES_TESTCLASSFILES = "src/test/resources/testclassfiles/Testclass.class";
 
     private static Collection<PackageInformation> packages;
+    private static GraphDatabaseService dbService;
 
     @Autowired
     GraphDBService graphDBService;
 
     @BeforeAll
-    static void loadPackages() {
+    static void setup() {
+        BoltConnector bolt = new BoltConnector("0");
+
+        dbService = new GraphDatabaseFactory()
+                .newEmbeddedDatabaseBuilder(new File("neo4j"))
+                .setConfig(bolt.type, "BOLT")
+                .setConfig(bolt.enabled, "true")
+                .setConfig(bolt.listen_address, "localhost:7687")
+                .newGraphDatabase();
+
         packages = new DependencyExtractor().analyseClasses(Collections.singletonList(SRC_TEST_RESOURCES_TESTCLASSFILES));
+    }
+
+    @AfterAll
+    static void cleanup() throws IOException {
+        dbService.shutdown();
+        FileSystemUtils.deleteRecursively(new File("neo4j"));
+        FileSystemUtils.deleteRecursively(new File("certificates"));
+        Files.deleteIfExists(Paths.get("store_lock"));
     }
 
     @Test
