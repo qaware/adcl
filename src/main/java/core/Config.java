@@ -52,9 +52,10 @@ public class Config {
 
         // Prio 1: properties !properties have to start with 'adcl.'
         for (Map.Entry<Object, Object> property : System.getProperties().entrySet()) {
-            if (!(property.getKey() instanceof String) || !(property.getValue() instanceof String)) continue;
-            String key = (String) property.getKey();
-            if (key.startsWith("adcl.")) properties.put(key.substring(5), property.getValue());
+            if (property.getKey() instanceof String && property.getValue() instanceof String) {
+                String key = (String) property.getKey();
+                if (key.startsWith("adcl.")) properties.put(key.substring(5), property.getValue());
+            }
         }
 
         // Prio 3: properties file

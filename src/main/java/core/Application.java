@@ -13,6 +13,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -21,10 +23,13 @@ import java.util.stream.Collectors;
 @SpringBootConfiguration
 @ComponentScan(basePackages = "database.*")
 public class Application {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Config.load(args);
 
-        ClassCollector alg = new ClassCollector(Config.get("project.uri", "."));
+        Path scanLocation = Config.getPath("project.uri", null);
+        if (scanLocation == null) throw new IOException("project.uri is not properly defined in config.properties");
+
+        ClassCollector alg = new ClassCollector(scanLocation.toString());
         alg.generateFileList();
         DependencyExtractor extractor = new DependencyExtractor();
 
