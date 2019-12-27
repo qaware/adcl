@@ -1,9 +1,6 @@
 package core;
 
-import core.information.BehaviorInformation;
-import core.information.ChangelogDependencyInformation;
-import core.information.ClassInformation;
-import core.information.PackageInformation;
+import core.information.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -11,9 +8,9 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DivExtractorTest {
+class DiffExtractorTest {
 
-    private static DivExtractor divExtractor;
+    private static DiffExtractor diffExtractor;
     private static Collection<PackageInformation> packageOld;
     private static Collection<PackageInformation> packageNew;
 
@@ -80,19 +77,27 @@ class DivExtractorTest {
         dsetFour.add(depedencyFour);
         classFourMethodFour.setReferencedBehavior(dsetFour);
 
-        divExtractor = new DivExtractor(Collections.singletonList(packageOldOne), Collections.singletonList(packageNewTwo));
+        diffExtractor = new DiffExtractor(Collections.singletonList(packageOldOne), Collections.singletonList(packageNewTwo));
 
     }
 
     @Test
-    void getAdded() {
-        Collection<PackageInformation> change = divExtractor.getAdded();
-        assertThat(change.contains(packageNew.iterator().next())).isTrue();
-    }
+    void getChanged() {
+        ClassInformation classOne = new ClassInformation("packageone.ClassOne");
+        ClassInformation classTwo = new ClassInformation("packageone.ClassTwo");
+        ClassInformation classThree = new ClassInformation("packageone.ClassThree");
 
-    @Test
-    void getDeleted() {
-        Collection<PackageInformation> change = divExtractor.getDeleted();
-        assertThat(change.contains(packageOld.iterator().next())).isTrue();
+        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChanged());
+        Collections.sort(change);
+
+        assertThat(change).isNotEmpty();
+        assertThat(change.get(0).getPackageName()).isEqualTo("packageone");
+        assertThat(change.get(0).getClassInformations().contains(classOne)).isTrue();
+        assertThat(change.get(0).getClassInformations().contains(classTwo)).isTrue();
+        assertThat(change.get(0).getClassInformations().contains(classThree)).isTrue();
+        assertThat(change.get(0).getClassInformations().first()
+                .getBehaviorInformations().first()
+                .getReferencedBehavior().first()).isInstanceOf(ChangelogDependencyInformation.class)
+                .hasFieldOrPropertyWithValue("changeStatus", ChangelogDependencyInformation.ChangeStatus.DELETED);
     }
 }
