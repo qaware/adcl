@@ -1,23 +1,26 @@
 package core.information;
 
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import java.util.Objects;
 import java.util.SortedSet;
 
 /**
  * * BehaviorInformation with additional change meta (whether it was added or deleted).
  */
-public class ChangelogDependencyInformation extends MethodInformation {
+@NodeEntity(label = "changelog")
+public class ChangelogDependencyInformation extends BehaviorInformation {
 
     private ChangeStatus changeStatus;
 
     /**
      * Instantiates a new Behavior information.
      *
-     * @param methodInformation the behavior to copy from
+     * @param behaviorInformation the behavior to copy from
      * @param changeStatus        whenever this behavior was deleted or added
      */
-    public ChangelogDependencyInformation(MethodInformation methodInformation, ChangeStatus changeStatus) {
-        super(methodInformation.getName(), methodInformation.getPackageDependencies(), methodInformation.getClassDependencies(), methodInformation.getMethodDependencies(), methodInformation.isConstructor());
+    public ChangelogDependencyInformation(BehaviorInformation behaviorInformation, ChangeStatus changeStatus) {
+        super(behaviorInformation.getName(), behaviorInformation.getReferencedPackages(), behaviorInformation.getReferencedClasses(), behaviorInformation.getReferencedBehavior(), behaviorInformation.isConstructor());
         this.changeStatus = changeStatus;
     }
 
@@ -37,14 +40,14 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * Instantiates a new Behavior information.
      *
      * @param name               the name of the behavior
-     * @param packageDependencies the referenced packages
-     * @param classDependencies  the referenced classes
-     * @param methodDependencies the referenced behavior
+     * @param referencedPackages the referenced packages
+     * @param referencedClasses  the referenced classes
+     * @param referencedBehavior the referenced behavior
      * @param isConstructor      true if behavior is constructor
      * @param changeStatus       whenever this behavior was deleted or added
      */
-    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
-        super(name, packageDependencies, classDependencies, methodDependencies, isConstructor);
+    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<BehaviorInformation> referencedBehavior, boolean isConstructor, ChangeStatus changeStatus) {
+        super(name, referencedPackages, referencedClasses, referencedBehavior, isConstructor);
         this.changeStatus = changeStatus;
     }
 

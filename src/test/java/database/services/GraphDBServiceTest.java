@@ -2,9 +2,8 @@ package database.services;
 
 import core.Application;
 import core.DependencyExtractor;
-import core.information.MethodInformation;
-import core.information.ClassInformation;
-import core.information.PackageInformation;
+import core.DiffExtractor;
+import core.information.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -75,9 +75,57 @@ public class GraphDBServiceTest {
         ClassInformation testClass = testPackage.getClassInformations().first();
         assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
 
-        MethodInformation testMethod = testClass.getMethodInformations().first();
-        assertThat(testMethod).isEqualTo(graphDBService.getMethodRepository().findByName(testMethod.getName()));
+        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
+        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
 
         graphDBService.getPackageRepository().deleteAll(packages);
+    }
+
+    @Test
+    void saveChangelogTest() {
+        Collection<PackageInformation> changes = new DiffExtractor(packages, new ArrayList<>()).getChanged();
+        ChangelogInformation changelogInformation = new ChangelogInformation(changes, null, null);
+        graphDBService.saveChangelog(changelogInformation);
+
+        changelogInformation = graphDBService.getChangeLogRepository().findAll().iterator().next();
+        assertThat(changelogInformation).isNotNull();
+        assertThat(changelogInformation.getChangelog()).isNotEmpty();
+
+        PackageInformation testPackage = graphDBService.getPackageRepository().findByPackageName("testclasses");
+        assertThat(testPackage).isNotNull();
+        assertThat(testPackage).isInstanceOf(PackageInformation.class);
+
+        ClassInformation testClass = testPackage.getClassInformations().first();
+        assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
+
+        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
+        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
+
+        assertThat(testBehavior.getReferencedBehavior()).hasOnlyElementsOfType(ChangelogDependencyInformation.class);
+
+        graphDBService.getChangeLogRepository().delete(changelogInformation);
+    }
+
+    @Test
+    void saveVersionTest() {
+        graphDBService.saveVersion(new VersionInformation(packages, "test"));
+        VersionInformation version = graphDBService.getVersionRepository().findVersionInformationByVersionName("test");
+        assertThat(version).isNotNull();
+
+        PackageInformation testPackage = version.getPackageInformations().stream()
+                .filter(packageInformation -> packageInformation.getPackageName().equals("testclasses")).findFirst().orElse(null);
+        assertThat(testPackage).isNotNull();
+        assertThat(testPackage).isInstanceOf(PackageInformation.class);
+        assertThat(testPackage).isEqualTo(packages.stream()
+                .filter(packageInformation -> packageInformation.getPackageName().equals("testclasses"))
+                .findFirst().orElse(null));
+
+        ClassInformation testClass = testPackage.getClassInformations().first();
+        assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
+
+        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
+        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
+
+        graphDBService.getVersionRepository().delete(version);
     }
 }
