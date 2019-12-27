@@ -44,6 +44,12 @@ public class ClassInformation implements Comparable<ClassInformation> {
     }
 
     /**
+     * Is needed for Spring Data, should not be used otherwise.
+     */
+    private ClassInformation() {
+    }
+
+    /**
      * Instantiates a new Class information.
      *
      * @param className            the name of the java class
@@ -109,6 +115,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
 
     /**
      * Adds a BehaviorInformation to the set of BehaviorInformation owned by the described class.
+     *
      * @param behaviorInformation that will be added
      */
     public void addBehaviorInformation(BehaviorInformation behaviorInformation) {

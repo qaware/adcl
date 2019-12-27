@@ -1,11 +1,14 @@
 package core.information;
 
+import org.neo4j.ogm.annotation.NodeEntity;
+
 import java.util.Objects;
 import java.util.SortedSet;
 
 /**
  * * BehaviorInformation with additional change meta (whether it was added or deleted).
  */
+@NodeEntity(label = "changelog")
 public class ChangelogDependencyInformation extends BehaviorInformation {
 
     private ChangeStatus changeStatus;
