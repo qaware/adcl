@@ -4,6 +4,8 @@ import core.information.BehaviorInformation;
 import core.information.ChangelogDependencyInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -25,6 +27,9 @@ public class DiffExtractor {
         SortedSet<PackageInformation> before = new TreeSet<>(old);
         SortedSet<PackageInformation> after = new TreeSet<>(analysed);
         diff(before, after);
+        print(before);
+        print(after);
+        print(changed);
     }
 
 
@@ -343,5 +348,18 @@ public class DiffExtractor {
                 compare = -1;
             return this;
         }
+    }
+
+    /**
+     * Prints both package informations before and after
+     */
+    public void print(SortedSet<PackageInformation> packageInformation){
+        Logger logger = LoggerFactory.getLogger(DiffExtractor.class);
+        packageInformation.forEach(packageInformation1->packageInformation1.getClassInformations().forEach(classInformation->classInformation.getBehaviorInformations().forEach(behaviorInformation->{
+            logger.info("Package: "+ packageInformation1.getPackageName() + "|| Klasse: "+ classInformation.getClassName() + "\n");
+            behaviorInformation.getReferencedClasses().forEach(l -> logger.info(" " + "Referenzierte Klassen:" +l.getClassName() + "\n"));
+            behaviorInformation.getReferencedBehavior().forEach(referencedBehavior->logger.info("Referenzierte Methode: " + referencedBehavior.getName() + "\n"));
+            logger.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        })));
     }
 }
