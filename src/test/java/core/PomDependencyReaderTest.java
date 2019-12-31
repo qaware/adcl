@@ -22,7 +22,7 @@ public class PomDependencyReaderTest {
     @Test
     void test() throws IOException, XmlPullParserException {
         MavenXpp3Reader in = new MavenXpp3Reader();
-        Model model = in.read(new FileReader("pom.xml"));
+        Model model = in.read(new FileReader("src/test/resources/Pom/pom.xml"));
         List<Dependency> list = model.getDependencies();
         List<Dependency> list2 = reader.readDependency();
         for(int i=0; i<list.size(); i++){
