@@ -14,11 +14,10 @@ public class PomDependencyReader {
     MavenXpp3Reader reader;
     Model model;
     InputStream in;
-    public PomDependencyReader() throws FileNotFoundException {
-        super();
+    public PomDependencyReader(String path) throws FileNotFoundException {
         reader = new MavenXpp3Reader();
         model = null;
-        in = new FileInputStream("pom.xml");
+        in = new FileInputStream(path);
     }
     public List<Dependency> readDependency() {
         try {
