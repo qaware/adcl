@@ -15,7 +15,6 @@ import java.util.*;
 public class PomDependencyReader {
     private static final Logger LOGGER = LoggerFactory.getLogger(PomDependencyReader.class);
     private String path;
-
     /**
      * Init PomDependencyReader
      * @param path Path describes where the pom.xml file is
