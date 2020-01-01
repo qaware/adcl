@@ -41,7 +41,7 @@ public class PomDependencyReader {
     }
 
     /**
-     * Prints arraylist out
+     * Prints an arraylist out
      */
     public void printListDependency(){
         try {
