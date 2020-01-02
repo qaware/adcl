@@ -1,7 +1,7 @@
 package core;
 
 
-import core.information.BehaviorInformation;
+import core.information.MethodInformation;
 import core.information.PackageInformation;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -81,20 +81,20 @@ public class DependencyExtractor {
         CtClass ctClass = getOrCreateCtClass(className);
         boolean isService = ctClass.hasAnnotation("org.springframework.stereotype.Service");
         dependencyPool.getOrCreateClassInformation(ctClass.getName(), isService, true);
-        createBehaviorInformations(ctClass);
+        createMethodInformations(ctClass);
     }
 
     /**
-     * Extracts CtBehaviors from the CtClass and creates for a BehaviorInformation.
+     * Extracts CtMethods from the CtClass and creates for a MethodInformation.
      *
-     * @param ctClass CtClass from which CtBehaviors are taken from.
+     * @param ctClass CtClass from which CtMethods are taken from.
      */
-    private void createBehaviorInformations(CtClass ctClass) {
+    private void createMethodInformations(CtClass ctClass) {
 
-        CtBehavior[] ctBehaviors = ctClass.getDeclaredBehaviors();
-        Arrays.stream(ctBehaviors).forEach(ctBehavior -> {
+        CtBehavior[] ctMethods = ctClass.getDeclaredBehaviors();
+        Arrays.stream(ctMethods).forEach(ctBehavior -> {
             try {
-                createBehaviorInformation(ctBehavior);
+                createMethodInformation(ctBehavior);
             } catch (CannotCompileException | NotFoundException e) {
                 LOGGER.error(e.getMessage());
             }
@@ -102,27 +102,27 @@ public class DependencyExtractor {
     }
 
     /**
-     * Extracts all methods and classes referenced by the method or constructor represented by the CtBehavior.
+     * Extracts all methods and classes referenced by the method or constructor represented by the CtMethod.
      *
-     * @param ctBehavior from which we extract the referenced methods from.
-     * @throws CannotCompileException CtBehavior body cannot be compiled
-     * @throws NotFoundException      if parameter types not set in CtBehavior
+     * @param ctMethods from which we extract the referenced methods from.
+     * @throws CannotCompileException CtMethod body cannot be compiled
+     * @throws NotFoundException      if parameter types not set in CtMethods
      */
-    private void createBehaviorInformation(CtBehavior ctBehavior) throws CannotCompileException, NotFoundException {
-        CtBehaviorBodyAnalyzer ctBehaviorBodyAnalyzer = new CtBehaviorBodyAnalyzer();
-        ctBehaviorBodyAnalyzer.analyse(ctBehavior);
-        BehaviorInformation behaviorInformation;
-        if (ctBehavior instanceof CtConstructor) {
-            behaviorInformation = dependencyPool.getOrCreateBehaviorInformation(ctBehavior.getLongName(), true);
+    private void createMethodInformation(CtBehavior ctMethods) throws CannotCompileException, NotFoundException {
+        CtMethodBodyAnalyzer ctMethodBodyAnalyzer = new CtMethodBodyAnalyzer();
+        ctMethodBodyAnalyzer.analyse(ctMethods);
+        MethodInformation methodInformation;
+        if (ctMethods instanceof CtConstructor) {
+            methodInformation = dependencyPool.getOrCreateMethodInformation(ctMethods.getLongName(), true);
         } else {
-            behaviorInformation = dependencyPool.getOrCreateBehaviorInformation(ctBehavior.getLongName(), false);
+            methodInformation = dependencyPool.getOrCreateMethodInformation(ctMethods.getLongName(), false);
         }
 
-        behaviorInformation.setReferencedClasses(ctBehaviorBodyAnalyzer.getReferencedClasses());
-        behaviorInformation.setReferencedBehavior(ctBehaviorBodyAnalyzer.getReferencedBehavior());
+        methodInformation.setReferencedClasses(ctMethodBodyAnalyzer.getReferencedClasses());
+        methodInformation.setReferencedMethods(ctMethodBodyAnalyzer.getReferencedMethods());
 
         SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        ctBehaviorBodyAnalyzer.getReferencedClasses().forEach(referencedClass -> referencedPackages.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(referencedClass.getClassName()))));
-        behaviorInformation.setReferencedPackages(referencedPackages);
+        ctMethodBodyAnalyzer.getReferencedClasses().forEach(referencedClass -> referencedPackages.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(referencedClass.getClassName()))));
+        methodInformation.setReferencedPackages(referencedPackages);
     }
 }

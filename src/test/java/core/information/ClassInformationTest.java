@@ -23,13 +23,13 @@ class ClassInformationTest {
         referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
         SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
         referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<BehaviorInformation> referencedBehavior = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        referencedBehavior.add(new BehaviorInformation(TEST_CLASS_TEST_2, false));
-        SortedSet<BehaviorInformation> behaviorInformations = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        behaviorInformations.add(new BehaviorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedBehavior, true));
-        behaviorInformations.add(new BehaviorInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedBehavior, false));
+        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        referencedMethods.add(new MethodInformation(TEST_CLASS_TEST_2, false));
+        SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodInformations.add(new MethodInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods, true));
+        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedMethods, false));
 
-        sut = new ClassInformation(TEST_TEST_CLASS, behaviorInformations, false);
+        sut = new ClassInformation(TEST_TEST_CLASS, methodInformations, false);
     }
 
     @Test
@@ -49,24 +49,24 @@ class ClassInformationTest {
 
     @Test
     void getConstructorInformations() {
-        sut.getBehaviorInformations().forEach(behaviorInformation -> {
-            if (behaviorInformation.isConstructor()) {
-                assertThat(behaviorInformation.getName()).isEqualTo(TEST_CLASS);
+        sut.getMethodInformations().forEach(methodInformation -> {
+            if (methodInformation.isConstructor()) {
+                assertThat(methodInformation.getName()).isEqualTo(TEST_CLASS);
             }
         });
     }
 
     @Test
     void getMethodInformations() {
-        sut.getBehaviorInformations().forEach(behaviorInformation -> {
-            if (!behaviorInformation.isConstructor()) {
-                assertThat(behaviorInformation.getName()).isEqualTo(TEST_CLASS_TEST_1);
+        sut.getMethodInformations().forEach(methodInformation -> {
+            if (!methodInformation.isConstructor()) {
+                assertThat(methodInformation.getName()).isEqualTo(TEST_CLASS_TEST_1);
             }
         });
     }
 
     @Test
-    void getReferencedBehavior() {
-        assertThat(sut.getReferencedBehavior().first().getName()).isEqualTo(TEST_CLASS_TEST_2);
+    void getReferencedMethods() {
+        assertThat(sut.getReferencedMethods().first().getName()).isEqualTo(TEST_CLASS_TEST_2);
     }
 }
