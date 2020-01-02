@@ -1,7 +1,7 @@
 package database.services;
 
 import core.information.PackageInformation;
-import database.repositories.BehaviorRepository;
+import database.repositories.MethodRepository;
 import database.repositories.ClassRepository;
 import database.repositories.PackageRepository;
 import org.springframework.stereotype.Service;
@@ -16,20 +16,20 @@ import java.util.Collection;
 public class GraphDBService {
     private PackageRepository packageRepository;
     private ClassRepository classRepository;
-    private BehaviorRepository behaviorRepository;
+    private MethodRepository methodRepository;
 
     /**
      * Instantiates a new GraphDBService.
      *
      * @param packageRepository  {@link PackageRepository}
      * @param classRepository    {@link ClassRepository}
-     * @param behaviorRepository {@link BehaviorRepository}
+     * @param methodRepository {@link MethodRepository}
      */
     public GraphDBService(PackageRepository packageRepository, ClassRepository classRepository,
-                          BehaviorRepository behaviorRepository) {
+                          MethodRepository methodRepository) {
         this.packageRepository = packageRepository;
         this.classRepository = classRepository;
-        this.behaviorRepository = behaviorRepository;
+        this.methodRepository = methodRepository;
     }
 
     /**
@@ -41,7 +41,7 @@ public class GraphDBService {
     public void saveAllNodes(Collection<PackageInformation> packages) {
         packages.forEach(packageInformation -> {
             packageInformation.getClassInformations().forEach(classInformation -> {
-                getBehaviorRepository().saveAll(classInformation.getBehaviorInformations());
+                getMethodRepository().saveAll(classInformation.getMethodInformations());
                 getClassRepository().save(classInformation);
             });
             getPackageRepository().save(packageInformation);
@@ -56,8 +56,8 @@ public class GraphDBService {
         return classRepository;
     }
 
-    public BehaviorRepository getBehaviorRepository() {
-        return behaviorRepository;
+    public MethodRepository getMethodRepository() {
+        return methodRepository;
     }
 
 

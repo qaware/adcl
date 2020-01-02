@@ -7,14 +7,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
-class BehaviorInformationTest {
+class MethodInformationTest {
     private static final String TEST_PACKAGE_2 = "testPackage2";
     private static final String TEST_TEST_CLASS = "test.TestClass";
     private static final String TEST_CLASS_TEST = "TestClass.test";
     private static final String TEST_TEST_METHOD = "Test.testMethod";
-    private BehaviorInformation sut;
+    private MethodInformation sut;
 
     @BeforeEach
     void setUp() {
@@ -22,9 +21,9 @@ class BehaviorInformationTest {
         referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
         SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
         referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<BehaviorInformation> referencedBehavior = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        referencedBehavior.add(new BehaviorInformation(TEST_CLASS_TEST, false));
-        sut = new BehaviorInformation(TEST_TEST_METHOD, referencedPackages, referencedClasses, referencedBehavior, false);
+        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        referencedMethods.add(new MethodInformation(TEST_CLASS_TEST, false));
+        sut = new MethodInformation(TEST_TEST_METHOD, referencedPackages, referencedClasses, referencedMethods, false);
     }
 
     @Test
@@ -43,7 +42,7 @@ class BehaviorInformationTest {
     }
 
     @Test
-    void getReferencedBehavior() {
-        assertThat(sut.getReferencedBehavior().first().getName()).isEqualTo(TEST_CLASS_TEST);
+    void getReferencedMethods() {
+        assertThat(sut.getReferencedMethods().first().getName()).isEqualTo(TEST_CLASS_TEST);
     }
 }

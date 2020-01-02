@@ -20,7 +20,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
     private Long id;
     private String className;
     @Relationship(type = "IS_BEHAVIOR_OF")
-    private SortedSet<BehaviorInformation> behaviorInformations;
+    private SortedSet<MethodInformation> methodInformations;
 
     private boolean isService;
 
@@ -30,7 +30,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param className the name of the java class
      */
     public ClassInformation(String className) {
-        this(className, new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance()), false);
+        this(className, new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance()), false);
     }
 
     /**
@@ -40,7 +40,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param isService true if this class is a Service
      */
     public ClassInformation(String className, boolean isService) {
-        this(className, new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance()), isService);
+        this(className, new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance()), isService);
     }
 
     /**
@@ -50,9 +50,9 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param behaviorInformations the behavior informations of the java class
      * @param isService            true if Class has service annotation
      */
-    public ClassInformation(String className, SortedSet<BehaviorInformation> behaviorInformations, boolean isService) {
+    public ClassInformation(String className, SortedSet<MethodInformation> behaviorInformations, boolean isService) {
         this.className = className;
-        this.behaviorInformations = behaviorInformations;
+        this.methodInformations = behaviorInformations;
         this.isService = isService;
     }
 
@@ -66,24 +66,24 @@ public class ClassInformation implements Comparable<ClassInformation> {
     }
 
     /**
-     * Gets all referenced packages by extracting them from it's {@link BehaviorInformation}.
+     * Gets all referenced packages by extracting them from it's {@link MethodInformation}.
      *
      * @return the referenced packages
      */
     public SortedSet<PackageInformation> getReferencedPackages() {
         SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        behaviorInformations.forEach(behaviorInformation -> referencedPackages.addAll(behaviorInformation.getReferencedPackages()));
+        methodInformations.forEach(behaviorInformation -> referencedPackages.addAll(behaviorInformation.getReferencedPackages()));
         return referencedPackages;
     }
 
     /**
-     * Gets all referenced classes by extracting them from it's {@link BehaviorInformation}.
+     * Gets all referenced classes by extracting them from it's {@link MethodInformation}.
      *
      * @return the referenced classes
      */
     public SortedSet<ClassInformation> getReferencedClasses() {
         SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformationComparator.getInstance());
-        behaviorInformations.forEach(behaviorInformation -> referencedClasses.addAll(behaviorInformation.getReferencedClasses()));
+        methodInformations.forEach(behaviorInformation -> referencedClasses.addAll(behaviorInformation.getReferencedClasses()));
         return referencedClasses;
     }
 
@@ -92,27 +92,27 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return a set of the behavior information
      */
-    public SortedSet<BehaviorInformation> getBehaviorInformations() {
-        return behaviorInformations;
+    public SortedSet<MethodInformation> getMethodInformations() {
+        return methodInformations;
     }
 
     /**
-     * Gets all referenced Behavior by extracting them from it's {@link BehaviorInformation}.
+     * Gets all referenced Behavior by extracting them from it's {@link MethodInformation}.
      *
      * @return the referenced methods
      */
-    public SortedSet<BehaviorInformation> getReferencedBehavior() {
-        SortedSet<BehaviorInformation> referencedBehaviors = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        behaviorInformations.forEach(behaviorInformation -> referencedBehaviors.addAll(behaviorInformation.getReferencedBehavior()));
+    public SortedSet<MethodInformation> getReferencedMethods() {
+        SortedSet<MethodInformation> referencedBehaviors = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodInformations.forEach(behaviorInformation -> referencedBehaviors.addAll(behaviorInformation.getReferencedMethods()));
         return referencedBehaviors;
     }
 
     /**
      * Adds a BehaviorInformation to the set of BehaviorInformation owned by the described class.
-     * @param behaviorInformation that will be added
+     * @param methodInformation that will be added
      */
-    public void addBehaviorInformation(BehaviorInformation behaviorInformation) {
-        behaviorInformations.add(behaviorInformation);
+    public void addMethodInformation(MethodInformation methodInformation) {
+        methodInformations.add(methodInformation);
     }
 
     /**

@@ -6,18 +6,18 @@ import java.util.SortedSet;
 /**
  * * BehaviorInformation with additional change meta (whether it was added or deleted).
  */
-public class ChangelogDependencyInformation extends BehaviorInformation {
+public class ChangelogDependencyInformation extends MethodInformation {
 
     private ChangeStatus changeStatus;
 
     /**
      * Instantiates a new Behavior information.
      *
-     * @param behaviorInformation the behavior to copy from
+     * @param methodInformation the behavior to copy from
      * @param changeStatus        whenever this behavior was deleted or added
      */
-    public ChangelogDependencyInformation(BehaviorInformation behaviorInformation, ChangeStatus changeStatus) {
-        super(behaviorInformation.getName(), behaviorInformation.getReferencedPackages(), behaviorInformation.getReferencedClasses(), behaviorInformation.getReferencedBehavior(), behaviorInformation.isConstructor());
+    public ChangelogDependencyInformation(MethodInformation methodInformation, ChangeStatus changeStatus) {
+        super(methodInformation.getName(), methodInformation.getReferencedPackages(), methodInformation.getReferencedClasses(), methodInformation.getReferencedMethods(), methodInformation.isConstructor());
         this.changeStatus = changeStatus;
     }
 
@@ -43,7 +43,7 @@ public class ChangelogDependencyInformation extends BehaviorInformation {
      * @param isConstructor      true if behavior is constructor
      * @param changeStatus       whenever this behavior was deleted or added
      */
-    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<BehaviorInformation> referencedBehavior, boolean isConstructor, ChangeStatus changeStatus) {
+    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<MethodInformation> referencedBehavior, boolean isConstructor, ChangeStatus changeStatus) {
         super(name, referencedPackages, referencedClasses, referencedBehavior, isConstructor);
         this.changeStatus = changeStatus;
     }

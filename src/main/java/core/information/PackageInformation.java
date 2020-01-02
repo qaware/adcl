@@ -66,14 +66,14 @@ public class PackageInformation implements Comparable<PackageInformation> {
     }
 
     /**
-     * Gets referenced behavior by extracting them from it's {@link ClassInformation}.
+     * Gets referenced method by extracting them from it's {@link ClassInformation}.
      *
      * @return the referenced methods
      */
-    public SortedSet<BehaviorInformation> getReferencedBehaviors() {
-        SortedSet<BehaviorInformation> referencedBehaviors = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        classInformations.forEach(classInformation -> referencedBehaviors.addAll(classInformation.getReferencedBehavior()));
-        return referencedBehaviors;
+    public SortedSet<MethodInformation> getReferencedMethods() {
+        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        classInformations.forEach(classInformation -> referencedMethods.addAll(classInformation.getReferencedMethods()));
+        return referencedMethods;
     }
 
     /**

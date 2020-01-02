@@ -39,12 +39,12 @@ public class NameParserUtil {
     /**
      * Extracts the the simple method name from a complete method name.
      *
-     * @param completeBehaviorName a complete method name
-     * @return simple behavior name
+     * @param completeMethodName a complete method name
+     * @return simple method name
      */
-    public static String extractBehaviorName(String completeBehaviorName) {
-        int startOfMethodName = cutOffParamaterList(completeBehaviorName).lastIndexOf('.');
-        return completeBehaviorName.substring(startOfMethodName + 1);
+    public static String extractMethodName(String completeMethodName) {
+        int startOfMethodName = cutOffParamaterList(completeMethodName).lastIndexOf('.');
+        return completeMethodName.substring(startOfMethodName + 1);
     }
 
     /**
@@ -59,16 +59,16 @@ public class NameParserUtil {
     }
 
     /**
-     * Cuts of the the parameter list of a complete behavior signature
+     * Cuts of the the parameter list of a complete method signature
      *
-     * @param behaviorSignature the complete
-     * @return the complete behavior name without the parameter list
+     * @param methodSignature the complete
+     * @return the complete method name without the parameter list
      */
-    public static String cutOffParamaterList(String behaviorSignature) {
-        int startOfParameterList = behaviorSignature.lastIndexOf('(');
+    public static String cutOffParamaterList(String methodSignature) {
+        int startOfParameterList = methodSignature.lastIndexOf('(');
         if (startOfParameterList < 0) {
-            return behaviorSignature;
+            return methodSignature;
         }
-        return behaviorSignature.substring(0, startOfParameterList);
+        return methodSignature.substring(0, startOfParameterList);
     }
 }

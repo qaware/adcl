@@ -1,6 +1,6 @@
 package view;
 
-import core.information.BehaviorInformation;
+import core.information.MethodInformation;
 import core.information.ChangelogDependencyInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
@@ -94,32 +94,32 @@ class HTMLReportBuilder {
      * @return a classInformation represented in HTML code
      */
     private static ContainerTag createClassItem(ClassInformation classInformation) {
-        List<ContainerTag> behaviorItems = new ArrayList<>();
-        classInformation.getBehaviorInformations().forEach(behaviorInformation -> {
-            if (!behaviorInformation.getReferencedBehavior().isEmpty()) {
-                behaviorItems.add(HTMLReportBuilder.createBehaviorItem(behaviorInformation));
+        List<ContainerTag> methodItems = new ArrayList<>();
+        classInformation.getMethodInformations().forEach(methodInformation -> {
+            if (!methodInformation.getReferencedMethods().isEmpty()) {
+                methodItems.add(HTMLReportBuilder.createMethodItem(methodInformation));
             }
         });
-        return createLiWithNestedUl(classInformation.isService() ? "Class[Service]" : "Class", NameParserUtil.extractSimpleClassNameFromCompleteClassName(classInformation.getClassName()), behaviorItems);
+        return createLiWithNestedUl(classInformation.isService() ? "Class[Service]" : "Class", NameParserUtil.extractSimpleClassNameFromCompleteClassName(classInformation.getClassName()), methodItems);
     }
 
     /**
-     * Extracts the needed Information from the behaviorInformation and creates a HTML representation.
+     * Extracts the needed Information from the methodInformation and creates a HTML representation.
      *
-     * @param behaviorInformation the behaviorInformation from which we extract the content from
-     * @return a behaviorInformation represented in HTML code
+     * @param methodInformation the methodInformation from which we extract the content from
+     * @return a methodInformation represented in HTML code
      */
-    private static ContainerTag createBehaviorItem(BehaviorInformation behaviorInformation) {
+    private static ContainerTag createMethodItem(MethodInformation methodInformation) {
         List<ContainerTag> dependencyItems = new ArrayList<>();
-        behaviorInformation.getReferencedBehavior().stream().filter(ref -> ref instanceof ChangelogDependencyInformation).map(ref -> (ChangelogDependencyInformation) ref)
+        methodInformation.getReferencedMethods().stream().filter(ref -> ref instanceof ChangelogDependencyInformation).map(ref -> (ChangelogDependencyInformation) ref)
                 .forEach(dependencyInformation -> dependencyItems.add(HTMLReportBuilder.createDependencyItem(dependencyInformation.getName(), dependencyInformation.getChangeStatus())));
-        return createLiWithNestedUl(behaviorInformation.isConstructor() ? "Constructor" : "Method", NameParserUtil.extractBehaviorName(behaviorInformation.getName()), dependencyItems);
+        return createLiWithNestedUl(methodInformation.isConstructor() ? "Constructor" : "Method", NameParserUtil.extractMethodName(methodInformation.getName()), dependencyItems);
     }
 
     /**
-     * @param name         the name of the behavior that is a dependency.
+     * @param name         the name of the method that is a dependency.
      * @param changeStatus whenever this dependency has been added or deleted
-     * @return the html element li containing the name of the dependency/behavior.
+     * @return the html element li containing the name of the dependency.
      */
     private static ContainerTag createDependencyItem(String name, ChangelogDependencyInformation.ChangeStatus changeStatus) {
         String cssClass = (changeStatus == ChangelogDependencyInformation.ChangeStatus.ADDED) ? "dependency-added" : "dependency-deleted";
@@ -132,7 +132,7 @@ class HTMLReportBuilder {
      * A Helper method to generate HTML list item with nested unordered lists.
      *
      * @param category name of the category
-     * @param name     name of the actual package, class or behavior being represented
+     * @param name     name of the actual package, class or method being represented
      * @param items    the information contained by the item that is being represented
      * @return a html presentation for the given content
      */
