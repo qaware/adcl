@@ -19,17 +19,17 @@ class ClassInformationTest {
 
     @BeforeEach
     void setUp() {
-        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
-        referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<BehaviorInformation> referencedBehavior = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        referencedBehavior.add(new BehaviorInformation(TEST_CLASS_TEST_2, false));
-        SortedSet<BehaviorInformation> behaviorInformations = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        behaviorInformations.add(new BehaviorInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedBehavior, true));
-        behaviorInformations.add(new BehaviorInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedBehavior, false));
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodDependencies.add(new MethodInformation(TEST_CLASS_TEST_2, false));
+        SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
+        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, packageDependencies, classDependencies, methodDependencies, false));
 
-        sut = new ClassInformation(TEST_TEST_CLASS, behaviorInformations, false);
+        sut = new ClassInformation(TEST_TEST_CLASS, methodInformations, false);
     }
 
     @Test
@@ -38,35 +38,35 @@ class ClassInformationTest {
     }
 
     @Test
-    void getReferencedPackages() {
-        assertThat(sut.getReferencedPackages().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
+    void getPackageDependencies() {
+        assertThat(sut.getPackageDependencies().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
-    void getReferencedClasses() {
-        assertThat(sut.getReferencedClasses().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
+    void getClassDependencies() {
+        assertThat(sut.getClassDependencies().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
     void getConstructorInformations() {
-        sut.getBehaviorInformations().forEach(behaviorInformation -> {
-            if (behaviorInformation.isConstructor()) {
-                assertThat(behaviorInformation.getName()).isEqualTo(TEST_CLASS);
+        sut.getMethodInformations().forEach(methodInformation -> {
+            if (methodInformation.isConstructor()) {
+                assertThat(methodInformation.getName()).isEqualTo(TEST_CLASS);
             }
         });
     }
 
     @Test
     void getMethodInformations() {
-        sut.getBehaviorInformations().forEach(behaviorInformation -> {
-            if (!behaviorInformation.isConstructor()) {
-                assertThat(behaviorInformation.getName()).isEqualTo(TEST_CLASS_TEST_1);
+        sut.getMethodInformations().forEach(methodInformation -> {
+            if (!methodInformation.isConstructor()) {
+                assertThat(methodInformation.getName()).isEqualTo(TEST_CLASS_TEST_1);
             }
         });
     }
 
     @Test
-    void getReferencedBehavior() {
-        assertThat(sut.getReferencedBehavior().first().getName()).isEqualTo(TEST_CLASS_TEST_2);
+    void getMethodDependencies() {
+        assertThat(sut.getMethodDependencies().first().getName()).isEqualTo(TEST_CLASS_TEST_2);
     }
 }

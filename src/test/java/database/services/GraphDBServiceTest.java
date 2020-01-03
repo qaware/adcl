@@ -2,7 +2,7 @@ package database.services;
 
 import core.Application;
 import core.DependencyExtractor;
-import core.information.BehaviorInformation;
+import core.information.MethodInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
 import org.junit.jupiter.api.AfterAll;
@@ -75,8 +75,8 @@ public class GraphDBServiceTest {
         ClassInformation testClass = testPackage.getClassInformations().first();
         assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
 
-        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
-        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
+        MethodInformation testMethod = testClass.getMethodInformations().first();
+        assertThat(testMethod).isEqualTo(graphDBService.getMethodRepository().findByName(testMethod.getName()));
 
         graphDBService.getPackageRepository().deleteAll(packages);
     }
