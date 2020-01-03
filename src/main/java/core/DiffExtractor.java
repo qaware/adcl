@@ -1,8 +1,8 @@
 package core;
 
-import core.information.BehaviorInformation;
 import core.information.ChangelogDependencyInformation;
 import core.information.ClassInformation;
+import core.information.MethodInformation;
 import core.information.PackageInformation;
 
 import java.util.Collection;
@@ -35,41 +35,41 @@ public class DiffExtractor {
      * Helper Method to add a change into changed without making duplicates
      *
      * @param referencedMethod    the changed dependency
-     * @param behaviorInformation which refers to referenceMethod
-     * @param classInformation    which has behaviorInformation
+     * @param methodInformation which refers to referenceMethod
+     * @param classInformation    which has methodInformation
      * @param packageInformation  which has classInformation
      * @param status              signals if the dependency was added or deleted
      */
-    private void add(BehaviorInformation referencedMethod, BehaviorInformation behaviorInformation, ClassInformation classInformation,
+    private void add(MethodInformation referencedMethod, MethodInformation methodInformation, ClassInformation classInformation,
                      PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus status) {
 
         PackageInformation pi = new PackageInformation(packageInformation.getPackageName());
         ClassInformation ci = new ClassInformation(classInformation.getClassName());
-        BehaviorInformation bi = new BehaviorInformation(behaviorInformation.getName(), behaviorInformation.isConstructor());
-        BehaviorInformation referencedbi = new ChangelogDependencyInformation(referencedMethod, status);
+        MethodInformation bi = new MethodInformation(methodInformation.getName(), methodInformation.isConstructor());
+        MethodInformation referencedbi = new ChangelogDependencyInformation(referencedMethod, status);
 
         if (changed.contains(packageInformation)) {
             pi = changed.stream().filter(packageInformation1 -> packageInformation1.equals(packageInformation)).findFirst().orElse(pi);
             if (pi.getClassInformations().contains(classInformation)) {
                 ci = packageInformation.getClassInformations().stream().filter(classInformation1 -> classInformation1.equals(classInformation)).findFirst().orElse(ci);
-                if (ci.getBehaviorInformations().contains(behaviorInformation)) {
-                    bi = classInformation.getBehaviorInformations().stream().filter(behaviorInformation1 -> behaviorInformation1.equals(behaviorInformation)).findFirst().orElse(bi);
+                if (ci.getMethodInformations().contains(methodInformation)) {
+                    bi = classInformation.getMethodInformations().stream().filter(methodInformation1 -> methodInformation1.equals(methodInformation)).findFirst().orElse(bi);
                 } else {
-                    ci.getBehaviorInformations().add(bi);
+                    ci.getMethodInformations().add(bi);
                 }
-                bi.getReferencedBehavior().add(referencedbi);
+                bi.getMethodDependencies().add(referencedbi);
             } else {
 
-                bi.getReferencedBehavior().add(referencedbi);
-                ci.getBehaviorInformations().add(bi);
+                bi.getMethodDependencies().add(referencedbi);
+                ci.getMethodInformations().add(bi);
                 pi.getClassInformations().add(ci);
             }
 
         } else {
 
 
-            bi.getReferencedBehavior().add(referencedbi);
-            ci.getBehaviorInformations().add(bi);
+            bi.getMethodDependencies().add(referencedbi);
+            ci.getMethodInformations().add(bi);
             pi.getClassInformations().add(ci);
             changed.add(pi);
         }
@@ -152,27 +152,27 @@ public class DiffExtractor {
     }
 
     /**
-     * Builds the difference between the behaviors in before and after
+     * Builds the difference between the Methods in before and after
      *
      * @param before    class before commit
      * @param after     class after commit
      * @param inPackage package in which before and after are
      */
     private void classDiff(ClassInformation before, ClassInformation after, PackageInformation inPackage) {
-        Iterator<BehaviorInformation> beforeIt = before.getBehaviorInformations().iterator();
-        Iterator<BehaviorInformation> afterIt = after.getBehaviorInformations().iterator();
-        BehaviorInformation afterNext = null;
-        BehaviorInformation beforeNext = null;
+        Iterator<MethodInformation> beforeIt = before.getMethodInformations().iterator();
+        Iterator<MethodInformation> afterIt = after.getMethodInformations().iterator();
+        MethodInformation afterNext = null;
+        MethodInformation beforeNext = null;
 
         while (beforeIt.hasNext() || afterIt.hasNext() || afterNext != null || beforeNext != null) {
-            CompareIterator<BehaviorInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt, afterNext, beforeNext).invoke();
+            CompareIterator<MethodInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt, afterNext, beforeNext).invoke();
             afterNext = compareIterator.getAfterNext();
             beforeNext = compareIterator.getBeforeNext();
             int compare = compareIterator.getCompare();
 
             switch (compare) {
                 case 0:
-                    behaviorDiff(beforeNext, afterNext, inPackage, after);
+                    methodDiff(beforeNext, afterNext, inPackage, after);
                     beforeNext = null;
                     afterNext = null;
                     break;
@@ -193,20 +193,20 @@ public class DiffExtractor {
     /**
      * Builds the difference between the Dependencies in before and after
      *
-     * @param before    behavior before commit
-     * @param after     behavior after commit
+     * @param before    Method before commit
+     * @param after     Method after commit
      * @param inPackage package in which inClass is
      * @param inClass   class in which before and after are
      */
-    private void behaviorDiff(BehaviorInformation before, BehaviorInformation after,
-                              PackageInformation inPackage, ClassInformation inClass) {
-        Iterator<BehaviorInformation> beforeIt = before.getReferencedBehavior().iterator();
-        Iterator<BehaviorInformation> afterIt = after.getReferencedBehavior().iterator();
-        BehaviorInformation afterNext = null;
-        BehaviorInformation beforeNext = null;
+    private void methodDiff(MethodInformation before, MethodInformation after,
+                            PackageInformation inPackage, ClassInformation inClass) {
+        Iterator<MethodInformation> beforeIt = before.getMethodDependencies().iterator();
+        Iterator<MethodInformation> afterIt = after.getMethodDependencies().iterator();
+        MethodInformation afterNext = null;
+        MethodInformation beforeNext = null;
 
         while (beforeIt.hasNext() || afterIt.hasNext() || afterNext != null || beforeNext != null) {
-            CompareIterator<BehaviorInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt, afterNext, beforeNext).invoke();
+            CompareIterator<MethodInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt, afterNext, beforeNext).invoke();
             afterNext = compareIterator.getAfterNext();
             beforeNext = compareIterator.getBeforeNext();
             int compare = compareIterator.getCompare();
@@ -247,21 +247,21 @@ public class DiffExtractor {
      * @param changeStatus       signals if the dependency was added or deleted
      */
     private void classChange(ClassInformation classInformation, PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
-        for (BehaviorInformation behaviorInformation : classInformation.getBehaviorInformations())
-            behaviourChange(behaviorInformation, classInformation, packageInformation, changeStatus);
+        for (MethodInformation MethodInformation : classInformation.getMethodInformations())
+            behaviourChange(MethodInformation, classInformation, packageInformation, changeStatus);
     }
 
     /**
-     * Adds all Dependencies in behaviorInformation to changed
+     * Adds all Dependencies in methodInformation to changed
      *
-     * @param behaviorInformation which has been changed
-     * @param classInformation    in which behaviorInformation is
+     * @param methodInformation which has been changed
+     * @param classInformation    in which methodInformation is
      * @param packageInformation  in which classInformation is
      * @param changeStatus        signals if the dependency was added or deleted
      */
-    private void behaviourChange(BehaviorInformation behaviorInformation, ClassInformation classInformation, PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
-        for (BehaviorInformation dependency : behaviorInformation.getReferencedBehavior())
-            add(dependency, behaviorInformation, classInformation, packageInformation, changeStatus);
+    private void behaviourChange(MethodInformation methodInformation, ClassInformation classInformation, PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
+        for (MethodInformation dependency : methodInformation.getMethodDependencies())
+            add(dependency, methodInformation, classInformation, packageInformation, changeStatus);
     }
 
     /**
@@ -276,7 +276,7 @@ public class DiffExtractor {
     /**
      * HelperClass for comparing two tree structures while iterating through them.
      *
-     * @param <T> should be one of {@link PackageInformation}, {@link ClassInformation}, {@link BehaviorInformation}
+     * @param <T> should be one of {@link PackageInformation}, {@link ClassInformation}, {@link MethodInformation}
      */
     private class CompareIterator<T extends Comparable<T>> {
         private Iterator<T> beforeIt;
