@@ -31,10 +31,12 @@ deploy:
   # Deploying to GitHub Releases
   provider: releases
   api_key:
-    secure: eSuPEfuc9U+ZSibstvQRgF2E/kHFoDOzQuzMHuy5IGyTkfKvanJ8tsGC/nJkZOnAc80i01K9oKtVgnXOE0Wb0yQqtRtAmIts4XNDfd9Ri2kYoaEMk+Xru+zx5yvrAnk0MQkvkOHHbMyWFWTy2pLckjG+gK2FQOWx4aNUkDlguenCoYkaSR6RDimf9f/yoYhBcYUbmzGxMPxNoA8UK68ogns9iOo61ffKxG5pxW66/09PjRbS+CWs10drXAKsVQqzZTDoVtwxXLWAjAyUg2RFXN9RRzBuUdy89iNHCBg72LLm6K3ND/N91Wb7Ae7YBd67Lca1zLqNEb5r9gqAidGKYi31ntJ3y5DQ27x2V+M954+vQq26i5Uonqc5hdU019KPZKilkmGvzVKskgylLWhXmMCvnoojR6fT06debLrxI6qf0kvt/SAwC6tvVotMRvjBCXQ3VhxsrF+wEEcWxGWqCGkpsi3ouSQgKGzI34OSAt35sejRcO01WPUdpkJ8O+5mRt4iGYX4Wd/dBo2HK4q+JcPBs+Vofn1LYpPx1LSYbx/3gDGNDUPagBVXSAAohU01eA4m5h3EHue1AlVTl2fJX8xUB+pbtZjF25UPGauAZET/ktxtD/74804VP766OQdKvzHWsqqV6Q65EaC3e0BoZ1WxNDSDLaxrqkRizsy0P74=
+    secure: o8EO9ytsSD7TjVcG/6a0148Qzp8Bzo00SUgjfhYhg4FNHDXmmYwRbqkZa4j04ZMwf5t1UI3liVYkZedoEetbA5lgbNSjUgJuHsrnU8bGuHiTiALD47yRM7hN08EgSYg/sPM0VaJMQgACiwfKixr1eGi8MxgEVh5Q3uJtPLzwJ56vUGB+Nstz2ZCqPu$
   file_glob: true
   # JAR, JavaDoc JAR and Sources JAR
   file: target/*.jar
+  on:
+    repo: qaware/adcl
   skip_cleanup: true
 
 cache:
