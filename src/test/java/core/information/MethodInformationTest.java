@@ -17,13 +17,13 @@ class MethodInformationTest {
 
     @BeforeEach
     void setUp() {
-        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
-        referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        referencedMethods.add(new MethodInformation(TEST_CLASS_TEST, false));
-        sut = new MethodInformation(TEST_TEST_METHOD, referencedPackages, referencedClasses, referencedMethods, false);
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodDependencies.add(new MethodInformation(TEST_CLASS_TEST, false));
+        sut = new MethodInformation(TEST_TEST_METHOD, packageDependencies, classDependencies, methodDependencies, false);
     }
 
     @Test
@@ -32,17 +32,17 @@ class MethodInformationTest {
     }
 
     @Test
-    void getReferencedPackages() {
-        assertThat(sut.getReferencedPackages().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
+    void getPackageDependencies() {
+        assertThat(sut.getPackageDependencies().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
-    void getReferencedClasses() {
-        assertThat(sut.getReferencedClasses().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
+    void getClassDependencies() {
+        assertThat(sut.getClassDependencies().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
-    void getReferencedMethods() {
-        assertThat(sut.getReferencedMethods().first().getName()).isEqualTo(TEST_CLASS_TEST);
+    void getMethodDependencies() {
+        assertThat(sut.getMethodDependencies().first().getName()).isEqualTo(TEST_CLASS_TEST);
     }
 }

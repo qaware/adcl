@@ -22,15 +22,15 @@ class PackageInformationTest {
     @BeforeAll
     private static void createClassInformation() {
 
-        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
-        referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        referencedMethods.add(new MethodInformation(TEST_CLASS_TEST, false));
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodDependencies.add(new MethodInformation(TEST_CLASS_TEST, false));
         SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        methodInformations.add(new MethodInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods, true));
-        methodInformations.add(new MethodInformation(TEST_CLASS_TEST, referencedPackages, referencedClasses, referencedMethods, false));
+        methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
+        methodInformations.add(new MethodInformation(TEST_CLASS_TEST, packageDependencies, classDependencies, methodDependencies, false));
 
         classInformation = new ClassInformation(TEST_TEST_CLASS, methodInformations, false);
     }
@@ -47,18 +47,18 @@ class PackageInformationTest {
     }
 
     @Test
-    void getReferencedPackages() {
-        assertThat(sut.getReferencedPackages().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
+    void getPackageDependencies() {
+        assertThat(sut.getPackageDependencies().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
-    void getReferencedClasses() {
+    void getClassDependencies() {
         sut.addClassInformation(classInformation);
-        assertThat(sut.getReferencedClasses().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
+        assertThat(sut.getClassDependencies().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
-    void getReferencedMethods() {
-        assertThat(sut.getReferencedMethods().first().getName()).isEqualTo(TEST_CLASS_TEST);
+    void getMethodDependencies() {
+        assertThat(sut.getMethodDependencies().first().getName()).isEqualTo(TEST_CLASS_TEST);
     }
 }

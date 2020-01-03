@@ -118,11 +118,11 @@ public class DependencyExtractor {
             methodInformation = dependencyPool.getOrCreateMethodInformation(ctMethods.getLongName(), false);
         }
 
-        methodInformation.setReferencedClasses(ctMethodBodyAnalyzer.getReferencedClasses());
-        methodInformation.setReferencedMethods(ctMethodBodyAnalyzer.getReferencedMethods());
+        methodInformation.setClassDependencies(ctMethodBodyAnalyzer.getClassDependencies());
+        methodInformation.setMethodDependencies(ctMethodBodyAnalyzer.getMethodDependencies());
 
-        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        ctMethodBodyAnalyzer.getReferencedClasses().forEach(referencedClass -> referencedPackages.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(referencedClass.getClassName()))));
-        methodInformation.setReferencedPackages(referencedPackages);
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        ctMethodBodyAnalyzer.getClassDependencies().forEach(classDependency -> packageDependencies.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(classDependency.getClassName()))));
+        methodInformation.setPackageDependencies(packageDependencies);
     }
 }

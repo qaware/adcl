@@ -20,11 +20,11 @@ public class MethodInformation implements Comparable<MethodInformation> {
     private Long id;
     private String name;
     @Relationship(type = "USES")
-    private SortedSet<PackageInformation> referencedPackages;
+    private SortedSet<PackageInformation> packageDependencies;
     @Relationship(type = "USES")
-    private SortedSet<ClassInformation> referencedClasses;
+    private SortedSet<ClassInformation> classDependencies;
     @Relationship(type = "USES")
-    private SortedSet<MethodInformation> referencedMethods;
+    private SortedSet<MethodInformation> methodDependencies;
 
     private boolean isConstructor;
 
@@ -42,44 +42,44 @@ public class MethodInformation implements Comparable<MethodInformation> {
      * Instantiates a new Method information.
      *
      * @param name               the name of the method
-     * @param referencedPackages the referenced packages
-     * @param referencedClasses  the referenced classes
-     * @param referencedMethods   the referenced method
+     * @param packageDependencies the referenced packages
+     * @param classDependencies  the referenced classes
+     * @param methodDependencies   the referenced method
      * @param isConstructor      true if method is constructor
      */
-    public MethodInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<MethodInformation> referencedMethods, boolean isConstructor) {
+    public MethodInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor) {
         this.name = name;
-        this.referencedPackages = referencedPackages;
-        this.referencedClasses = referencedClasses;
-        this.referencedMethods = referencedMethods;
+        this.packageDependencies = packageDependencies;
+        this.classDependencies = classDependencies;
+        this.methodDependencies = methodDependencies;
         this.isConstructor = isConstructor;
     }
 
     /**
      * Set the referenced packages.
      *
-     * @param referencedPackages the referenced packages
+     * @param packageDependencies the referenced packages
      */
-    public void setReferencedPackages(SortedSet<PackageInformation> referencedPackages) {
-        this.referencedPackages = referencedPackages;
+    public void setPackageDependencies(SortedSet<PackageInformation> packageDependencies) {
+        this.packageDependencies = packageDependencies;
     }
 
     /**
      * Set the referenced classes
      *
-     * @param referencedClasses the referenced classes
+     * @param classDependencies the referenced classes
      */
-    public void setReferencedClasses(SortedSet<ClassInformation> referencedClasses) {
-        this.referencedClasses = referencedClasses;
+    public void setClassDependencies(SortedSet<ClassInformation> classDependencies) {
+        this.classDependencies = classDependencies;
     }
 
     /**
      * Set the referenced methods
      *
-     * @param referencedMethods the referenced methods
+     * @param methodDependencies the referenced methods
      */
-    public void setReferencedMethods(SortedSet<MethodInformation> referencedMethods) {
-        this.referencedMethods = referencedMethods;
+    public void setMethodDependencies(SortedSet<MethodInformation> methodDependencies) {
+        this.methodDependencies = methodDependencies;
     }
 
     /**
@@ -91,16 +91,16 @@ public class MethodInformation implements Comparable<MethodInformation> {
         return name;
     }
 
-    public SortedSet<PackageInformation> getReferencedPackages() {
-        return referencedPackages;
+    public SortedSet<PackageInformation> getPackageDependencies() {
+        return packageDependencies;
     }
 
-    public SortedSet<ClassInformation> getReferencedClasses() {
-        return referencedClasses;
+    public SortedSet<ClassInformation> getClassDependencies() {
+        return classDependencies;
     }
 
-    public SortedSet<MethodInformation> getReferencedMethods() {
-        return referencedMethods;
+    public SortedSet<MethodInformation> getMethodDependencies() {
+        return methodDependencies;
     }
 
     public boolean isConstructor() {

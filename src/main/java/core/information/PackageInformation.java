@@ -48,10 +48,10 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced packages
      */
-    public SortedSet<PackageInformation> getReferencedPackages() {
-        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        classInformations.forEach(classInformation -> referencedPackages.addAll(classInformation.getReferencedPackages()));
-        return referencedPackages;
+    public SortedSet<PackageInformation> getPackageDependencies() {
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        classInformations.forEach(classInformation -> packageDependencies.addAll(classInformation.getPackageDependencies()));
+        return packageDependencies;
     }
 
     /**
@@ -59,10 +59,10 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getReferencedClasses() {
-        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
-        classInformations.forEach(classInformation -> referencedClasses.addAll(classInformation.getReferencedClasses()));
-        return referencedClasses;
+    public SortedSet<ClassInformation> getClassDependencies() {
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        classInformations.forEach(classInformation -> classDependencies.addAll(classInformation.getClassDependencies()));
+        return classDependencies;
     }
 
     /**
@@ -70,10 +70,10 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getReferencedMethods() {
-        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        classInformations.forEach(classInformation -> referencedMethods.addAll(classInformation.getReferencedMethods()));
-        return referencedMethods;
+    public SortedSet<MethodInformation> getMethodDependencies() {
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        classInformations.forEach(classInformation -> methodDependencies.addAll(classInformation.getMethodDependencies()));
+        return methodDependencies;
     }
 
     /**

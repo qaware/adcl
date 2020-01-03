@@ -1,80 +1,80 @@
 Package: java.lang 
      ↪ Class: java.lang.String
-               ↪ Referenced packages: 
-               ↪ Referenced classes: 
+               ↪ Package dependencies: 
+               ↪ Class dependencies: 
                ↪ Constructors: 
                ↪ Methods:  
 Package: java.util 
      ↪ Class: java.util.ArrayList
-               ↪ Referenced packages: 
-               ↪ Referenced classes: 
+               ↪ Package dependencies: 
+               ↪ Class dependencies: 
                ↪ Constructors: 
                         ↪Constructor: java.util.ArrayList()
-                              ↪ Referenced packages: 
-                              ↪ Referenced classes: 
-                              ↪ Referenced methods: 
+                              ↪ Package dependencies: 
+                              ↪ Class dependencies: 
+                              ↪ Method dependencies: 
                ↪ Methods: 
                         ↪Method: java.util.ArrayList.add(java.lang.Object)
-                              ↪ Referenced packages: 
-                              ↪ Referenced classes: 
-                              ↪ Referenced methods: 
+                              ↪ Package dependencies: 
+                              ↪ Class dependencies: 
+                              ↪ Method dependencies: 
      ↪ Class: java.util.List
-               ↪ Referenced packages: 
-               ↪ Referenced classes: 
+               ↪ Package dependencies: 
+               ↪ Class dependencies: 
                ↪ Constructors: 
                ↪ Methods: 
      ↪ Class: java.util.TreeSet
-               ↪ Referenced packages: 
-               ↪ Referenced classes: 
+               ↪ Package dependencies: 
+               ↪ Class dependencies: 
                ↪ Constructors: 
                         ↪Constructor: java.util.TreeSet()
-                              ↪ Referenced packages: 
-                              ↪ Referenced classes: 
-                              ↪ Referenced methods: 
+                              ↪ Package dependencies: 
+                              ↪ Class dependencies: 
+                              ↪ Method dependencies: 
                ↪ Methods: 
                         ↪Method: java.util.TreeSet.add(java.lang.Object)
-                              ↪ Referenced packages: 
-                              ↪ Referenced classes: 
-                              ↪ Referenced methods: 
+                              ↪ Package dependencies: 
+                              ↪ Class dependencies: 
+                              ↪ Method dependencies: 
                         ↪Method: java.util.TreeSet.clear()
-                              ↪ Referenced packages: 
-                              ↪ Referenced classes: 
-                              ↪ Referenced methods:  
+                              ↪ Package dependencies: 
+                              ↪ Class dependencies: 
+                              ↪ Method dependencies:  
 Package: testclasses 
      ↪ Class: testclasses.Testclass
-               ↪ Referenced packages: 
+               ↪ Package dependencies: 
                     ↪ java.lang
                     ↪ java.util
-               ↪ Referenced classes: 
+               ↪ Class dependencies: 
                     ↪ java.lang.String
                     ↪ java.util.ArrayList
                     ↪ java.util.List
                     ↪ java.util.TreeSet
                ↪ Constructors: 
                         ↪Constructor: testclasses.Testclass(java.lang.String)
-                              ↪ Referenced packages: 
+                              ↪ Package dependencies: 
                                    ↪ java.lang
-                              ↪ Referenced classes: 
+                              ↪ Class dependencies: 
                                    ↪ java.lang.String
-                              ↪ Referenced methods: 
+                              ↪ Method dependencies: 
                ↪ Methods: 
                         ↪Method: testclasses.Testclass.doSomething(java.lang.String)
-                              ↪ Referenced packages: 
+                              ↪ Package dependencies: 
                                    ↪ java.lang
                                    ↪ java.util
-                              ↪ Referenced classes: 
+                              ↪ Class dependencies: 
                                    ↪ java.lang.String
                                    ↪ java.util.ArrayList
                                    ↪ java.util.List
-                              ↪ Referenced methods: 
+                              ↪ Method dependencies: 
                                    ↪ java.util.ArrayList()
                                    ↪ java.util.ArrayList.add(java.lang.Object)
                         ↪Method: testclasses.Testclass.doSomething2()
-                              ↪ Referenced packages: 
+                              ↪ Package dependencies: 
                                    ↪ java.util
-                              ↪ Referenced classes: 
+                              ↪ Class dependencies: 
                                    ↪ java.util.TreeSet
-                              ↪ Referenced methods: 
+                              ↪ Method dependencies: 
                                    ↪ java.util.TreeSet()
                                    ↪ java.util.TreeSet.add(java.lang.Object)
                                    ↪ java.util.TreeSet.clear() 

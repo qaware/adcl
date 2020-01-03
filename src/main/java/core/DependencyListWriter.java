@@ -24,9 +24,9 @@ class DependencyListWriter {
     private static String formatString30 = "%n %30s %s";
     private static String formatString35 = "%n %35s %s";
     private static String arrowDownRight = "↪";
-    private static String refMethods = "Referenced methods: ";
-    private static String refClasses = "Referenced classes: ";
-    private static String refPackages = "Referenced packages: ";
+    private static String refMethods = "Method dependencies: ";
+    private static String refClasses = "Class dependencies: ";
+    private static String refPackages = "Package dependencies: ";
     private static String formatStringMethod = "%n%25sMethod: %s";
     private static String formatStringConstructor = "%n%25sConstructor: %s";
 
@@ -87,11 +87,11 @@ class DependencyListWriter {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Package: ").append(packageInformation.getPackageName());
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
-        packageInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
+        packageInformation.getPackageDependencies().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
-        packageInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
+        packageInformation.getClassDependencies().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refMethods));
-        packageInformation.getReferencedMethods().forEach(methods -> stringBuilder.append(String.format(formatString20, arrowDownRight, methods.getName())));
+        packageInformation.getMethodDependencies().forEach(methods -> stringBuilder.append(String.format(formatString20, arrowDownRight, methods.getName())));
 
         return stringBuilder.toString();
     }
@@ -110,9 +110,9 @@ class DependencyListWriter {
             stringBuilder.append("Class: ").append(classInformation.getClassName());
         }
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
-        classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
+        classInformation.getPackageDependencies().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
-        classInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
+        classInformation.getClassDependencies().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, "Constructors: "));
         classInformation.getMethodInformations().forEach(methodInformation -> {
             if (methodInformation.isConstructor()) {
@@ -143,11 +143,11 @@ class DependencyListWriter {
             stringBuilder.append("Class: ").append(classInformation.getClassName());
         }
         stringBuilder.append(String.format(formatString15, arrowDownRight, refPackages));
-        classInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
+        classInformation.getPackageDependencies().forEach(packAge -> stringBuilder.append(String.format(formatString20, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString15, arrowDownRight, refClasses));
-        classInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
-        stringBuilder.append(String.format(formatString15, arrowDownRight, "Referenced Method: "));
-        classInformation.getReferencedMethods().forEach(method -> stringBuilder.append(String.format(formatString20, arrowDownRight, method.getName())));
+        classInformation.getClassDependencies().forEach(clazz -> stringBuilder.append(String.format(formatString20, arrowDownRight, clazz.getClassName())));
+        stringBuilder.append(String.format(formatString15, arrowDownRight, "Method dependencies: "));
+        classInformation.getMethodDependencies().forEach(method -> stringBuilder.append(String.format(formatString20, arrowDownRight, method.getName())));
 
         return stringBuilder.toString();
     }
@@ -163,11 +163,11 @@ class DependencyListWriter {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(String.format(formatString, arrowDownRight, methodInformation.getName()));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refPackages));
-        methodInformation.getReferencedPackages().forEach(packAge -> stringBuilder.append(String.format(formatString35, arrowDownRight, packAge.getPackageName())));
+        methodInformation.getPackageDependencies().forEach(packAge -> stringBuilder.append(String.format(formatString35, arrowDownRight, packAge.getPackageName())));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refClasses));
-        methodInformation.getReferencedClasses().forEach(clazz -> stringBuilder.append(String.format(formatString35, arrowDownRight, clazz.getClassName())));
+        methodInformation.getClassDependencies().forEach(clazz -> stringBuilder.append(String.format(formatString35, arrowDownRight, clazz.getClassName())));
         stringBuilder.append(String.format(formatString30, arrowDownRight, refMethods));
-        methodInformation.getReferencedMethods().forEach(method -> stringBuilder.append(String.format(formatString35, arrowDownRight, method.getName())));
+        methodInformation.getMethodDependencies().forEach(method -> stringBuilder.append(String.format(formatString35, arrowDownRight, method.getName())));
         return stringBuilder.toString();
     }
 }
