@@ -96,7 +96,7 @@ class HTMLReportBuilder {
     private static ContainerTag createClassItem(ClassInformation classInformation) {
         List<ContainerTag> methodItems = new ArrayList<>();
         classInformation.getMethodInformations().forEach(methodInformation -> {
-            if (!methodInformation.getReferencedMethods().isEmpty()) {
+            if (!methodInformation.getMethodDependencies().isEmpty()) {
                 methodItems.add(HTMLReportBuilder.createMethodItem(methodInformation));
             }
         });
@@ -111,7 +111,7 @@ class HTMLReportBuilder {
      */
     private static ContainerTag createMethodItem(MethodInformation methodInformation) {
         List<ContainerTag> dependencyItems = new ArrayList<>();
-        methodInformation.getReferencedMethods().stream().filter(ref -> ref instanceof ChangelogDependencyInformation).map(ref -> (ChangelogDependencyInformation) ref)
+        methodInformation.getMethodDependencies().stream().filter(ref -> ref instanceof ChangelogDependencyInformation).map(ref -> (ChangelogDependencyInformation) ref)
                 .forEach(dependencyInformation -> dependencyItems.add(HTMLReportBuilder.createDependencyItem(dependencyInformation.getName(), dependencyInformation.getChangeStatus())));
         return createLiWithNestedUl(methodInformation.isConstructor() ? "Constructor" : "Method", NameParserUtil.extractMethodName(methodInformation.getName()), dependencyItems);
     }

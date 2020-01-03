@@ -21,16 +21,16 @@ import java.util.regex.Pattern;
  */
 public class CtMethodBodyAnalyzer extends ExprEditor {
 
-    private SortedSet<MethodInformation> referencedMethods;
-    private SortedSet<ClassInformation> referencedClasses;
+    private SortedSet<MethodInformation> methodDependencies;
+    private SortedSet<ClassInformation> classDependencies;
     private DependencyPool dependencyPool;
 
     /**
      * Instantiates a new CtMethodBodyAnalyzer.
      */
     CtMethodBodyAnalyzer() {
-        this.referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        this.referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        this.methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        this.classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
         this.dependencyPool = DependencyPool.getInstance();
     }
 
@@ -48,15 +48,15 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     @Override
     public void edit(MethodCall m) {
         String signature = parseJVMSignatureIntoMethodSignature(m.getSignature());
-        referencedMethods.add(dependencyPool.getOrCreateMethodInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
-        referencedClasses.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
+        classDependencies.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
     }
 
     @Override
     public void edit(NewExpr newExpr) {
         String signature = parseJVMSignatureIntoMethodSignature(newExpr.getSignature());
-        referencedMethods.add(dependencyPool.getOrCreateMethodInformation(newExpr.getClassName() + signature, true));
-        referencedClasses.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(newExpr.getClassName() + signature, true));
+        classDependencies.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
     }
 
     /**
@@ -96,7 +96,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      */
     private void addParameterTypesAsDependencies(String signature) {
         List<String> parameterTypes = parseJVMSignatureIntoParameterTypeList(signature);
-        parameterTypes.forEach(parameterType -> referencedClasses.add(dependencyPool.getOrCreateClassInformation(parameterType)));
+        parameterTypes.forEach(parameterType -> classDependencies.add(dependencyPool.getOrCreateClassInformation(parameterType)));
     }
 
     /**
@@ -104,8 +104,8 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getReferencedClasses() {
-        return referencedClasses;
+    public SortedSet<ClassInformation> getClassDependencies() {
+        return classDependencies;
     }
 
     /**
@@ -113,7 +113,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getReferencedMethods() {
-        return referencedMethods;
+    public SortedSet<MethodInformation> getMethodDependencies() {
+        return methodDependencies;
     }
 }

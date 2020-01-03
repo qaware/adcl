@@ -73,19 +73,19 @@ class HTMLReportBuilderTest {
         //put dependency items into sets and add them methods
         SortedSet<MethodInformation> dsetOne = new TreeSet<>();
         dsetOne.add(depedencyOne);
-        classOneMethodOne.setReferencedMethods(dsetOne);
+        classOneMethodOne.setMethodDependencies(dsetOne);
 
         SortedSet<MethodInformation> dsetTwo = new TreeSet<>();
         dsetTwo.add(depedencyTwo);
-        classTwoMethodTwo.setReferencedMethods(dsetTwo);
+        classTwoMethodTwo.setMethodDependencies(dsetTwo);
 
         SortedSet<MethodInformation> dsetThree = new TreeSet<>();
         dsetThree.add(depedencyThree);
-        classThreeMethodThree.setReferencedMethods(dsetThree);
+        classThreeMethodThree.setMethodDependencies(dsetThree);
 
         SortedSet<MethodInformation> dsetFour = new TreeSet<>();
         dsetFour.add(depedencyFour);
-        classFourMethodFour.setReferencedMethods(dsetFour);
+        classFourMethodFour.setMethodDependencies(dsetFour);
 
     }
 

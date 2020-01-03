@@ -48,15 +48,15 @@ class DependencyListWriterTest {
     @BeforeEach
     void setUp() {
 
-        SortedSet<PackageInformation> referencedPackages = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        referencedPackages.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
-        referencedClasses.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> referencedMethods = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        referencedMethods.add(new MethodInformation(TEST_CLASS_TEST_2, false));
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        methodDependencies.add(new MethodInformation(TEST_CLASS_TEST_2, false));
         SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        methodInformations.add(new MethodInformation(TEST_CLASS, referencedPackages, referencedClasses, referencedMethods, true));
-        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, referencedPackages, referencedClasses, referencedMethods, false));
+        methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
+        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, packageDependencies, classDependencies, methodDependencies, false));
 
         classInformation = new ClassInformation(TEST_TEST_CLASS, methodInformations, false);
         packageInformation = new PackageInformation(TEST_PACKAGE);
@@ -90,7 +90,7 @@ class DependencyListWriterTest {
         String resultText = DependencyListWriter.generateFlatList(packageInformation);
         assertThat(resultText).contains(TEST_PACKAGE);
         assertThat(resultText).contains(classInformation.getClassName());
-        classInformation.getReferencedMethods().forEach(methodInformation -> assertThat(resultText).contains(methodInformation.getName()));
+        classInformation.getMethodDependencies().forEach(methodInformation -> assertThat(resultText).contains(methodInformation.getName()));
     }
 
     @Test

@@ -17,7 +17,7 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * @param changeStatus        whenever this behavior was deleted or added
      */
     public ChangelogDependencyInformation(MethodInformation methodInformation, ChangeStatus changeStatus) {
-        super(methodInformation.getName(), methodInformation.getReferencedPackages(), methodInformation.getReferencedClasses(), methodInformation.getReferencedMethods(), methodInformation.isConstructor());
+        super(methodInformation.getName(), methodInformation.getPackageDependencies(), methodInformation.getClassDependencies(), methodInformation.getMethodDependencies(), methodInformation.isConstructor());
         this.changeStatus = changeStatus;
     }
 
@@ -37,14 +37,14 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * Instantiates a new Behavior information.
      *
      * @param name               the name of the behavior
-     * @param referencedPackages the referenced packages
-     * @param referencedClasses  the referenced classes
-     * @param referencedBehavior the referenced behavior
+     * @param packageDependencies the referenced packages
+     * @param classDependencies  the referenced classes
+     * @param methodDependencies the referenced behavior
      * @param isConstructor      true if behavior is constructor
      * @param changeStatus       whenever this behavior was deleted or added
      */
-    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> referencedPackages, SortedSet<ClassInformation> referencedClasses, SortedSet<MethodInformation> referencedBehavior, boolean isConstructor, ChangeStatus changeStatus) {
-        super(name, referencedPackages, referencedClasses, referencedBehavior, isConstructor);
+    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
+        super(name, packageDependencies, classDependencies, methodDependencies, isConstructor);
         this.changeStatus = changeStatus;
     }
 
