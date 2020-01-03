@@ -41,18 +41,18 @@ class DiffExtractorTest {
         packageNewTwo.addClassInformation(classFour);
 
         //create methods owned by the classes above
-        BehaviorInformation classOneMethodOne = new BehaviorInformation("packageone.ClassOne.methodOne()", false);
-        BehaviorInformation classTwoMethodTwo = new BehaviorInformation("packageone.ClassTwo.methodTwo()", false);
-        BehaviorInformation classThreeMethodThree = new BehaviorInformation("packageone.ClassThree.methodThree()", false);
-        BehaviorInformation classFourMethodFour = new BehaviorInformation("packageone.ClassOne.methodOne()", false);
-        BehaviorInformation classFourMethodFifth = new BehaviorInformation("packageone.ClassOne.methodFour()", false);
+        MethodInformation classOneMethodOne = new MethodInformation("packageone.ClassOne.methodOne()", false);
+        MethodInformation classTwoMethodTwo = new MethodInformation("packageone.ClassTwo.methodTwo()", false);
+        MethodInformation classThreeMethodThree = new MethodInformation("packageone.ClassThree.methodThree()", false);
+        MethodInformation classFourMethodFour = new MethodInformation("packageone.ClassOne.methodOne()", false);
+        MethodInformation classFourMethodFifth = new MethodInformation("packageone.ClassOne.methodFour()", false);
 
         //add methods to classes
-        classOne.addBehaviorInformation(classOneMethodOne);
-        classTwo.addBehaviorInformation(classTwoMethodTwo);
-        classThree.addBehaviorInformation(classThreeMethodThree);
-        classFour.addBehaviorInformation(classFourMethodFour);
-        classFour.addBehaviorInformation(classFourMethodFifth);
+        classOne.addMethodInformation(classOneMethodOne);
+        classTwo.addMethodInformation(classTwoMethodTwo);
+        classThree.addMethodInformation(classThreeMethodThree);
+        classFour.addMethodInformation(classFourMethodFour);
+        classFour.addMethodInformation(classFourMethodFifth);
 
         //create changelogitems
         ChangelogDependencyInformation depedencyOne = new ChangelogDependencyInformation("sample.Class.method1(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.ADDED);
@@ -61,21 +61,21 @@ class DiffExtractorTest {
         ChangelogDependencyInformation depedencyFour = new ChangelogDependencyInformation("sample.Class.method4(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.DELETED);
 
         //put dependency items into sets and add them to methods
-        SortedSet<BehaviorInformation> dsetOne = new TreeSet<>();
+        SortedSet<MethodInformation> dsetOne = new TreeSet<>();
         dsetOne.add(depedencyOne);
-        classOneMethodOne.setReferencedBehavior(dsetOne);
+        classOneMethodOne.setMethodDependencies(dsetOne);
 
-        SortedSet<BehaviorInformation> dsetTwo = new TreeSet<>();
+        SortedSet<MethodInformation> dsetTwo = new TreeSet<>();
         dsetTwo.add(depedencyTwo);
-        classTwoMethodTwo.setReferencedBehavior(dsetTwo);
+        classTwoMethodTwo.setMethodDependencies(dsetTwo);
 
-        SortedSet<BehaviorInformation> dsetThree = new TreeSet<>();
+        SortedSet<MethodInformation> dsetThree = new TreeSet<>();
         dsetThree.add(depedencyThree);
-        classThreeMethodThree.setReferencedBehavior(dsetThree);
+        classThreeMethodThree.setMethodDependencies(dsetThree);
 
-        SortedSet<BehaviorInformation> dsetFour = new TreeSet<>();
+        SortedSet<MethodInformation> dsetFour = new TreeSet<>();
         dsetFour.add(depedencyFour);
-        classFourMethodFour.setReferencedBehavior(dsetFour);
+        classFourMethodFour.setMethodDependencies(dsetFour);
 
         diffExtractor = new DiffExtractor(Collections.singletonList(packageOldOne), Collections.singletonList(packageNewTwo));
 
@@ -96,8 +96,8 @@ class DiffExtractorTest {
         assertThat(change.get(0).getClassInformations().contains(classTwo)).isTrue();
         assertThat(change.get(0).getClassInformations().contains(classThree)).isTrue();
         assertThat(change.get(0).getClassInformations().first()
-                .getBehaviorInformations().first()
-                .getReferencedBehavior().first()).isInstanceOf(ChangelogDependencyInformation.class)
+                .getMethodInformations().first()
+                .getMethodDependencies().first()).isInstanceOf(ChangelogDependencyInformation.class)
                 .hasFieldOrPropertyWithValue("changeStatus", ChangelogDependencyInformation.ChangeStatus.DELETED);
     }
 }
