@@ -12,12 +12,12 @@ Package: java.util
                         ↪Constructor: java.util.ArrayList()
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
                ↪ Methods: 
                         ↪Method: java.util.ArrayList.add(java.lang.Object)
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
      ↪ Class: java.util.List
                ↪ Referenced packages: 
                ↪ Referenced classes: 
@@ -30,16 +30,16 @@ Package: java.util
                         ↪Constructor: java.util.TreeSet()
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
                ↪ Methods: 
                         ↪Method: java.util.TreeSet.add(java.lang.Object)
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
                         ↪Method: java.util.TreeSet.clear()
                               ↪ Referenced packages: 
                               ↪ Referenced classes: 
-                              ↪ Referenced methods:
+                              ↪ Referenced methods:  
 Package: testclasses 
      ↪ Class: testclasses.Testclass
                ↪ Referenced packages: 
@@ -56,7 +56,7 @@ Package: testclasses
                                    ↪ java.lang
                               ↪ Referenced classes: 
                                    ↪ java.lang.String
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
                ↪ Methods: 
                         ↪Method: testclasses.Testclass.doSomething(java.lang.String)
                               ↪ Referenced packages: 
@@ -66,7 +66,7 @@ Package: testclasses
                                    ↪ java.lang.String
                                    ↪ java.util.ArrayList
                                    ↪ java.util.List
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
                                    ↪ java.util.ArrayList()
                                    ↪ java.util.ArrayList.add(java.lang.Object)
                         ↪Method: testclasses.Testclass.doSomething2()
@@ -74,7 +74,7 @@ Package: testclasses
                                    ↪ java.util
                               ↪ Referenced classes: 
                                    ↪ java.util.TreeSet
-                              ↪ Referenced methods:
+                              ↪ Referenced methods: 
                                    ↪ java.util.TreeSet()
                                    ↪ java.util.TreeSet.add(java.lang.Object)
                                    ↪ java.util.TreeSet.clear() 
