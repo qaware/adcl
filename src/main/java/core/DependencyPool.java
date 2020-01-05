@@ -13,6 +13,7 @@ import java.util.TreeMap;
  */
 public class DependencyPool {
     private static DependencyPool instance;
+    private static DependencyPool extractorInstance;
 
     private TreeMap<String, PackageInformation> packageInformationMap;
     private TreeMap<String, ClassInformation> classInformationMap;
@@ -47,6 +48,18 @@ public class DependencyPool {
     }
 
     /**
+     * Gets the available instance for DiffExtractor or creates it if necessary
+     *
+     * @return a instance of DependencyPool
+     */
+    public static DependencyPool getExtractorInstance() {
+        if (extractorInstance == null) {
+            extractorInstance = new DependencyPool();
+        }
+        return extractorInstance;
+    }
+
+    /**
      * Gets the PackageInformation with the given packageName, if its not available it will be created.
      *
      * @param packageName the name of the package
@@ -64,7 +77,7 @@ public class DependencyPool {
      * @param isInternal  set true if the given package is internal to the analysed project
      * @return the PackageInformation for the given name
      */
-    private PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
+    PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
         if (packageInformationMap.containsKey(packageName)) {
             if (isInternal) {
                 PackageInformation packageInformation = packageInformationMap.get(packageName);
