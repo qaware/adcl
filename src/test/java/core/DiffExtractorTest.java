@@ -87,7 +87,7 @@ class DiffExtractorTest {
         ClassInformation classTwo = new ClassInformation("packageone.ClassTwo");
         ClassInformation classThree = new ClassInformation("packageone.ClassThree");
 
-        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChanged());
+        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelist());
         Collections.sort(change);
 
         assertThat(change).isNotEmpty();
