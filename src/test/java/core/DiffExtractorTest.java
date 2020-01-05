@@ -18,11 +18,10 @@ class DiffExtractorTest {
     static void beforeAll() {
         packageOld = new ArrayList<>();
         packageNew = new ArrayList<>();
+
         //create packages
         PackageInformation packageOldOne = new PackageInformation("packageone");
-        //packageOldOne.setInternalPackage(true);
         PackageInformation packageNewTwo = new PackageInformation("packageone");
-        //packageNewTwo.setInternalPackage(true);
 
         //add packages
         packageOld.add(packageOldOne);
@@ -32,27 +31,31 @@ class DiffExtractorTest {
         ClassInformation classOne = new ClassInformation("packageone.ClassOne");
         ClassInformation classTwo = new ClassInformation("packageone.ClassTwo");
         ClassInformation classThree = new ClassInformation("packageone.ClassThree");
-        ClassInformation classFour = new ClassInformation("packageone.ClassOne");
+
+        ClassInformation classCopyOne = new ClassInformation("packageone.ClassOne");
 
         //add Classes to packages
         packageOldOne.addClassInformation(classOne);
         packageOldOne.addClassInformation(classTwo);
+
         packageNewTwo.addClassInformation(classThree);
-        packageNewTwo.addClassInformation(classFour);
+        packageNewTwo.addClassInformation(classCopyOne);
 
         //create methods owned by the classes above
         MethodInformation classOneMethodOne = new MethodInformation("packageone.ClassOne.methodOne()", false);
         MethodInformation classTwoMethodTwo = new MethodInformation("packageone.ClassTwo.methodTwo()", false);
         MethodInformation classThreeMethodThree = new MethodInformation("packageone.ClassThree.methodThree()", false);
-        MethodInformation classFourMethodFour = new MethodInformation("packageone.ClassOne.methodOne()", false);
-        MethodInformation classFourMethodFifth = new MethodInformation("packageone.ClassOne.methodFour()", false);
+
+        MethodInformation classCopyOneMethodCopyOne = new MethodInformation("packageone.ClassOne.methodOne()", false);
+        MethodInformation classCopyOneMethodFour = new MethodInformation("packageone.ClassOne.methodFour()", false);
 
         //add methods to classes
         classOne.addMethodInformation(classOneMethodOne);
         classTwo.addMethodInformation(classTwoMethodTwo);
         classThree.addMethodInformation(classThreeMethodThree);
-        classFour.addMethodInformation(classFourMethodFour);
-        classFour.addMethodInformation(classFourMethodFifth);
+
+        classCopyOne.addMethodInformation(classCopyOneMethodCopyOne);
+        classCopyOne.addMethodInformation(classCopyOneMethodFour);
 
         //create changelogitems
         ChangelogDependencyInformation depedencyOne = new ChangelogDependencyInformation("sample.Class.method1(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.ADDED);
@@ -75,7 +78,7 @@ class DiffExtractorTest {
 
         SortedSet<MethodInformation> dsetFour = new TreeSet<>();
         dsetFour.add(depedencyFour);
-        classFourMethodFour.setMethodDependencies(dsetFour);
+        classCopyOneMethodCopyOne.setMethodDependencies(dsetFour);
 
         diffExtractor = new DiffExtractor(Collections.singletonList(packageOldOne), Collections.singletonList(packageNewTwo));
 
