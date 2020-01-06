@@ -28,8 +28,7 @@ jobs:
           if [ $TRAVIS_PULL_REQUEST != "false" ]; then
           curl --output githubdeployer.jar -sL https://github.com/deregges/githubdeployer/releases/download/1.0.0/githubdeployer.jar
           export TRAVIS_TAG=${TRAVIS_TAG:-build$TRAVIS_BUILD_NUMBER}
-          echo ${GIT_TOKEN:0:1}
-          java -jar githubdeployer.jar org=adcl repo=adcl token=$GIT_TOKEN tag=$TRAVIS_TAG title=$TRAVIS_TAG artifact=./target prerelease=true
+          java -jar githubdeployer.jar org=qaware repo=adcl token=$GIT_TOKEN tag=$TRAVIS_TAG title=$TRAVIS_TAG artifact=./target prerelease=true
           else
           echo "Skipping deployment as we are on a PR"
           fi
