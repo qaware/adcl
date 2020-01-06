@@ -4,17 +4,17 @@ import java.util.Objects;
 import java.util.SortedSet;
 
 /**
- * * BehaviorInformation with additional change meta (whether it was added or deleted).
+ * * MethodInformation with additional change meta (whether it was added or deleted).
  */
 public class ChangelogDependencyInformation extends MethodInformation {
 
     private ChangeStatus changeStatus;
 
     /**
-     * Instantiates a new Behavior information.
+     * Instantiates a new ChangelogDependencyInformation.
      *
-     * @param methodInformation the behavior to copy from
-     * @param changeStatus        whenever this behavior was deleted or added
+     * @param methodInformation the method to copy from
+     * @param changeStatus      whenever this method was deleted or added
      */
     public ChangelogDependencyInformation(MethodInformation methodInformation, ChangeStatus changeStatus) {
         super(methodInformation.getName(), methodInformation.getPackageDependencies(), methodInformation.getClassDependencies(), methodInformation.getMethodDependencies(), methodInformation.isConstructor());
@@ -22,11 +22,11 @@ public class ChangelogDependencyInformation extends MethodInformation {
     }
 
     /**
-     * Instantiates a new Behavior information.
+     * Instantiates a new ChangelogDependencyInformation.
      *
-     * @param name          the name of the behavior
-     * @param isConstructor true if this behavior is a constructor
-     * @param changeStatus  whenever this behavior was deleted or added
+     * @param name          the name of the method
+     * @param isConstructor true if this method is a constructor
+     * @param changeStatus  whenever this method was deleted or added
      */
     public ChangelogDependencyInformation(String name, boolean isConstructor, ChangeStatus changeStatus) {
         super(name, isConstructor);
@@ -34,14 +34,14 @@ public class ChangelogDependencyInformation extends MethodInformation {
     }
 
     /**
-     * Instantiates a new Behavior information.
+     * Instantiates a new ChangelogDependencyInformation.
      *
-     * @param name               the name of the behavior
+     * @param name                the name of the method
      * @param packageDependencies the referenced packages
-     * @param classDependencies  the referenced classes
-     * @param methodDependencies the referenced behavior
-     * @param isConstructor      true if behavior is constructor
-     * @param changeStatus       whenever this behavior was deleted or added
+     * @param classDependencies   the referenced classes
+     * @param methodDependencies  the referenced method
+     * @param isConstructor       true if method is constructor
+     * @param changeStatus        whenever this method was deleted or added
      */
     public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
         super(name, packageDependencies, classDependencies, methodDependencies, isConstructor);
