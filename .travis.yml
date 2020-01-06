@@ -25,7 +25,7 @@ jobs:
     - stage: deploy
       script:
         - |
-          if [ $TRAVIS_PR != "false" ]; then
+          if [ $TRAVIS_PULL_REQUEST == "false" ]; then
           curl --output githubdeployer.jar -sL https://github.com/deregges/githubdeployer/releases/download/1.0.0/githubdeployer.jar
           export TRAVIS_TAG=${TRAVIS_TAG:-build$TRAVIS_BUILD_NUMBER}
           java -jar githubdeployer.jar org=adcl repo=adcl token=$GIT_TOKEN tag=$TRAVIS_TAG title=$TRAVIS_TAG artifact=./target prerelease=true
