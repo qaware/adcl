@@ -15,29 +15,16 @@ git:
   depth: false
 
 script:
-  # clean, run sonar, generate javadoc jar
-  - mvn clean verify sonar:sonar javadoc:jar
-  # sonar quality gate breaker
-  - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
-
-before_deploy:
-  # Set up git user name and tag this commit
-  - git config --local user.name adclTeam
-  - git config --local user.email adclTeam@gmail.com
-  - export TRAVIS_TAG=${TRAVIS_TAG:-Build$TRAVIS_BUILD_NUMBER}
-  - git tag "$TRAVIS_TAG"
-
-deploy:
-  # Deploying to GitHub Releases
-  provider: releases
-  api_key:
-    secure: o8EO9ytsSD7TjVcG/6a0148Qzp8Bzo00SUgjfhYhg4FNHDXmmYwRbqkZa4j04ZMwf5t1UI3liVYkZedoEetbA5lgbNSjUgJuHsrnU8bGuHiTiALD47yRM7hN08EgSYg/sPM0VaJMQgACiwfKixr1eGi8MxgEVh5Q3uJtPLzwJ56vUGB+Nstz2ZCqPu$
-  file_glob: true
-  # JAR, JavaDoc JAR and Sources JAR
-  file: target/*.jar
-  on:
-    repo: qaware/adcl
-  skip_cleanup: true
+  - |
+    mvn clean verify sonar:sonar javadoc:jar
+    mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
+    if [ $TRAVIS_PULL_REQUEST == "false" ]; then
+    curl --output githubdeployer.jar -sL https://github.com/deregges/githubdeployer/releases/download/1.0.0/githubdeployer.jar
+    export TRAVIS_TAG=${TRAVIS_TAG:-build$TRAVIS_BUILD_NUMBER}
+    java -jar githubdeployer.jar org=qaware repo=adcl token=$GIT_TOKEN tag=$TRAVIS_TAG title=$TRAVIS_TAG artifact=./target prerelease=true
+    else
+    echo "Skipping deployment as we are on a PR"
+    fi
 
 cache:
   directories:
