@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.SortedSet;
 
 /**
- * * MethodInformation with additional change meta (whether it was added or deleted).
+ * MethodInformation with additional change meta (whether it was added or deleted).
  */
 public class ChangelogDependencyInformation extends MethodInformation {
 

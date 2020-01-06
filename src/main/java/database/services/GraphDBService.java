@@ -94,9 +94,9 @@ public class GraphDBService {
     }
 
     /**
-     * Gets behavior repository.
+     * Gets method repository.
      *
-     * @return the behavior repository
+     * @return the method repository
      */
     public MethodRepository getMethodRepository() {
         return methodRepository;
