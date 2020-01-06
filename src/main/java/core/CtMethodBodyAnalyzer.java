@@ -1,6 +1,6 @@
 package core;
 
-import core.information.BehaviorInformation;
+import core.information.MethodInformation;
 import core.information.ClassInformation;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -17,46 +17,46 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The CtBehaviorBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
+ * The CtMethodBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
  */
-public class CtBehaviorBodyAnalyzer extends ExprEditor {
+public class CtMethodBodyAnalyzer extends ExprEditor {
 
-    private SortedSet<BehaviorInformation> referencedBehavior;
-    private SortedSet<ClassInformation> referencedClasses;
+    private SortedSet<MethodInformation> methodDependencies;
+    private SortedSet<ClassInformation> classDependencies;
     private DependencyPool dependencyPool;
 
     /**
-     * Instantiates a new CtBehaviorBodyAnalyzer.
+     * Instantiates a new CtMethodBodyAnalyzer.
      */
-    CtBehaviorBodyAnalyzer() {
-        this.referencedBehavior = new TreeSet<>(BehaviorInformation.BehaviorInformationComparator.getInstance());
-        this.referencedClasses = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+    CtMethodBodyAnalyzer() {
+        this.methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        this.classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
         this.dependencyPool = DependencyPool.getInstance();
     }
 
     /**
      * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
      *
-     * @param ctBehaviour the ct behaviour
-     * @throws CannotCompileException if CtBehavior body cannot be compiled
+     * @param ctMethods the ct method
+     * @throws CannotCompileException if CtMethod body cannot be compiled
      */
-    void analyse(CtBehavior ctBehaviour) throws CannotCompileException {
-        ctBehaviour.instrument(this);
-        addParameterTypesAsDependencies(ctBehaviour.getSignature());
+    void analyse(CtBehavior ctMethods) throws CannotCompileException {
+        ctMethods.instrument(this);
+        addParameterTypesAsDependencies(ctMethods.getSignature());
     }
 
     @Override
     public void edit(MethodCall m) {
         String signature = parseJVMSignatureIntoMethodSignature(m.getSignature());
-        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
-        referencedClasses.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
+        classDependencies.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
     }
 
     @Override
     public void edit(NewExpr newExpr) {
         String signature = parseJVMSignatureIntoMethodSignature(newExpr.getSignature());
-        referencedBehavior.add(dependencyPool.getOrCreateBehaviorInformation(newExpr.getClassName() + signature, true));
-        referencedClasses.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(newExpr.getClassName() + signature, true));
+        classDependencies.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
     }
 
     /**
@@ -96,7 +96,7 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
      */
     private void addParameterTypesAsDependencies(String signature) {
         List<String> parameterTypes = parseJVMSignatureIntoParameterTypeList(signature);
-        parameterTypes.forEach(parameterType -> referencedClasses.add(dependencyPool.getOrCreateClassInformation(parameterType)));
+        parameterTypes.forEach(parameterType -> classDependencies.add(dependencyPool.getOrCreateClassInformation(parameterType)));
     }
 
     /**
@@ -104,8 +104,8 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getReferencedClasses() {
-        return referencedClasses;
+    public SortedSet<ClassInformation> getClassDependencies() {
+        return classDependencies;
     }
 
     /**
@@ -113,7 +113,7 @@ public class CtBehaviorBodyAnalyzer extends ExprEditor {
      *
      * @return the referenced methods
      */
-    public SortedSet<BehaviorInformation> getReferencedBehavior() {
-        return referencedBehavior;
+    public SortedSet<MethodInformation> getMethodDependencies() {
+        return methodDependencies;
     }
 }

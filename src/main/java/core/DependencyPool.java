@@ -1,6 +1,6 @@
 package core;
 
-import core.information.BehaviorInformation;
+import core.information.MethodInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
 import util.NameParserUtil;
@@ -9,14 +9,15 @@ import java.util.Collection;
 import java.util.TreeMap;
 
 /**
- * A container for PackageInformation, ClassInformation and BehaviorInformation to avoid duplicates of these.
+ * A container for PackageInformation, ClassInformation and MethodInformation to avoid duplicates of these.
  */
 public class DependencyPool {
     private static DependencyPool instance;
+    private static DependencyPool extractorInstance;
 
     private TreeMap<String, PackageInformation> packageInformationMap;
     private TreeMap<String, ClassInformation> classInformationMap;
-    private TreeMap<String, BehaviorInformation> behaviorInformationMap;
+    private TreeMap<String, MethodInformation> methodInformationMap;
 
     /**
      * private to avoid multiple instances
@@ -31,7 +32,7 @@ public class DependencyPool {
     private void initializeDataStorage() {
         packageInformationMap = new TreeMap<>();
         classInformationMap = new TreeMap<>();
-        behaviorInformationMap = new TreeMap<>();
+        methodInformationMap = new TreeMap<>();
     }
 
     /**
@@ -44,6 +45,18 @@ public class DependencyPool {
             instance = new DependencyPool();
         }
         return instance;
+    }
+
+    /**
+     * Gets the available instance for DiffExtractor or creates it if necessary
+     *
+     * @return a instance of DependencyPool
+     */
+    public static DependencyPool getExtractorInstance() {
+        if (extractorInstance == null) {
+            extractorInstance = new DependencyPool();
+        }
+        return extractorInstance;
     }
 
     /**
@@ -64,7 +77,7 @@ public class DependencyPool {
      * @param isInternal  set true if the given package is internal to the analysed project
      * @return the PackageInformation for the given name
      */
-    private PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
+    PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
         if (packageInformationMap.containsKey(packageName)) {
             if (isInternal) {
                 PackageInformation packageInformation = packageInformationMap.get(packageName);
@@ -115,30 +128,30 @@ public class DependencyPool {
     }
 
     /**
-     * Gets the BehaviorInformation with the given BehaviorName, if its not available it will be created.
+     * Gets the MethodInformation with the given MethodName, if its not available it will be created.
      *
-     * @param behaviorName  the name of the behavior
-     * @param isConstructor set true if the behavior is a constructor
-     * @return the BehaviorInformation for the given name
+     * @param methodName  the name of the method
+     * @param isConstructor set true if the method is a constructor
+     * @return the MethodInformation for the given name
      */
-    BehaviorInformation getOrCreateBehaviorInformation(String behaviorName, boolean isConstructor) {
-        if (behaviorInformationMap.containsKey(behaviorName)) {
-            return behaviorInformationMap.get(behaviorName);
+    MethodInformation getOrCreateMethodInformation(String methodName, boolean isConstructor) {
+        if (methodInformationMap.containsKey(methodName)) {
+            return methodInformationMap.get(methodName);
         }
         ClassInformation classInformation;
         if (isConstructor) {
-            classInformation = getOrCreateClassInformation(NameParserUtil.cutOffParamaterList(behaviorName));
+            classInformation = getOrCreateClassInformation(NameParserUtil.cutOffParamaterList(methodName));
         } else {
-            classInformation = getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(behaviorName)));
+            classInformation = getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(methodName)));
         }
-        BehaviorInformation behaviorInformation = new BehaviorInformation(behaviorName, isConstructor);
-        classInformation.addBehaviorInformation(behaviorInformation);
-        behaviorInformationMap.put(behaviorName, behaviorInformation);
-        return behaviorInformation;
+        MethodInformation methodInformation = new MethodInformation(methodName, isConstructor);
+        classInformation.addMethodInformation(methodInformation);
+        methodInformationMap.put(methodName, methodInformation);
+        return methodInformation;
     }
 
     /**
-     * removes all acquired PackageInformation, ClassInformation and BehaviorInformation
+     * removes all acquired PackageInformation, ClassInformation and MethodInformation
      */
     void resetDataStorage() {
         initializeDataStorage();

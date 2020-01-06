@@ -1,6 +1,6 @@
 package view;
 
-import core.information.BehaviorInformation;
+import core.information.MethodInformation;
 import core.information.ChangelogDependencyInformation;
 import core.information.ClassInformation;
 import core.information.PackageInformation;
@@ -14,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -54,16 +53,16 @@ class HTMLReportBuilderTest {
         packageTwo.addClassInformation(classFour);
 
         //create methods owned by the classes above
-        BehaviorInformation classOneMethodOne = new BehaviorInformation("packageone.ClassOne.methodOne()", false);
-        BehaviorInformation classTwoMethodTwo = new BehaviorInformation("packageone.ClassTwo.methodTwo()", false);
-        BehaviorInformation classThreeMethodThree = new BehaviorInformation("packagetwo.ClassThree.methodThree()", false);
-        BehaviorInformation classFourMethodFour = new BehaviorInformation("packagetwo.ClassFour.methodFour()", false);
+        MethodInformation classOneMethodOne = new MethodInformation("packageone.ClassOne.methodOne()", false);
+        MethodInformation classTwoMethodTwo = new MethodInformation("packageone.ClassTwo.methodTwo()", false);
+        MethodInformation classThreeMethodThree = new MethodInformation("packagetwo.ClassThree.methodThree()", false);
+        MethodInformation classFourMethodFour = new MethodInformation("packagetwo.ClassFour.methodFour()", false);
 
         //add methods to classes
-        classOne.addBehaviorInformation(classOneMethodOne);
-        classTwo.addBehaviorInformation(classTwoMethodTwo);
-        classThree.addBehaviorInformation(classThreeMethodThree);
-        classFour.addBehaviorInformation(classFourMethodFour);
+        classOne.addMethodInformation(classOneMethodOne);
+        classTwo.addMethodInformation(classTwoMethodTwo);
+        classThree.addMethodInformation(classThreeMethodThree);
+        classFour.addMethodInformation(classFourMethodFour);
 
         //create changelogitems
         ChangelogDependencyInformation depedencyOne = new ChangelogDependencyInformation("sample.Class.method1(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.ADDED);
@@ -72,21 +71,21 @@ class HTMLReportBuilderTest {
         ChangelogDependencyInformation depedencyFour = new ChangelogDependencyInformation("sample.Class.method4(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.DELETED);
 
         //put dependency items into sets and add them methods
-        SortedSet<BehaviorInformation> dsetOne = new TreeSet<>();
+        SortedSet<MethodInformation> dsetOne = new TreeSet<>();
         dsetOne.add(depedencyOne);
-        classOneMethodOne.setReferencedBehavior(dsetOne);
+        classOneMethodOne.setMethodDependencies(dsetOne);
 
-        SortedSet<BehaviorInformation> dsetTwo = new TreeSet<>();
+        SortedSet<MethodInformation> dsetTwo = new TreeSet<>();
         dsetTwo.add(depedencyTwo);
-        classTwoMethodTwo.setReferencedBehavior(dsetTwo);
+        classTwoMethodTwo.setMethodDependencies(dsetTwo);
 
-        SortedSet<BehaviorInformation> dsetThree = new TreeSet<>();
+        SortedSet<MethodInformation> dsetThree = new TreeSet<>();
         dsetThree.add(depedencyThree);
-        classThreeMethodThree.setReferencedBehavior(dsetThree);
+        classThreeMethodThree.setMethodDependencies(dsetThree);
 
-        SortedSet<BehaviorInformation> dsetFour = new TreeSet<>();
+        SortedSet<MethodInformation> dsetFour = new TreeSet<>();
         dsetFour.add(depedencyFour);
-        classFourMethodFour.setReferencedBehavior(dsetFour);
+        classFourMethodFour.setMethodDependencies(dsetFour);
 
     }
 
