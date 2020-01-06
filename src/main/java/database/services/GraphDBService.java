@@ -16,7 +16,7 @@ import java.util.Collection;
 public class GraphDBService {
     private PackageRepository packageRepository;
     private ClassRepository classRepository;
-    private BehaviorRepository behaviorRepository;
+    private MethodRepository methodRepository;
     private VersionRepository versionRepository;
     private ChangeLogRepository changeLogRepository;
 
@@ -25,16 +25,16 @@ public class GraphDBService {
      *
      * @param packageRepository   {@link PackageRepository}
      * @param classRepository     {@link ClassRepository}
-     * @param behaviorRepository  {@link BehaviorRepository}
+     * @param methodRepository  {@link MethodRepository}
      * @param versionRepository   the version repository
      * @param changeLogRepository the change log repository
      */
     public GraphDBService(PackageRepository packageRepository, ClassRepository classRepository,
-                          BehaviorRepository behaviorRepository, VersionRepository versionRepository,
+                          MethodRepository methodRepository, VersionRepository versionRepository,
                           ChangeLogRepository changeLogRepository) {
         this.packageRepository = packageRepository;
         this.classRepository = classRepository;
-        this.behaviorRepository = behaviorRepository;
+        this.methodRepository = methodRepository;
         this.versionRepository = versionRepository;
         this.changeLogRepository = changeLogRepository;
     }
@@ -48,7 +48,7 @@ public class GraphDBService {
     public void saveAllNodes(Collection<PackageInformation> packages) {
         packages.forEach(packageInformation -> {
             packageInformation.getClassInformations().forEach(classInformation -> {
-                getBehaviorRepository().saveAll(classInformation.getBehaviorInformations());
+                getMethodRepository().saveAll(classInformation.getMethodInformations());
                 getClassRepository().save(classInformation);
             });
             getPackageRepository().save(packageInformation);
@@ -98,8 +98,8 @@ public class GraphDBService {
      *
      * @return the behavior repository
      */
-    public BehaviorRepository getBehaviorRepository() {
-        return behaviorRepository;
+    public MethodRepository getMethodRepository() {
+        return methodRepository;
     }
 
     /**

@@ -75,15 +75,15 @@ public class GraphDBServiceTest {
         ClassInformation testClass = testPackage.getClassInformations().first();
         assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
 
-        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
-        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
+        MethodInformation testMethod = testClass.getMethodInformations().first();
+        assertThat(testMethod).isEqualTo(graphDBService.getMethodRepository().findByName(testMethod.getName()));
 
         graphDBService.getPackageRepository().deleteAll(packages);
     }
 
     @Test
     void saveChangelogTest() {
-        Collection<PackageInformation> changes = new DiffExtractor(packages, new ArrayList<>()).getChanged();
+        Collection<PackageInformation> changes = new DiffExtractor(packages, new ArrayList<>()).getChangelist();
         ChangelogInformation changelogInformation = new ChangelogInformation(changes, null, null);
         graphDBService.saveChangelog(changelogInformation);
 
@@ -98,10 +98,10 @@ public class GraphDBServiceTest {
         ClassInformation testClass = testPackage.getClassInformations().first();
         assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
 
-        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
-        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
+        MethodInformation testMethod = testClass.getMethodInformations().first();
+        assertThat(testMethod).isEqualTo(graphDBService.getMethodRepository().findByName(testMethod.getName()));
 
-        assertThat(testBehavior.getReferencedBehavior()).hasOnlyElementsOfType(ChangelogDependencyInformation.class);
+        assertThat(testMethod.getMethodDependencies()).hasOnlyElementsOfType(ChangelogDependencyInformation.class);
 
         graphDBService.getChangeLogRepository().delete(changelogInformation);
     }
@@ -123,8 +123,8 @@ public class GraphDBServiceTest {
         ClassInformation testClass = testPackage.getClassInformations().first();
         assertThat(testClass).isEqualTo(graphDBService.getClassRepository().findByClassName(testClass.getClassName()));
 
-        BehaviorInformation testBehavior = testClass.getBehaviorInformations().first();
-        assertThat(testBehavior).isEqualTo(graphDBService.getBehaviorRepository().findByName(testBehavior.getName()));
+        MethodInformation testMethod = testClass.getMethodInformations().first();
+        assertThat(testMethod).isEqualTo(graphDBService.getMethodRepository().findByName(testMethod.getName()));
 
         graphDBService.getVersionRepository().delete(version);
     }

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @SpringBootConfiguration
 @ComponentScan(basePackages = "database.*")
 public class Application {
-    public static final String COMMIT_NA = "COMMIT_NA";
+    private static final String COMMIT_NA = "COMMIT_NA";
 
     public static void main(String[] args) throws IOException {
         //Loading config
@@ -70,7 +70,7 @@ public class Application {
 
         //Save the Analysis in the Database
         graphDBService.saveVersion(current);
-        graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChanged(), previous, current));
+        graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChangelist(), previous, current));
 
         ctx.close();
     }
