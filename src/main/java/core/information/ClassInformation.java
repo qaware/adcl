@@ -19,7 +19,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
     @GeneratedValue
     private Long id;
     private String className;
-    @Relationship(type = "IS_BEHAVIOR_OF")
+    @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
     private SortedSet<MethodInformation> methodInformations;
 
     private boolean isService;
