@@ -1,7 +1,7 @@
 package core;
 
-import core.information.MethodInformation;
 import core.information.ClassInformation;
+import core.information.MethodInformation;
 import core.information.PackageInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +16,7 @@ import java.util.Collection;
 /**
  * The DependencyListWriter formats the extracted information and writes them into a file.
  */
+@Deprecated
 class DependencyListWriter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyListWriter.class);
