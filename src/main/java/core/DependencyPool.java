@@ -22,7 +22,7 @@ public class DependencyPool {
     /**
      * private to avoid multiple instances
      */
-    private DependencyPool() {
+    DependencyPool() {
         initializeDataStorage();
     }
 

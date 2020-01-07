@@ -51,4 +51,14 @@ public class PomDependencyReader {
             LOGGER.info(ex.getMessage());
         }
     }
+
+    /**
+     * Integrates all dependencies in data structure
+     */
+    public void integrateInDataStructure(){
+        DependencyPool pool = new DependencyPool();
+        readDependency().forEach(dependency -> {
+            pool.getOrCreateClassInformation(dependency.getGroupId() + dependency.getArtifactId());
+        });
+    }
 }
