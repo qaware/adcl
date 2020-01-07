@@ -1,18 +1,14 @@
 package core;
 
-import core.information.MethodInformation;
 import core.information.ClassInformation;
+import core.information.MethodInformation;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,18 +41,26 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         addParameterTypesAsDependencies(ctMethods.getSignature());
     }
 
-    @Override
-    public void edit(MethodCall m) {
-        String signature = parseJVMSignatureIntoMethodSignature(m.getSignature());
-        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(m.getClassName() + "." + m.getMethodName() + signature, false));
-        classDependencies.add(dependencyPool.getOrCreateClassInformation(m.getClassName()));
+    /**
+     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
+     *
+     * @param className the class name to be checked
+     */
+    private static boolean isInternal(String className) {
+        try {
+            return isInternal(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
-    @Override
-    public void edit(NewExpr newExpr) {
-        String signature = parseJVMSignatureIntoMethodSignature(newExpr.getSignature());
-        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(newExpr.getClassName() + signature, true));
-        classDependencies.add(dependencyPool.getOrCreateClassInformation(newExpr.getClassName()));
+    /**
+     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
+     *
+     * @param clazz the class to be checked
+     */
+    private static boolean isInternal(Class<?> clazz) {
+        return clazz.getProtectionDomain().getCodeSource() == null;
     }
 
     /**
@@ -89,14 +93,10 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         return parseJVMSignatureIntoParameterTypeList(signature.substring(signature.indexOf('('), signature.lastIndexOf(')'))).toString().replace("[", "(").replace("]", ")").replace(" ", "");
     }
 
-    /**
-     * Adds the Parameter types to the references Classes.
-     *
-     * @param signature in JVM Type signature
-     */
-    private void addParameterTypesAsDependencies(String signature) {
-        List<String> parameterTypes = parseJVMSignatureIntoParameterTypeList(signature);
-        parameterTypes.forEach(parameterType -> classDependencies.add(dependencyPool.getOrCreateClassInformation(parameterType)));
+    @Override
+    public void edit(MethodCall m) {
+        String signature = parseJVMSignatureIntoMethodSignature(m.getSignature());
+        addDependency(m.getClassName(), "." + m.getMethodName() + signature, false);
     }
 
     /**
@@ -115,5 +115,47 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      */
     public SortedSet<MethodInformation> getMethodDependencies() {
         return methodDependencies;
+    }
+
+    @Override
+    public void edit(NewExpr newExpr) {
+        String signature = parseJVMSignatureIntoMethodSignature(newExpr.getSignature());
+        addDependency(newExpr.getClassName(), signature, true);
+    }
+
+    /**
+     * Adds the Parameter types to the references Classes.
+     *
+     * @param signature in JVM Type signature
+     */
+    private void addParameterTypesAsDependencies(String signature) {
+        List<String> parameterTypes = parseJVMSignatureIntoParameterTypeList(signature);
+        parameterTypes.forEach(this::addDependency);
+    }
+
+    /**
+     * Add a new method dependency to the list of dependencies the method has. Dependencies to internal (JRE) methods are omitted
+     *
+     * @param toClass       the class the method dependency is pointing to
+     * @param toMethod      the method the method dependency is pointing to
+     * @param isConstructor whether the dependency represents a constructor call
+     * @return whether a new method dependency got added
+     */
+    private boolean addDependency(String toClass, String toMethod, boolean isConstructor) {
+        if (!addDependency(toClass)) return false;
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(toClass + toMethod, isConstructor));
+        return true;
+    }
+
+    /**
+     * Add a new class dependency to the list of dependencies the method has. Dependencies to internal (JRE) classes are omitted
+     *
+     * @param toClass the class the class dependency is pointing to
+     * @return whether a new class dependency got added
+     */
+    private boolean addDependency(String toClass) {
+        if (isInternal(toClass)) return false;
+        classDependencies.add(dependencyPool.getOrCreateClassInformation(toClass));
+        return true;
     }
 }
