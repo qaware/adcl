@@ -27,6 +27,7 @@ public class DiffExtractor {
      */
     public DiffExtractor(Collection<PackageInformation> old, Collection<PackageInformation> analysed) {
 
+        changelistDependencyPool.resetDataStorage();
         SortedSet<PackageInformation> before = new TreeSet<>(old);
         SortedSet<PackageInformation> after = new TreeSet<>(analysed);
         diff(before, after);

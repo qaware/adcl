@@ -65,6 +65,11 @@ public class GraphDBService {
         changeLogRepository.save(changelog);
     }
 
+    @Transactional
+    public VersionInformation getVersion(String previousCommitName) {
+        return getVersionRepository().findVersionInformationByVersionName(previousCommitName);
+    }
+
     /**
      * Saves a version in the database.
      *

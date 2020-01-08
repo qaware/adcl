@@ -56,6 +56,15 @@ public class MethodInformation implements Comparable<MethodInformation> {
     }
 
     /**
+     * Should not be used is for Spring Data
+     */
+    public MethodInformation() {
+        this.packageDependencies = new TreeSet<>();
+        this.classDependencies = new TreeSet<>();
+        this.methodDependencies = new TreeSet<>();
+    }
+
+    /**
      * Set the referenced packages.
      *
      * @param packageDependencies the referenced packages

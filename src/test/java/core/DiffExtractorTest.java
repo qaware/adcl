@@ -1,6 +1,9 @@
 package core;
 
-import core.information.*;
+import core.information.ChangelogDependencyInformation;
+import core.information.ClassInformation;
+import core.information.MethodInformation;
+import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -80,12 +83,12 @@ class DiffExtractorTest {
         dsetFour.add(depedencyFour);
         classCopyOneMethodCopyOne.setMethodDependencies(dsetFour);
 
-        diffExtractor = new DiffExtractor(Collections.singletonList(packageOldOne), Collections.singletonList(packageNewTwo));
-
     }
 
     @Test
     void getChanged() {
+        diffExtractor = new DiffExtractor(packageOld, packageNew);
+
         ClassInformation classOne = new ClassInformation("packageone.ClassOne");
         ClassInformation classTwo = new ClassInformation("packageone.ClassTwo");
         ClassInformation classThree = new ClassInformation("packageone.ClassThree");
@@ -102,5 +105,12 @@ class DiffExtractorTest {
                 .getMethodInformations().first()
                 .getMethodDependencies().first()).isInstanceOf(ChangelogDependencyInformation.class)
                 .hasFieldOrPropertyWithValue("changeStatus", ChangelogDependencyInformation.ChangeStatus.DELETED);
+    }
+
+    @Test
+    void analyseSame() {
+        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageOld);
+
+        assertThat(diffExtractor.getChangelist()).isEmpty();
     }
 }

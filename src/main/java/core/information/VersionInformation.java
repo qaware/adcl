@@ -4,6 +4,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.Collection;
 import java.util.SortedSet;
@@ -22,6 +23,7 @@ public class VersionInformation {
     @Relationship(type = "IS_VERSION_OF")
     private SortedSet<PackageInformation> packageInformations;
 
+    @Lazy
     @Relationship(type = "FOLLOWED")
     private VersionInformation previousVersion = null;
 
