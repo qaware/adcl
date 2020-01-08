@@ -8,6 +8,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * The type Package information contains Information about the static dependencies of a java package.
@@ -127,6 +128,13 @@ public class PackageInformation implements Comparable<PackageInformation> {
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return ("Package " + packageName + " (id=" + id + ", " + (isInternalPackage ? "internal" : "external") + ") {\n"
+                + classInformations.stream().map(ClassInformation::toString).collect(Collectors.joining(",\n"))
+        ).replace("\n", "\n    ") + "\n}";
     }
 
     /**

@@ -8,6 +8,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * The type Class information contains Information about the static dependencies of a java class.
@@ -146,6 +147,13 @@ public class ClassInformation implements Comparable<ClassInformation> {
     @Override
     public int hashCode() {
         return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return ("Class " + className + " (id=" + id + ", " + (isService ? "service" : "no-service") + ") {\n"
+                + methodInformations.stream().map(MethodInformation::toString).collect(Collectors.joining(",\n"))
+        ).replace("\n", "\n    ") + "\n}";
     }
 
     /**
