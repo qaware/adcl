@@ -3,7 +3,11 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  neo4jUrl: 'bolt://localhost:7687',
+  neo4jUsername: 'neo4j',
+  neo4jPassword: 'test',
+  neo4jEncrypted: false
 };
 
 /*

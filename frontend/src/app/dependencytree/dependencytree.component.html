@@ -1,0 +1,27 @@
+<mat-form-field>
+  <mat-label>Changelog</mat-label>
+  <mat-select (selectionChange)="changeDependencyTree($event.value)">
+    <mat-option *ngFor="let id of database.changelogIds" [value]="id">
+      {{id}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+<mat-form-field>
+  <input matInput placeholder="Search" (input)="filterChanged($event.target.value)">
+</mat-form-field>
+<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
+    <button mat-icon-button disabled></button>
+    <strong>{{node.label}}: &nbsp; </strong> {{node.item}}
+  </mat-tree-node>
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+    <button mat-icon-button matTreeNodeToggle
+            [attr.aria-label]="'toggle ' + node.filename">
+      <mat-icon class="mat-icon-rtl-mirror">
+        {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+      </mat-icon>
+    </button>
+    <strong> {{node.label}}: &nbsp; </strong> {{node.item}}
+  </mat-tree-node>
+</mat-tree>
+
