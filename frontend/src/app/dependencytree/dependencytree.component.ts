@@ -152,7 +152,6 @@ export class DependencyTreeDatabase {
           }
         );
       });
-      console.log(packageInformation);
     }).then(() => {
       this.neo4j.run(queryClassInformation, params).then(classInfo => {
           let index = 1;
@@ -185,7 +184,7 @@ export class DependencyTreeDatabase {
             methodInformation.push(obj);
 
             const added: { [k: string]: any } = {};
-            added.label = 'Added dependencies ';
+            added.label = 'Added dependencies';
             added.text = '';
             added.code = obj.code + '.0';
             methodInformation.push(added);
@@ -209,7 +208,11 @@ export class DependencyTreeDatabase {
                 obj.constructor = dcInfo[1];
                 obj.changeStatus = dcInfo[2];
                 obj.usedByMethod = dcInfo[3];
-                obj.label = 'Dependency';
+                if (status === '.0') {
+                  obj.label = '🔒 Dependency';
+                } else {
+                  obj.label = '🔓 Dependency';
+                }
                 dependencyInformationMethod.push(obj);
               });
             }
