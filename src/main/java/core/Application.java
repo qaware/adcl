@@ -53,16 +53,14 @@ public class Application {
         //Getting previous Commit
         VersionInformation previous;
         String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
-        VersionInformation current;
+        VersionInformation current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA));
 
-        if (previousCommitName.equals(COMMIT_NA)) {
-            current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA));
-        } else {
+        if (!previousCommitName.equals(COMMIT_NA)) {
             previous = graphDBService.getVersion(previousCommitName);
             if (previous == null)
                 throw new NoSuchElementException("Commit " + previousCommitName + " does not exist in the database");
 
-            current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA), previous);
+            current.setPreviousVersion(previous);
 
             //Analyse differences between current and previous Commit
             DiffExtractor diffExtractor = new DiffExtractor(previous.getPackageInformations(), packages);

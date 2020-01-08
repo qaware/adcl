@@ -83,4 +83,13 @@ public class VersionInformation {
     public VersionInformation getPreviousVersion() {
         return previousVersion;
     }
+
+    /**
+     * Sets previous version.
+     *
+     * @param previousVersion the previous version
+     */
+    public void setPreviousVersion(VersionInformation previousVersion) {
+        this.previousVersion = previousVersion;
+    }
 }
