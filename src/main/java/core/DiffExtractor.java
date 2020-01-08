@@ -46,7 +46,7 @@ public class DiffExtractor {
         changelistDependencyPool.getOrCreateClassInformation(classInformation.getClassName(), classInformation.isService(), packageInformation.isInternalPackage());
 
         //create a copy of methodInformation
-        MethodInformation mi = changelistDependencyPool.getOrCreateMethodInformation(methodInformation.getName(), methodInformation.isConstructor());
+        MethodInformation mi = changelistDependencyPool.getOrCreateMethodInformation(methodInformation.getName());
 
         //addToChangelist ChangelogDependencyInformation to the copy of methodInformation
         MethodInformation md = new ChangelogDependencyInformation(methodDependency, status);

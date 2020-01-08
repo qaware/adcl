@@ -19,10 +19,12 @@ import org.springframework.util.FileSystemUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 @ActiveProfiles(profiles = "test")
 public class GraphDBServiceTest {
-    private static final String SRC_TEST_RESOURCES_TESTCLASSFILES = "src/test/resources/testclassfiles/Testclass.class";
+    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
 
     private static Collection<PackageInformation> packages;
     private static GraphDatabaseService dbService;
@@ -39,7 +41,7 @@ public class GraphDBServiceTest {
     GraphDBService graphDBService;
 
     @BeforeAll
-    static void setup() {
+    static void setup() throws IOException {
         BoltConnector bolt = new BoltConnector("0");
 
         dbService = new GraphDatabaseFactory()
@@ -49,7 +51,8 @@ public class GraphDBServiceTest {
                 .setConfig(bolt.listen_address, "localhost:7687")
                 .newGraphDatabase();
 
-        packages = new DependencyExtractor().analyseClasses(Collections.singletonList(SRC_TEST_RESOURCES_TESTCLASSFILES));
+        List<String> classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
+        packages = new DependencyExtractor().analyseClasses(classFiles);
     }
 
     @AfterAll
@@ -65,11 +68,11 @@ public class GraphDBServiceTest {
 
         graphDBService.saveAllNodes(packages);
 
-        PackageInformation testPackage = graphDBService.getPackageRepository().findByPackageName("testclasses");
+        PackageInformation testPackage = graphDBService.getPackageRepository().findByPackageName("packageA");
         assertThat(testPackage).isNotNull();
         assertThat(testPackage).isInstanceOf(PackageInformation.class);
         assertThat(testPackage).isEqualTo(packages.stream()
-                .filter(packageInformation -> packageInformation.getPackageName().equals("testclasses"))
+                .filter(packageInformation -> packageInformation.getPackageName().equals("packageA"))
                 .findFirst().orElse(null));
 
         ClassInformation testClass = testPackage.getClassInformations().first();
@@ -91,7 +94,7 @@ public class GraphDBServiceTest {
         assertThat(changelogInformation).isNotNull();
         assertThat(changelogInformation.getChangelog()).isNotEmpty();
 
-        PackageInformation testPackage = graphDBService.getPackageRepository().findByPackageName("testclasses");
+        PackageInformation testPackage = graphDBService.getPackageRepository().findByPackageName("packageB");
         assertThat(testPackage).isNotNull();
         assertThat(testPackage).isInstanceOf(PackageInformation.class);
 
@@ -113,11 +116,11 @@ public class GraphDBServiceTest {
         assertThat(version).isNotNull();
 
         PackageInformation testPackage = version.getPackageInformations().stream()
-                .filter(packageInformation -> packageInformation.getPackageName().equals("testclasses")).findFirst().orElse(null);
+                .filter(packageInformation -> packageInformation.getPackageName().equals("packageA")).findFirst().orElse(null);
         assertThat(testPackage).isNotNull();
         assertThat(testPackage).isInstanceOf(PackageInformation.class);
         assertThat(testPackage).isEqualTo(packages.stream()
-                .filter(packageInformation -> packageInformation.getPackageName().equals("testclasses"))
+                .filter(packageInformation -> packageInformation.getPackageName().equals("packageA"))
                 .findFirst().orElse(null));
 
         ClassInformation testClass = testPackage.getClassInformations().first();
