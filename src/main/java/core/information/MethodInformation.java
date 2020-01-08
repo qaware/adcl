@@ -8,6 +8,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * The class Behavior information contains static dependency information about {@link javassist.CtBehavior}.
@@ -27,6 +28,15 @@ public class MethodInformation implements Comparable<MethodInformation> {
     private SortedSet<MethodInformation> methodDependencies;
 
     private boolean isConstructor;
+
+    @Override
+    public String toString() {
+        return ("Method " + name + " (id=" + id + ", " + (isConstructor ? "constructor" : "no-constructor") + ") {\n"
+                + "packageDependencies=[" + packageDependencies.stream().map(PackageInformation::getPackageName).collect(Collectors.joining(", ")) + "]\n"
+                + "classDependencies=[" + classDependencies.stream().map(ClassInformation::getClassName).collect(Collectors.joining(", ")) + "]\n"
+                + "methodDependencies=[" + methodDependencies.stream().map(MethodInformation::getName).collect(Collectors.joining(", ")) + "]"
+        ).replace("\n", "\n    ") + "\n}";
+    }
 
     /**
      * Instantiates a new Method information.
