@@ -26,7 +26,7 @@ report.destination=C:\\\\ADCLTest
 
 #### Wie sieht die Datei dann am Ende aus?  
 
-######So:  
+###### So:  
 
 spring.data.neo4j.uri=bolt://localhost:7687  
 spring.data.neo4j.username=neo4j  
