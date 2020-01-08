@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PackageInformationTest {
     private static final String TEST_PACKAGE_2 = "testPackage2";
@@ -22,13 +22,13 @@ class PackageInformationTest {
     @BeforeAll
     private static void createClassInformation() {
 
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
         packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>();
         classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
         methodDependencies.add(new MethodInformation(TEST_CLASS_TEST, false));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        SortedSet<MethodInformation> methodInformations = new TreeSet<>();
         methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
         methodInformations.add(new MethodInformation(TEST_CLASS_TEST, packageDependencies, classDependencies, methodDependencies, false));
 

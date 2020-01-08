@@ -1,69 +1,103 @@
 package core;
 
+import core.information.ClassInformation;
 import core.information.MethodInformation;
 import core.information.PackageInformation;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import util.IOUtil;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static util.DataGenerationUtil.*;
 
 class DependencyExtractorTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DependencyExtractorTest.class);
-    private static final String SRC_TEST_RESOURCES_TESTCLASSFILES = "src/test/resources/testclassfiles/";
-    private static final String SRC_TEST_RESOURCES_TXTFILES_EXPECTED = "src/test/resources/txtfiles/expectedTextResultFromTestclass.txt";
-    private DependencyExtractor sut;
-    private static String expectedResultText;
+    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
 
-    @BeforeAll
-    static void loadFiles() {
-        try {
-            expectedResultText = IOUtil.readFile(SRC_TEST_RESOURCES_TXTFILES_EXPECTED, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
+    private DependencyExtractor depEx;
+    private List<String> classFiles;
+
+    @SuppressWarnings({"unused", "UnusedAssignment"})
+    private static SortedSet<PackageInformation> cmpData() {
+        PackageInformation pa, pb, pd;
+        ClassInformation ca, cabase, cb, cc, cca, cci, ce;
+        MethodInformation caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
+
+        SortedSet<PackageInformation> result = version(
+                pa = pi("packageA",
+                        ca = ci("packageA.ClassA", false, true,
+                                caC = mi("packageA.ClassA.<init>()"),
+                                caMa = mi("packageA.ClassA.methodA()"),
+                                caMb = mi("packageA.ClassA.methodB(packageB.ClassB)"),
+                                caE = mi("packageA.ClassA.empty()")
+                        ),
+                        cabase = ci("packageA.ClassABase", false, true,
+                                cabaseE = mi("packageA.ClassABase.empty()")
+                        )
+                ),
+                pb = pi("packageB",
+                        cb = ci("packageB.ClassB", true, true,
+                                cbC = mi("packageB.ClassB.<init>()"),
+                                cbCC = mi("packageB.ClassB.<clinit>()"),
+                                cbGia1 = mi("packageB.ClassB.getInstanceA()"),
+                                cbM = mi("packageB.ClassB.method(java.util.function.Predicate)"),
+                                cbL = mi("packageB.ClassB.lambda$getInstanceA$0(java.lang.String)"),
+                                cbGia2 = mi("packageB.ClassB.getInstanceA(java.lang.String,int,packageA.ClassA[])")
+                        )
+                ),
+                pd = pi("default",
+                        cc = ci("ClassC", false, true,
+                                ccC = mi("ClassC.<init>()"),
+                                ccRca = mi("ClassC.retrieveClassA()")
+                        ),
+                        cca = ci("ClassC$1", false, true,
+                                ccaC = mi("ClassC$1.<init>(ClassC)"),
+                                ccaGcc = mi("ClassC$1.getClassC()")
+                        ),
+                        cci = ci("ClassC$ClassCInner", false, true,
+                                cciC = mi("ClassC$ClassCInner.<init>(ClassC)"),
+                                cciRca = mi("ClassC$ClassCInner.retrieveClassA()")
+                        ),
+                        ce = ci("ExternalClass", false, false,
+                                ceEm = mi("ExternalClass.extMethod()")
+                        )
+                )
+        );
+
+        p(caMa, pb, cb, cbC);
+        p(caMb, pb, cb);
+        //TODO analyse LDC OpCodes
+        //p(cbC, ca);
+        p(cbCC, pa, ca, cabase, caC);
+        p(cbGia1, pa, ca, cabase);
+        p(ccC, pd, cca, ccaC);
+        p(ccaC, pd, cc);
+        p(ccRca, pa, pb, ca, cbGia1, cb);
+        p(ccaGcc, pd, cc, ccC);
+        p(cciC, pd, cc);
+        p(cciRca, pd, pa, ce, ca, ceEm);
+        p(cbGia2, pa, pb, ca, cb, cbM);
+
+        return result;
     }
 
     @BeforeEach
-    void setUp() {
-        sut = new DependencyExtractor();
+    void setUp() throws IOException {
+        depEx = new DependencyExtractor();
+        classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
     }
 
     @Test
     void analyseClasses() {
-        List<String> classes = new ArrayList<>();
-        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "Testclass.class");
-        Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
-        StringBuilder resultText = new StringBuilder();
-        analysedClasses.forEach(packageInformation -> resultText.append(String.format("%s %n", DependencyListWriter.generateDeepList(packageInformation))));
+        SortedSet<PackageInformation> analysedClasses = new TreeSet<>(depEx.analyseClasses(classFiles));
 
-        assertThat(resultText.toString()).isEqualTo(expectedResultText);
-
-    }
-
-    @Test
-    void analyseClassesWithService() {
-        List<String> classes = new ArrayList<>();
-        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "Testservice.class");
-        Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
-        assertThat(analysedClasses.iterator().next().getClassInformations().first().isService()).isTrue();
-    }
-
-    @Test
-    void analyseClassesWithConstructorSignature() {
-        List<String> classes = new ArrayList<>();
-        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "H.class");
-        classes.add(SRC_TEST_RESOURCES_TESTCLASSFILES + "K.class");
-        Collection<PackageInformation> analysedClasses = sut.analyseClasses(classes);
-        assertThat(analysedClasses.iterator().next().getClassInformations().last().getMethodDependencies()).contains(new MethodInformation("core.H(java.lang.String,java.util.ArrayList)", true));
+        assertThat(analysedClasses).isEqualTo(cmpData());
     }
 }

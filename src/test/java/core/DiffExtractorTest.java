@@ -1,6 +1,9 @@
 package core;
 
-import core.information.*;
+import core.information.ChangelogDependencyInformation;
+import core.information.ClassInformation;
+import core.information.MethodInformation;
+import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -86,18 +89,12 @@ class DiffExtractorTest {
 
     @Test
     void getChanged() {
-        ClassInformation classOne = new ClassInformation("packageone.ClassOne");
-        ClassInformation classTwo = new ClassInformation("packageone.ClassTwo");
-        ClassInformation classThree = new ClassInformation("packageone.ClassThree");
-
         ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelist());
         Collections.sort(change);
 
         assertThat(change).isNotEmpty();
         assertThat(change.get(0).getPackageName()).isEqualTo("packageone");
-        assertThat(change.get(0).getClassInformations().contains(classOne)).isTrue();
-        assertThat(change.get(0).getClassInformations().contains(classTwo)).isTrue();
-        assertThat(change.get(0).getClassInformations().contains(classThree)).isTrue();
+        assertThat(change.get(0).getClassInformations().stream().map(ClassInformation::getClassName)).contains("packageone.ClassOne", "packageone.ClassTwo", "packageone.ClassThree");
         assertThat(change.get(0).getClassInformations().first()
                 .getMethodInformations().first()
                 .getMethodDependencies().first()).isInstanceOf(ChangelogDependencyInformation.class)

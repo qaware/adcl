@@ -4,18 +4,19 @@ import core.information.ClassInformation;
 import core.information.MethodInformation;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
-import javassist.expr.NewExpr;
+import javassist.NotFoundException;
+import javassist.expr.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The CtMethodBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
  */
 public class CtMethodBodyAnalyzer extends ExprEditor {
+    private static final Logger logger = LoggerFactory.getLogger(CtMethodBodyAnalyzer.class);
+    private static final Set<String> PRIMITIVES = new HashSet<>(Arrays.asList("boolean", "byte", "short", "char", "int", "long", "float", "double"));
 
     private SortedSet<MethodInformation> methodDependencies;
     private SortedSet<ClassInformation> classDependencies;
@@ -25,20 +26,9 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      * Instantiates a new CtMethodBodyAnalyzer.
      */
     CtMethodBodyAnalyzer() {
-        this.methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        this.classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        this.methodDependencies = new TreeSet<>();
+        this.classDependencies = new TreeSet<>();
         this.dependencyPool = DependencyPool.getInstance();
-    }
-
-    /**
-     * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
-     *
-     * @param ctMethods the ct method
-     * @throws CannotCompileException if CtMethod body cannot be compiled
-     */
-    void analyse(CtBehavior ctMethods) throws CannotCompileException {
-        ctMethods.instrument(this);
-        addParameterTypesAsDependencies(ctMethods.getSignature());
     }
 
     /**
@@ -47,11 +37,140 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      * @param className the class name to be checked
      */
     private static boolean isInternal(String className) {
+        className = className.replace("[", "").replace("]", "");
         try {
-            return isInternal(Class.forName(className));
+            return PRIMITIVES.contains(className) || isInternal(Class.forName(className));
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    /**
+     * Gets all types denoted by prefix 'L' and suffix ';' that can be found in the methods bytecode signature
+     *
+     * @return a set of full class names (com.example.MyClass) that were found
+     */
+    private static Set<String> getTypesFromSignature(String signature) {
+        Set<String> result = new HashSet<>();
+        int pos = 0;
+        while (true) {
+            int lpos = signature.indexOf('L', pos);
+            if (lpos == -1) break;
+            int spos = signature.indexOf(';', lpos);
+            result.add(signature.substring(lpos + 1, spos).replace('/', '.'));
+            pos = spos;
+        }
+        return result;
+    }
+
+    /**
+     * Converts a bytecode signature to a java source signature (only parameter lists, starting with '(' and ending with ')')
+     */
+    private static String convertSignature(String signature) {
+        StringBuilder sb = new StringBuilder("(");
+
+        int pos = 1;
+        boolean array = false;
+
+        while (pos < signature.length()) {
+            switch (signature.charAt(pos)) {
+                case ')':
+                    pos = signature.length();
+                    if (sb.length() > 1) sb.setLength(sb.length() - 2);
+                    break;
+                case 'Z':
+                    sb.append("boolean");
+                    break;
+                case 'B':
+                    sb.append("byte");
+                    break;
+                case 'C':
+                    sb.append("char");
+                    break;
+                case 'S':
+                    sb.append("short");
+                    break;
+                case 'I':
+                    sb.append("int");
+                    break;
+                case 'J':
+                    sb.append("long");
+                    break;
+                case 'F':
+                    sb.append("float");
+                    break;
+                case 'D':
+                    sb.append("double");
+                    break;
+                case '[':
+                    array = true;
+                    pos++;
+                    continue;
+                case 'L':
+                    int sPos = signature.indexOf(';', pos);
+                    sb.append(signature, pos + 1, sPos);
+                    pos = sPos;
+                    break;
+            }
+            pos++;
+            if (array) {
+                sb.append("[]");
+                array = false;
+            }
+            if (pos < signature.length()) sb.append(", ");
+        }
+
+        sb.append(')');
+        return sb.toString().replace('/', '.');
+    }
+
+    /**
+     * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
+     *
+     * @param ctMethod the ct method
+     */
+    void analyse(CtBehavior ctMethod) {
+        getTypesFromSignature(ctMethod.getSignature()).forEach(this::addDependency);
+        try {
+            ctMethod.instrument(this);
+        } catch (CannotCompileException e) {
+            logger.warn("Got CannotCompileException without intention to compile", e);
+        }
+    }
+
+    @Override
+    public void edit(MethodCall m) {
+        addDependency(m.getClassName(), m.getMethodName() + convertSignature(m.getSignature()), false);
+    }
+
+    @Override
+    public void edit(NewExpr newExpr) {
+        addDependency(newExpr.getClassName(), "<init>" + convertSignature(newExpr.getSignature()), true);
+    }
+
+    @Override
+    public void edit(Cast c) {
+        try {
+            addDependency(c.getType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process class cast in " + c.where().getLongName() + " as the casted type is not initialized yet");
+        }
+    }
+
+    @Override
+    public void edit(NewArray a) {
+        try {
+            addDependency(a.getComponentType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process newarr in " + a.where().getLongName() + " as the casted type is not initialized yet");
+        }
+    }
+
+    @Override
+    public void edit(FieldAccess f) {
+        getTypesFromSignature(f.getSignature()).forEach(this::addDependency);
     }
 
     /**
@@ -63,40 +182,24 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         return clazz.getProtectionDomain().getCodeSource() == null;
     }
 
-    /**
-     * Parses the jvm style into a list of the contained types.
-     *
-     * @param signature the jvm style signature
-     * @return list of types
-     */
-    private List<String> parseJVMSignatureIntoParameterTypeList(String signature) {
-        String[] split = signature.replace("/", ".").replace("(", "").replace(")", "").split(";");
-
-        Pattern pattern = Pattern.compile("[a-z]");
-        List<String> formatted = new ArrayList<>();
-        Arrays.stream(split).forEach(s -> {
-            Matcher matcher = pattern.matcher(s);
-            if (matcher.find()) {
-                formatted.add(s.substring(matcher.start()));
-            }
-        });
-        return formatted;
-    }
-
-    /**
-     * Parses a jvm style signature into a Method parameter list.
-     *
-     * @param signature the jvm style signature
-     * @return types in style of (Type,Type,Type,...)
-     */
-    private String parseJVMSignatureIntoMethodSignature(String signature) {
-        return parseJVMSignatureIntoParameterTypeList(signature.substring(signature.indexOf('('), signature.lastIndexOf(')'))).toString().replace("[", "(").replace("]", ")").replace(" ", "");
+    @Override
+    public void edit(Instanceof i) {
+        try {
+            addDependency(i.getType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process instanceof in " + i.where().getLongName() + " as the casted type is not initialized yet");
+        }
     }
 
     @Override
-    public void edit(MethodCall m) {
-        String signature = parseJVMSignatureIntoMethodSignature(m.getSignature());
-        addDependency(m.getClassName(), "." + m.getMethodName() + signature, false);
+    public void edit(Handler h) throws CannotCompileException {
+        try {
+            addDependency(h.getType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process catch type in " + h.where().getLongName() + " as the casted type is not initialized yet");
+        }
     }
 
     /**
@@ -117,22 +220,6 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         return methodDependencies;
     }
 
-    @Override
-    public void edit(NewExpr newExpr) {
-        String signature = parseJVMSignatureIntoMethodSignature(newExpr.getSignature());
-        addDependency(newExpr.getClassName(), signature, true);
-    }
-
-    /**
-     * Adds the Parameter types to the references Classes.
-     *
-     * @param signature in JVM Type signature
-     */
-    private void addParameterTypesAsDependencies(String signature) {
-        List<String> parameterTypes = parseJVMSignatureIntoParameterTypeList(signature);
-        parameterTypes.forEach(this::addDependency);
-    }
-
     /**
      * Add a new method dependency to the list of dependencies the method has. Dependencies to internal (JRE) methods are omitted
      *
@@ -143,7 +230,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      */
     private boolean addDependency(String toClass, String toMethod, boolean isConstructor) {
         if (!addDependency(toClass)) return false;
-        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(toClass + toMethod, isConstructor));
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(toClass + '.' + toMethod));
         return true;
     }
 

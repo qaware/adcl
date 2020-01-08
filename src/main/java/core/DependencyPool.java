@@ -1,7 +1,7 @@
 package core;
 
-import core.information.MethodInformation;
 import core.information.ClassInformation;
+import core.information.MethodInformation;
 import core.information.PackageInformation;
 import util.NameParserUtil;
 
@@ -66,30 +66,7 @@ public class DependencyPool {
      * @return the PackageInformation for the given name
      */
     PackageInformation getOrCreatePackageInformation(String packageName) {
-        return getOrCreatePackageInformation(packageName, false);
-    }
-
-    /**
-     * Gets the PackageInformation with the given packageName, if its not available it will be created.
-     * if isInternal is true it will be set in the the created/retrieved PackageInformation.
-     *
-     * @param packageName the name of the package
-     * @param isInternal  set true if the given package is internal to the analysed project
-     * @return the PackageInformation for the given name
-     */
-    PackageInformation getOrCreatePackageInformation(String packageName, boolean isInternal) {
-        if (packageInformationMap.containsKey(packageName)) {
-            if (isInternal) {
-                PackageInformation packageInformation = packageInformationMap.get(packageName);
-                packageInformation.setInternalPackage(true);
-                return packageInformation;
-            }
-            return packageInformationMap.get(packageName);
-        }
-        PackageInformation packageInformation = new PackageInformation(packageName);
-        packageInformation.setInternalPackage(isInternal);
-        packageInformationMap.put(packageName, packageInformation);
-        return packageInformation;
+        return packageInformationMap.computeIfAbsent(packageName, PackageInformation::new);
     }
 
     /**
@@ -105,49 +82,34 @@ public class DependencyPool {
     /**
      * Gets the ClassInformation with the given className, if its not available it will be created.
      *
-     * @param className       the name of the class
-     * @param isService       set true if the given class a spring boot service
-     * @param packageInternal set true if the given class is internal to the analysed project
+     * @param className the name of the class
+     * @param isService set true if the given class a spring boot service
+     * @param internal  set true if the given class is internal to the analysed project
      * @return the ClassInformation for the given name
      */
-    ClassInformation getOrCreateClassInformation(String className, boolean isService, boolean packageInternal) {
-        if (classInformationMap.containsKey(className)) {
-            if (isService) {
-                ClassInformation classInformation = classInformationMap.get(className);
-                classInformation.setService(true);
-                return classInformation;
-            }
-            return classInformationMap.get(className);
-        }
-        PackageInformation packageInformation = getOrCreatePackageInformation(NameParserUtil.extractPackageName(className), packageInternal);
-
-        ClassInformation classInformation = new ClassInformation(className, isService);
-        packageInformation.addClassInformation(classInformation);
-        classInformationMap.put(className, classInformation);
-        return classInformation;
+    ClassInformation getOrCreateClassInformation(String className, boolean isService, boolean internal) {
+        ClassInformation result = classInformationMap.computeIfAbsent(className, name -> {
+            ClassInformation newClass = new ClassInformation(className);
+            getOrCreatePackageInformation(NameParserUtil.extractPackageName(className)).addClassInformation(newClass);
+            return newClass;
+        });
+        if (isService) result.setService(true);
+        if (internal) result.setInternal(true);
+        return result;
     }
 
     /**
      * Gets the MethodInformation with the given MethodName, if its not available it will be created.
      *
      * @param methodName  the name of the method
-     * @param isConstructor set true if the method is a constructor
      * @return the MethodInformation for the given name
      */
-    MethodInformation getOrCreateMethodInformation(String methodName, boolean isConstructor) {
-        if (methodInformationMap.containsKey(methodName)) {
-            return methodInformationMap.get(methodName);
-        }
-        ClassInformation classInformation;
-        if (isConstructor) {
-            classInformation = getOrCreateClassInformation(NameParserUtil.cutOffParamaterList(methodName));
-        } else {
-            classInformation = getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(methodName)));
-        }
-        MethodInformation methodInformation = new MethodInformation(methodName, isConstructor);
-        classInformation.addMethodInformation(methodInformation);
-        methodInformationMap.put(methodName, methodInformation);
-        return methodInformation;
+    MethodInformation getOrCreateMethodInformation(String methodName) {
+        return methodInformationMap.computeIfAbsent(methodName, name -> {
+            MethodInformation result = new MethodInformation(name);
+            getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(methodName))).addMethodInformation(result);
+            return result;
+        });
     }
 
     /**

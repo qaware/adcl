@@ -1,26 +1,18 @@
 package core;
 
-
 import core.information.MethodInformation;
 import core.information.PackageInformation;
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
-import javassist.NotFoundException;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.NameParserUtil;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * The DependencyExtractor can extract static dependencies from class files such as referenced packages, classes, methods.
@@ -81,47 +73,25 @@ public class DependencyExtractor {
         CtClass ctClass = getOrCreateCtClass(className);
         boolean isService = ctClass.hasAnnotation("org.springframework.stereotype.Service");
         dependencyPool.getOrCreateClassInformation(ctClass.getName(), isService, true);
-        createMethodInformations(ctClass);
-    }
 
-    /**
-     * Extracts CtMethods from the CtClass and creates for a MethodInformation.
-     *
-     * @param ctClass CtClass from which CtMethods are taken from.
-     */
-    private void createMethodInformations(CtClass ctClass) {
-
-        CtBehavior[] ctMethods = ctClass.getDeclaredBehaviors();
-        Arrays.stream(ctMethods).forEach(ctBehavior -> {
-            try {
-                createMethodInformation(ctBehavior);
-            } catch (CannotCompileException | NotFoundException e) {
-                LOGGER.error(e.getMessage());
-            }
-        });
+        Arrays.stream(ctClass.getDeclaredBehaviors()).forEach(this::createMethodInformation);
     }
 
     /**
      * Extracts all methods and classes referenced by the method or constructor represented by the CtMethod.
      *
-     * @param ctMethods from which we extract the referenced methods from.
-     * @throws CannotCompileException CtMethod body cannot be compiled
-     * @throws NotFoundException      if parameter types not set in CtMethods
+     * @param ctMethod from which we extract the referenced methods from.
      */
-    private void createMethodInformation(CtBehavior ctMethods) throws CannotCompileException, NotFoundException {
-        CtMethodBodyAnalyzer ctMethodBodyAnalyzer = new CtMethodBodyAnalyzer();
-        ctMethodBodyAnalyzer.analyse(ctMethods);
-        MethodInformation methodInformation;
-        if (ctMethods instanceof CtConstructor) {
-            methodInformation = dependencyPool.getOrCreateMethodInformation(ctMethods.getLongName(), true);
-        } else {
-            methodInformation = dependencyPool.getOrCreateMethodInformation(ctMethods.getLongName(), false);
-        }
+    private void createMethodInformation(CtBehavior ctMethod) {
+        String methodName = ctMethod instanceof CtConstructor && ((CtConstructor) ctMethod).isConstructor() ? ctMethod.getLongName().replace("(", ".<init>(") : ctMethod.getLongName();
+        MethodInformation methodInformation = dependencyPool.getOrCreateMethodInformation(methodName);
 
+        CtMethodBodyAnalyzer ctMethodBodyAnalyzer = new CtMethodBodyAnalyzer();
+        ctMethodBodyAnalyzer.analyse(ctMethod);
         methodInformation.setClassDependencies(ctMethodBodyAnalyzer.getClassDependencies());
         methodInformation.setMethodDependencies(ctMethodBodyAnalyzer.getMethodDependencies());
 
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
         ctMethodBodyAnalyzer.getClassDependencies().forEach(classDependency -> packageDependencies.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(classDependency.getClassName()))));
         methodInformation.setPackageDependencies(packageDependencies);
     }

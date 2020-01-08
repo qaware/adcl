@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class MethodInformationTest {
     private static final String TEST_PACKAGE_2 = "testPackage2";
@@ -17,11 +17,11 @@ class MethodInformationTest {
 
     @BeforeEach
     void setUp() {
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
         packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        SortedSet<ClassInformation> classDependencies = new TreeSet<>();
         classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
         methodDependencies.add(new MethodInformation(TEST_CLASS_TEST, false));
         sut = new MethodInformation(TEST_TEST_METHOD, packageDependencies, classDependencies, methodDependencies, false);
     }
