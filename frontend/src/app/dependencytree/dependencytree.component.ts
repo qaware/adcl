@@ -185,11 +185,13 @@ export class DependencyTreeDatabase {
             methodInformation.push(obj);
 
             const added: { [k: string]: any } = {};
-            added.label = 'Added dependencies to';
+            added.label = 'Added dependencies ';
+            added.text = '';
             added.code = obj.code + '.0';
             methodInformation.push(added);
             const deleted: { [k: string]: any } = {};
-            deleted.label = 'Deleted dependencies to';
+            deleted.label = 'Deleted dependencies';
+            deleted.text = '';
             deleted.code = obj.code + '.1';
             methodInformation.push(deleted);
           });
