@@ -33,7 +33,7 @@ report.destination=C:\\\\ADCLTest
 #### Wie sieht die Datei dann am Ende aus?  
 
 ###### So:   
-````
+```properties
 spring.data.neo4j.uri=bolt://localhost:7687  
 spring.data.neo4j.username=neo4j  
 spring.data.neo4j.password=Test  
@@ -41,4 +41,4 @@ project.uri=C:\\\\Users\\\\Daniel Drießen\\\\Documents\\\\TestDaten\\\\classes
 project.commit.previous=chummer1  
 project.commit=chummer2  
 report.destination=C:\\\\ADCLTest  
-````
+```
