@@ -104,10 +104,10 @@ public class GraphDBServiceTest {
                 .findFirst().orElse(null));
 
         ClassInformation testClass = testPackage.getClassInformations().first();
-        assertThat(testClass.getClassName()).isEqualTo("packageA.ClassABase");
+        assertThat(testClass.getClassName()).isEqualTo("packageA.ClassA");
 
         MethodInformation testMethod = testClass.getMethodInformations().first();
-        assertThat(testMethod.getName()).isEqualTo("packageA.ClassABase.empty()");
+        assertThat(testMethod.getName()).isEqualTo("packageA.ClassA.empty()");
 
         graphDBService.getVersionRepository().delete(version);
     }
