@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,7 +95,7 @@ class DependencyExtractorTest {
 
     @Test
     void analyseClasses() {
-        SortedSet<PackageInformation> analysedClasses = new TreeSet<>(depEx.analyseClasses(classFiles));
+        SortedSet<PackageInformation> analysedClasses = depEx.analyseClasses(classFiles);
 
         assertThat(analysedClasses).isEqualTo(cmpData());
     }
