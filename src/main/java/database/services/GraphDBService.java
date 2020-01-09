@@ -66,8 +66,8 @@ public class GraphDBService {
     }
 
     @Transactional
-    public VersionInformation getVersion(String previousCommitName) {
-        return getVersionRepository().findVersionInformationByVersionName(previousCommitName);
+    public VersionInformation getVersion(String versionName) {
+        return getVersionRepository().findVersionInformationByVersionName(versionName);
     }
 
     /**
