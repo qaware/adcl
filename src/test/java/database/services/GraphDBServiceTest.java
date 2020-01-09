@@ -103,11 +103,11 @@ public class GraphDBServiceTest {
                 .filter(packageInformation -> packageInformation.getPackageName().equals("packageA"))
                 .findFirst().orElse(null));
 
-        ClassInformation testClass = testPackage.getClassInformations().iterator().next();
-        assertThat(testClass.getClassName()).isEqualTo("packageA.ClassA");
+        assertThat(testPackage.getClassInformations().stream().map(ClassInformation::getClassName)).contains("packageA.ClassA");
 
-        MethodInformation testMethod = testClass.getMethodInformations().iterator().next();
-        assertThat(testMethod.getName()).isEqualTo("packageA.ClassA.empty()");
+        ClassInformation testClass = testPackage.getClassInformations().stream().filter(c -> c.getClassName().equals("packageA.ClassA")).findAny().orElse(null);
+        assertThat(testClass).isNotNull();
+        assertThat(testClass.getMethodInformations().stream().map(MethodInformation::getName)).contains("packageA.ClassA.empty()");
 
         graphDBService.getVersionRepository().delete(version);
     }
