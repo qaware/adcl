@@ -18,30 +18,28 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     private static final Logger logger = LoggerFactory.getLogger(CtMethodBodyAnalyzer.class);
     private static final Set<String> PRIMITIVES = new HashSet<>(Arrays.asList("boolean", "byte", "short", "char", "int", "long", "float", "double"));
 
-    private SortedSet<MethodInformation> methodDependencies;
-    private SortedSet<ClassInformation> classDependencies;
+    private final SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
+    private final SortedSet<ClassInformation> classDependencies = new TreeSet<>();
     private DependencyPool dependencyPool;
 
     /**
      * Instantiates a new CtMethodBodyAnalyzer.
      */
-    CtMethodBodyAnalyzer() {
-        this.methodDependencies = new TreeSet<>();
-        this.classDependencies = new TreeSet<>();
-        this.dependencyPool = DependencyPool.getInstance();
+    CtMethodBodyAnalyzer(DependencyPool dependencyPool) {
+        this.dependencyPool = dependencyPool;
     }
 
     /**
-     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
+     * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
      *
-     * @param className the class name to be checked
+     * @param ctMethod the ct method
      */
-    private static boolean isInternal(String className) {
-        className = className.replace("[", "").replace("]", "");
+    void analyse(CtBehavior ctMethod) {
+        getTypesFromSignature(ctMethod.getSignature()).forEach(this::addDependency);
         try {
-            return PRIMITIVES.contains(className) || isInternal(Class.forName(className));
-        } catch (ClassNotFoundException e) {
-            return false;
+            ctMethod.instrument(this);
+        } catch (CannotCompileException e) {
+            logger.warn("Got CannotCompileException without intention to compile", e);
         }
     }
 
@@ -124,30 +122,6 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         return sb.toString().replace('/', '.');
     }
 
-    /**
-     * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
-     *
-     * @param ctMethod the ct method
-     */
-    void analyse(CtBehavior ctMethod) {
-        getTypesFromSignature(ctMethod.getSignature()).forEach(this::addDependency);
-        try {
-            ctMethod.instrument(this);
-        } catch (CannotCompileException e) {
-            logger.warn("Got CannotCompileException without intention to compile", e);
-        }
-    }
-
-    @Override
-    public void edit(MethodCall m) {
-        addDependency(m.getClassName(), m.getMethodName() + convertSignature(m.getSignature()), false);
-    }
-
-    @Override
-    public void edit(NewExpr newExpr) {
-        addDependency(newExpr.getClassName(), "<init>" + convertSignature(newExpr.getSignature()), true);
-    }
-
     @Override
     public void edit(Cast c) {
         try {
@@ -173,15 +147,6 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         getTypesFromSignature(f.getSignature()).forEach(this::addDependency);
     }
 
-    /**
-     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
-     *
-     * @param clazz the class to be checked
-     */
-    private static boolean isInternal(Class<?> clazz) {
-        return clazz.getProtectionDomain().getCodeSource() == null;
-    }
-
     @Override
     public void edit(Instanceof i) {
         try {
@@ -192,13 +157,17 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         }
     }
 
-    @Override
-    public void edit(Handler h) throws CannotCompileException {
+    /**
+     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
+     *
+     * @param className the class name to be checked
+     */
+    private static boolean isJRE(String className) {
+        className = className.replace("[", "").replace("]", "");
         try {
-            addDependency(h.getType().getName());
-        } catch (NotFoundException e) {
-            //TODO needs to be analyzed
-            logger.warn("Could not process catch type in " + h.where().getLongName() + " as the casted type is not initialized yet");
+            return PRIMITIVES.contains(className) || isJRE(Class.forName(className));
+        } catch (ClassNotFoundException e) {
+            return false;
         }
     }
 
@@ -221,28 +190,58 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     }
 
     /**
-     * Add a new method dependency to the list of dependencies the method has. Dependencies to internal (JRE) methods are omitted
+     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
      *
-     * @param toClass       the class the method dependency is pointing to
-     * @param toMethod      the method the method dependency is pointing to
-     * @param isConstructor whether the dependency represents a constructor call
+     * @param clazz the class to be checked
+     */
+    private static boolean isJRE(Class<?> clazz) {
+        return clazz.getProtectionDomain().getCodeSource() == null;
+    }
+
+    @Override
+    public void edit(Handler h) {
+        try {
+            addDependency(h.getType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process catch type in " + h.where().getLongName() + " as the casted type is not initialized yet");
+        }
+    }
+
+    @Override
+    public void edit(MethodCall m) {
+        addDependency(m.getClassName(), m.getMethodName() + convertSignature(m.getSignature()));
+    }
+
+    @Override
+    public void edit(NewExpr newExpr) {
+        addDependency(newExpr.getClassName(), "<init>" + convertSignature(newExpr.getSignature()));
+    }
+
+    /**
+     * Add a new method dependency to the list of dependencies the method has. Dependencies to internal (JRE) methods are omitted
+     * The (new) resulting class will be marked external, but the dependencyExtractor will mark them internal afterwards
+     *
+     * @param toClass  the class the method dependency is pointing to
+     * @param toMethod the method the method dependency is pointing to
      * @return whether a new method dependency got added
      */
-    private boolean addDependency(String toClass, String toMethod, boolean isConstructor) {
+    private boolean addDependency(String toClass, String toMethod) {
         if (!addDependency(toClass)) return false;
-        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(toClass + '.' + toMethod));
+        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(toClass + '.' + toMethod, false));
         return true;
     }
 
     /**
      * Add a new class dependency to the list of dependencies the method has. Dependencies to internal (JRE) classes are omitted
+     * The (new) resulting class will be marked external, but the dependencyExtractor will mark them internal afterwards
      *
      * @param toClass the class the class dependency is pointing to
      * @return whether a new class dependency got added
      */
     private boolean addDependency(String toClass) {
-        if (isInternal(toClass)) return false;
-        classDependencies.add(dependencyPool.getOrCreateClassInformation(toClass));
+        if (isJRE(toClass)) return false;
+        classDependencies.add(dependencyPool.getOrCreateClassInformation(toClass, false));
         return true;
     }
 }
