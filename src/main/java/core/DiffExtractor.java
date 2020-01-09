@@ -7,7 +7,7 @@ import core.information.PackageInformation;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -15,7 +15,7 @@ import java.util.TreeSet;
  * Diff gets computed upon constructor invocation.
  */
 public class DiffExtractor {
-    private DependencyPool changelistDependencyPool = DependencyPool.getExtractorInstance();
+    private final DependencyPool changelistDependencyPool = new DependencyPool();
 
     /**
      * Instantiates a new DiffExtractor.
@@ -24,9 +24,8 @@ public class DiffExtractor {
      * @param analysed the analysed
      */
     public DiffExtractor(Collection<PackageInformation> old, Collection<PackageInformation> analysed) {
-        changelistDependencyPool.resetDataStorage();
-        SortedSet<PackageInformation> before = new TreeSet<>(old);
-        SortedSet<PackageInformation> after = new TreeSet<>(analysed);
+        Set<PackageInformation> before = new TreeSet<>(old);
+        Set<PackageInformation> after = new TreeSet<>(analysed);
         diff(before, after);
     }
 
@@ -36,17 +35,16 @@ public class DiffExtractor {
      * @param methodDependency   the changed dependency
      * @param methodInformation  which refers to methodDependency
      * @param classInformation   which has methodInformation
-     * @param packageInformation which has classInformation
      * @param status             signals if the dependency was added or deleted
      */
     private void addToChangelist(MethodInformation methodDependency, MethodInformation methodInformation, ClassInformation classInformation,
-                                 PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus status) {
+                                 ChangelogDependencyInformation.ChangeStatus status) {
 
         //create a copy of package- and classInformation
-        changelistDependencyPool.getOrCreateClassInformation(classInformation.getClassName(), classInformation.isService(), packageInformation.isInternalPackage());
+        changelistDependencyPool.getOrCreateClassInformation(classInformation.getClassName(), classInformation.isService(), classInformation.isInternal());
 
         //create a copy of methodInformation
-        MethodInformation mi = changelistDependencyPool.getOrCreateMethodInformation(methodInformation.getName(), methodInformation.isConstructor());
+        MethodInformation mi = changelistDependencyPool.getOrCreateMethodInformation(methodInformation.getName(), classInformation.isInternal());
 
         //addToChangelist ChangelogDependencyInformation to the copy of methodInformation
         MethodInformation md = new ChangelogDependencyInformation(methodDependency, status);
@@ -60,7 +58,7 @@ public class DiffExtractor {
      * @param before packages before commit
      * @param after  packages after commit
      */
-    private void diff(SortedSet<PackageInformation> before, SortedSet<PackageInformation> after) {
+    private void diff(Set<PackageInformation> before, Set<PackageInformation> after) {
         Iterator<PackageInformation> beforeIt = before.iterator();
         Iterator<PackageInformation> afterIt = after.iterator();
 
@@ -110,15 +108,15 @@ public class DiffExtractor {
 
             switch (compare) {
                 case -1:
-                    classChange(afterNext, after, ChangelogDependencyInformation.ChangeStatus.ADDED);
+                    classChange(afterNext, ChangelogDependencyInformation.ChangeStatus.ADDED);
                     compareIterator.iterateAfter();
                     break;
                 case 1:
-                    classChange(beforeNext, before, ChangelogDependencyInformation.ChangeStatus.DELETED);
+                    classChange(beforeNext, ChangelogDependencyInformation.ChangeStatus.DELETED);
                     compareIterator.iterateBefore();
                     break;
                 default:
-                    classDiff(beforeNext, afterNext, after);
+                    classDiff(beforeNext, afterNext);
                     compareIterator.iterateBefore();
                     compareIterator.iterateAfter();
                     break;
@@ -131,9 +129,8 @@ public class DiffExtractor {
      *
      * @param before    class before commit
      * @param after     class after commit
-     * @param inPackage package in which before and after are
      */
-    private void classDiff(ClassInformation before, ClassInformation after, PackageInformation inPackage) {
+    private void classDiff(ClassInformation before, ClassInformation after) {
         Iterator<MethodInformation> beforeIt = before.getMethodInformations().iterator();
         Iterator<MethodInformation> afterIt = after.getMethodInformations().iterator();
 
@@ -147,15 +144,15 @@ public class DiffExtractor {
 
             switch (compare) {
                 case -1:
-                    behaviourChange(afterNext, after, inPackage, ChangelogDependencyInformation.ChangeStatus.ADDED);
+                    behaviourChange(afterNext, after, ChangelogDependencyInformation.ChangeStatus.ADDED);
                     compareIterator.iterateAfter();
                     break;
                 case 1:
-                    behaviourChange(beforeNext, before, inPackage, ChangelogDependencyInformation.ChangeStatus.DELETED);
+                    behaviourChange(beforeNext, before, ChangelogDependencyInformation.ChangeStatus.DELETED);
                     compareIterator.iterateBefore();
                     break;
                 default:
-                    methodDiff(beforeNext, afterNext, inPackage, after);
+                    methodDiff(beforeNext, afterNext, after);
                     compareIterator.iterateBefore();
                     compareIterator.iterateAfter();
                     break;
@@ -168,10 +165,9 @@ public class DiffExtractor {
      *
      * @param before    Method before commit
      * @param after     Method after commit
-     * @param inPackage package in which inClass is
      * @param inClass   class in which before and after are
      */
-    private void methodDiff(MethodInformation before, MethodInformation after, PackageInformation inPackage, ClassInformation inClass) {
+    private void methodDiff(MethodInformation before, MethodInformation after, ClassInformation inClass) {
         Iterator<MethodInformation> beforeIt = before.getMethodDependencies().iterator();
         Iterator<MethodInformation> afterIt = after.getMethodDependencies().iterator();
 
@@ -186,11 +182,11 @@ public class DiffExtractor {
 
             switch (compare) {
                 case -1:
-                    addToChangelist(afterNext, after, inClass, inPackage, ChangelogDependencyInformation.ChangeStatus.ADDED);
+                    addToChangelist(afterNext, after, inClass, ChangelogDependencyInformation.ChangeStatus.ADDED);
                     compareIterator.iterateAfter();
                     break;
                 case 1:
-                    addToChangelist(beforeNext, before, inClass, inPackage, ChangelogDependencyInformation.ChangeStatus.DELETED);
+                    addToChangelist(beforeNext, before, inClass, ChangelogDependencyInformation.ChangeStatus.DELETED);
                     compareIterator.iterateBefore();
                     break;
                 default:
@@ -209,19 +205,18 @@ public class DiffExtractor {
      */
     private void packageChange(PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
         for (ClassInformation classInformation : packageInformation.getClassInformations())
-            classChange(classInformation, packageInformation, changeStatus);
+            classChange(classInformation, changeStatus);
     }
 
     /**
      * Adds all Dependencies in classInformation to changed
      *
      * @param classInformation   which has been changed
-     * @param packageInformation in which classInformation is
      * @param changeStatus       signals if the dependency was added or deleted
      */
-    private void classChange(ClassInformation classInformation, PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
+    private void classChange(ClassInformation classInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
         for (MethodInformation MethodInformation : classInformation.getMethodInformations())
-            behaviourChange(MethodInformation, classInformation, packageInformation, changeStatus);
+            behaviourChange(MethodInformation, classInformation, changeStatus);
     }
 
     /**
@@ -229,12 +224,11 @@ public class DiffExtractor {
      *
      * @param methodInformation  which has been changed
      * @param classInformation   in which methodInformation is
-     * @param packageInformation in which classInformation is
      * @param changeStatus       signals if the dependency was added or deleted
      */
-    private void behaviourChange(MethodInformation methodInformation, ClassInformation classInformation, PackageInformation packageInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
+    private void behaviourChange(MethodInformation methodInformation, ClassInformation classInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
         for (MethodInformation dependency : methodInformation.getMethodDependencies())
-            addToChangelist(dependency, methodInformation, classInformation, packageInformation, changeStatus);
+            addToChangelist(dependency, methodInformation, classInformation, changeStatus);
     }
 
     /**
@@ -255,7 +249,7 @@ public class DiffExtractor {
      *
      * @param <T> should be one of {@link PackageInformation}, {@link ClassInformation}, {@link MethodInformation}
      */
-    private class CompareIterator<T extends Comparable<T>> implements Iterator<Integer> {
+    private static class CompareIterator<T extends Comparable<T>> implements Iterator<Integer> {
         private Iterator<T> beforeIt;
         private Iterator<T> afterIt;
         private T afterNext;
