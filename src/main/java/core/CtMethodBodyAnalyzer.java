@@ -4,6 +4,7 @@ import core.information.ClassInformation;
 import core.information.MethodInformation;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
+import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.expr.*;
 import org.slf4j.Logger;
@@ -204,7 +205,9 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     @Override
     public void edit(Handler h) {
         try {
-            addDependency(h.getType().getName());
+            CtClass type = h.getType();
+            if (type == null) return; //finally block
+            addDependency(type.getName());
         } catch (NotFoundException e) {
             //TODO needs to be analyzed
             logger.warn("Could not process catch type in " + h.where().getLongName() + " as the casted type is not initialized yet");
