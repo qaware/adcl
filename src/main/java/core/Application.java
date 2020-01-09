@@ -17,7 +17,6 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -54,23 +53,24 @@ public class Application {
         //Getting previous Commit
         VersionInformation previous;
         String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
+        VersionInformation current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA));
 
-        if (previousCommitName.equals(COMMIT_NA)) {
-            previous = new VersionInformation(new ArrayList<>(), "init");
-        } else {
-            previous = graphDBService.getVersionRepository().findVersionInformationByVersionName(previousCommitName);
+        if (!previousCommitName.equals(COMMIT_NA)) {
+            previous = graphDBService.getVersion(previousCommitName);
             if (previous == null)
                 throw new NoSuchElementException("Commit " + previousCommitName + " does not exist in the database");
+
+            current.setPreviousVersion(previous);
+
+            //Analyse differences between current and previous Commit
+            DiffExtractor diffExtractor = new DiffExtractor(previous.getPackageInformations(), packages);
+
+            //Save the Analysis in the Database
+            graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChangelist(), previous, current));
         }
 
-        VersionInformation current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA), previous);
-
-        //Analyse differences between current and previous Commit
-        DiffExtractor diffExtractor = new DiffExtractor(previous.getPackageInformations(), packages);
-
-        //Save the Analysis in the Database
+        //Save the Version in the Database
         graphDBService.saveVersion(current);
-        graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChangelist(), previous, current));
 
         ctx.close();
     }

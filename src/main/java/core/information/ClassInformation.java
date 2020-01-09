@@ -62,6 +62,13 @@ public class ClassInformation implements Comparable<ClassInformation> {
     }
 
     /**
+     * Should not be used is for Spring Data
+     */
+    public ClassInformation() {
+        methodInformations = new TreeSet<>();
+    }
+
+    /**
      * Gets the class name.
      *
      * @return the class name

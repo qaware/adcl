@@ -76,6 +76,12 @@ public class ChangelogDependencyInformation extends MethodInformation {
     }
 
     /**
+     * Should not be used is for Spring Data
+     */
+    public ChangelogDependencyInformation() {
+    }
+
+    /**
      * Get the change status, this field is used then creating the Changelog to determine whenever a dependency was deleted or added.
      *
      * @return the current status
