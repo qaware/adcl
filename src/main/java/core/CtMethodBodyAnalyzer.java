@@ -9,7 +9,10 @@ import javassist.expr.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * The CtMethodBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
@@ -18,8 +21,8 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     private static final Logger logger = LoggerFactory.getLogger(CtMethodBodyAnalyzer.class);
     private static final Set<String> PRIMITIVES = new HashSet<>(Arrays.asList("boolean", "byte", "short", "char", "int", "long", "float", "double"));
 
-    private final SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
-    private final SortedSet<ClassInformation> classDependencies = new TreeSet<>();
+    private final Set<MethodInformation> methodDependencies = new TreeSet<>();
+    private final Set<ClassInformation> classDependencies = new TreeSet<>();
     private DependencyPool dependencyPool;
 
     /**
@@ -176,7 +179,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getClassDependencies() {
+    public Set<ClassInformation> getClassDependencies() {
         return classDependencies;
     }
 
@@ -185,7 +188,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getMethodDependencies() {
+    public Set<MethodInformation> getMethodDependencies() {
         return methodDependencies;
     }
 

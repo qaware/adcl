@@ -47,13 +47,13 @@ class DependencyListWriterTest {
     @BeforeEach
     void setUp() {
 
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>();
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         methodDependencies.add(new MethodInformation(TEST_CLASS_TEST_2, false));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>();
+        Set<MethodInformation> methodInformations = new TreeSet<>();
         methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
         methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, packageDependencies, classDependencies, methodDependencies, false));
 

@@ -9,7 +9,7 @@ import util.Utils;
 
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -24,7 +24,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
     private Long id;
     private String className;
     @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
-    private SortedSet<MethodInformation> methodInformations;
+    private Set<MethodInformation> methodInformations;
 
     private boolean isService;
     private boolean isInternal;
@@ -55,7 +55,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param behaviorInformations the behavior informations of the java class
      * @param isService            true if Class has service annotation
      */
-    public ClassInformation(String className, SortedSet<MethodInformation> behaviorInformations, boolean isService) {
+    public ClassInformation(String className, Set<MethodInformation> behaviorInformations, boolean isService) {
         this.className = className;
         this.methodInformations = behaviorInformations;
         this.isService = isService;
@@ -82,8 +82,8 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return the referenced packages
      */
-    public SortedSet<PackageInformation> getPackageDependencies() {
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
+    public Set<PackageInformation> getPackageDependencies() {
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         methodInformations.forEach(behaviorInformation -> packageDependencies.addAll(behaviorInformation.getPackageDependencies()));
         return packageDependencies;
     }
@@ -93,8 +93,8 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getClassDependencies() {
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>();
+    public Set<ClassInformation> getClassDependencies() {
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         methodInformations.forEach(behaviorInformation -> classDependencies.addAll(behaviorInformation.getClassDependencies()));
         return classDependencies;
     }
@@ -104,7 +104,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return a set of the behavior information
      */
-    public SortedSet<MethodInformation> getMethodInformations() {
+    public Set<MethodInformation> getMethodInformations() {
         return methodInformations;
     }
 
@@ -113,8 +113,8 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getMethodDependencies() {
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
+    public Set<MethodInformation> getMethodDependencies() {
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         methodInformations.forEach(behaviorInformation -> methodDependencies.addAll(behaviorInformation.getMethodDependencies()));
         return methodDependencies;
     }
@@ -162,7 +162,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
         return Comparator.comparing(ClassInformation::isInternal)
                 .thenComparing(ClassInformation::isService)
                 .thenComparing(ClassInformation::getClassName)
-                .thenComparing(ClassInformation::getMethodInformations, Utils.sortedSetComparator())
+                .thenComparing(ClassInformation::getMethodInformations, Utils.setComparator())
                 .compare(this, classInformation);
     }
 

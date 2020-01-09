@@ -7,7 +7,7 @@ import core.information.PackageInformation;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -24,8 +24,8 @@ public class DiffExtractor {
      * @param analysed the analysed
      */
     public DiffExtractor(Collection<PackageInformation> old, Collection<PackageInformation> analysed) {
-        SortedSet<PackageInformation> before = new TreeSet<>(old);
-        SortedSet<PackageInformation> after = new TreeSet<>(analysed);
+        Set<PackageInformation> before = new TreeSet<>(old);
+        Set<PackageInformation> after = new TreeSet<>(analysed);
         diff(before, after);
     }
 
@@ -58,7 +58,7 @@ public class DiffExtractor {
      * @param before packages before commit
      * @param after  packages after commit
      */
-    private void diff(SortedSet<PackageInformation> before, SortedSet<PackageInformation> after) {
+    private void diff(Set<PackageInformation> before, Set<PackageInformation> after) {
         Iterator<PackageInformation> beforeIt = before.iterator();
         Iterator<PackageInformation> afterIt = after.iterator();
 

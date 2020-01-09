@@ -5,14 +5,14 @@ import core.information.MethodInformation;
 import core.information.PackageInformation;
 
 import java.util.Arrays;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class DataGenerationUtil {
     /**
      * create a version point
      */
-    public static SortedSet<PackageInformation> version(PackageInformation... packages) {
+    public static Set<PackageInformation> version(PackageInformation... packages) {
         return new TreeSet<>(Arrays.asList(packages));
     }
 
@@ -49,9 +49,9 @@ public class DataGenerationUtil {
      * @param i  information: Any PackageInformation, ClassInformation or MethodInformation
      */
     public static void p(MethodInformation mi, Object... i) {
-        SortedSet<PackageInformation> pis = mi.getPackageDependencies();
-        SortedSet<ClassInformation> cis = mi.getClassDependencies();
-        SortedSet<MethodInformation> mis = mi.getMethodDependencies();
+        Set<PackageInformation> pis = mi.getPackageDependencies();
+        Set<ClassInformation> cis = mi.getClassDependencies();
+        Set<MethodInformation> mis = mi.getMethodDependencies();
 
         for (Object o : i) {
             if (o instanceof PackageInformation) pis.add((PackageInformation) o);

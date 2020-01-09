@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,13 +22,13 @@ class PackageInformationTest {
     @BeforeAll
     private static void createClassInformation() {
 
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>();
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         methodDependencies.add(new MethodInformation(TEST_CLASS_TEST, false));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>();
+        Set<MethodInformation> methodInformations = new TreeSet<>();
         methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
         methodInformations.add(new MethodInformation(TEST_CLASS_TEST, packageDependencies, classDependencies, methodDependencies, false));
 
@@ -48,17 +48,17 @@ class PackageInformationTest {
 
     @Test
     void getPackageDependencies() {
-        assertThat(sut.getPackageDependencies().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
+        assertThat(sut.getPackageDependencies().iterator().next().getPackageName()).isEqualTo(TEST_PACKAGE_2);
     }
 
     @Test
     void getClassDependencies() {
         sut.addClassInformation(classInformation);
-        assertThat(sut.getClassDependencies().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
+        assertThat(sut.getClassDependencies().iterator().next().getClassName()).isEqualTo(TEST_TEST_CLASS);
     }
 
     @Test
     void getMethodDependencies() {
-        assertThat(sut.getMethodDependencies().first().getName()).isEqualTo(TEST_CLASS_TEST);
+        assertThat(sut.getMethodDependencies().iterator().next().getName()).isEqualTo(TEST_CLASS_TEST);
     }
 }

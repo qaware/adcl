@@ -10,7 +10,7 @@ import util.Utils;
 
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -25,7 +25,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
     private Long id;
     private String packageName;
     @Relationship(type = "IS_CLASS_OF", direction = Relationship.INCOMING)
-    private SortedSet<ClassInformation> classInformations;
+    private Set<ClassInformation> classInformations;
 
     @Deprecated
     private boolean isInternalPackage;
@@ -54,8 +54,8 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced packages
      */
-    public SortedSet<PackageInformation> getPackageDependencies() {
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
+    public Set<PackageInformation> getPackageDependencies() {
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         classInformations.forEach(classInformation -> packageDependencies.addAll(classInformation.getPackageDependencies()));
         return packageDependencies;
     }
@@ -65,8 +65,8 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getClassDependencies() {
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>();
+    public Set<ClassInformation> getClassDependencies() {
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         classInformations.forEach(classInformation -> classDependencies.addAll(classInformation.getClassDependencies()));
         return classDependencies;
     }
@@ -76,8 +76,8 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getMethodDependencies() {
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>();
+    public Set<MethodInformation> getMethodDependencies() {
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         classInformations.forEach(classInformation -> methodDependencies.addAll(classInformation.getMethodDependencies()));
         return methodDependencies;
     }
@@ -107,7 +107,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return all class information.
      */
-    public SortedSet<ClassInformation> getClassInformations() {
+    public Set<ClassInformation> getClassInformations() {
         return classInformations;
     }
 
@@ -125,7 +125,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
     public int compareTo(@NotNull PackageInformation packageInformation) {
         return Comparator.comparing(PackageInformation::getPackageName)
                 .thenComparing(PackageInformation::isInternalPackage)
-                .thenComparing(PackageInformation::getClassInformations, Utils.sortedSetComparator())
+                .thenComparing(PackageInformation::getClassInformations, Utils.setComparator())
                 .compare(this, packageInformation);
     }
 

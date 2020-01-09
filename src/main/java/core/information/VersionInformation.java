@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.context.annotation.Lazy;
 
 import java.util.Collection;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -21,7 +21,7 @@ public class VersionInformation {
     private String versionName;
 
     @Relationship(type = "IS_VERSION_OF")
-    private SortedSet<PackageInformation> packageInformations;
+    private Set<PackageInformation> packageInformations;
 
     @Lazy
     @Relationship(type = "FOLLOWED")
@@ -71,7 +71,7 @@ public class VersionInformation {
      *
      * @return the package informations
      */
-    public SortedSet<PackageInformation> getPackageInformations() {
+    public Set<PackageInformation> getPackageInformations() {
         return packageInformations;
     }
 

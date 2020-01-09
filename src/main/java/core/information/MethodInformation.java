@@ -8,7 +8,7 @@ import util.Utils;
 
 import java.util.Comparator;
 import java.util.Objects;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -23,11 +23,11 @@ public class MethodInformation implements Comparable<MethodInformation> {
     private Long id;
     private String name;
     @Relationship(type = "USES")
-    private SortedSet<PackageInformation> packageDependencies;
+    private Set<PackageInformation> packageDependencies;
     @Relationship(type = "USES")
-    private SortedSet<ClassInformation> classDependencies;
+    private Set<ClassInformation> classDependencies;
     @Relationship(type = "USES")
-    private SortedSet<MethodInformation> methodDependencies;
+    private Set<MethodInformation> methodDependencies;
 
     /**
      * Instantiates a new Method information.
@@ -43,14 +43,14 @@ public class MethodInformation implements Comparable<MethodInformation> {
     /**
      * Instantiates a new Method information.
      *
-     * @param name               the name of the method
+     * @param name                the name of the method
      * @param packageDependencies the referenced packages
-     * @param classDependencies  the referenced classes
-     * @param methodDependencies   the referenced method
-     * @param isConstructor      true if method is constructor
+     * @param classDependencies   the referenced classes
+     * @param methodDependencies  the referenced method
+     * @param isConstructor       true if method is constructor
      */
     @Deprecated
-    public MethodInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor) {
+    public MethodInformation(String name, Set<PackageInformation> packageDependencies, Set<ClassInformation> classDependencies, Set<MethodInformation> methodDependencies, boolean isConstructor) {
         this.name = name;
         this.packageDependencies = packageDependencies;
         this.classDependencies = classDependencies;
@@ -74,7 +74,7 @@ public class MethodInformation implements Comparable<MethodInformation> {
      * @param classDependencies   the referenced classes
      * @param methodDependencies  the referenced method
      */
-    public MethodInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies) {
+    public MethodInformation(String name, Set<PackageInformation> packageDependencies, Set<ClassInformation> classDependencies, Set<MethodInformation> methodDependencies) {
         this.name = name;
         this.packageDependencies = packageDependencies;
         this.classDependencies = classDependencies;
@@ -90,31 +90,21 @@ public class MethodInformation implements Comparable<MethodInformation> {
         this.methodDependencies = new TreeSet<>();
     }
 
+    public Set<PackageInformation> getPackageDependencies() {
+        return packageDependencies;
+    }
+
     /**
      * Set the referenced packages.
      *
      * @param packageDependencies the referenced packages
      */
-    public void setPackageDependencies(SortedSet<PackageInformation> packageDependencies) {
+    public void setPackageDependencies(Set<PackageInformation> packageDependencies) {
         this.packageDependencies = packageDependencies;
     }
 
-    /**
-     * Set the referenced classes
-     *
-     * @param classDependencies the referenced classes
-     */
-    public void setClassDependencies(SortedSet<ClassInformation> classDependencies) {
-        this.classDependencies = classDependencies;
-    }
-
-    /**
-     * Set the referenced methods
-     *
-     * @param methodDependencies the referenced methods
-     */
-    public void setMethodDependencies(SortedSet<MethodInformation> methodDependencies) {
-        this.methodDependencies = methodDependencies;
+    public Set<ClassInformation> getClassDependencies() {
+        return classDependencies;
     }
 
     /**
@@ -126,16 +116,26 @@ public class MethodInformation implements Comparable<MethodInformation> {
         return name;
     }
 
-    public SortedSet<PackageInformation> getPackageDependencies() {
-        return packageDependencies;
+    /**
+     * Set the referenced classes
+     *
+     * @param classDependencies the referenced classes
+     */
+    public void setClassDependencies(Set<ClassInformation> classDependencies) {
+        this.classDependencies = classDependencies;
     }
 
-    public SortedSet<ClassInformation> getClassDependencies() {
-        return classDependencies;
-    }
-
-    public SortedSet<MethodInformation> getMethodDependencies() {
+    public Set<MethodInformation> getMethodDependencies() {
         return methodDependencies;
+    }
+
+    /**
+     * Set the referenced methods
+     *
+     * @param methodDependencies the referenced methods
+     */
+    public void setMethodDependencies(Set<MethodInformation> methodDependencies) {
+        this.methodDependencies = methodDependencies;
     }
 
     public boolean isConstructor() {
@@ -146,9 +146,9 @@ public class MethodInformation implements Comparable<MethodInformation> {
     public int compareTo(MethodInformation methodInformation) {
         return Comparator.comparing(MethodInformation::isConstructor)
                 .thenComparing(MethodInformation::getName)
-                .thenComparing(MethodInformation::getPackageDependencies, Utils.sortedSetComparator(Comparator.comparing(PackageInformation::getPackageName)))
-                .thenComparing(MethodInformation::getClassDependencies, Utils.sortedSetComparator(Comparator.comparing(ClassInformation::getClassName)))
-                .thenComparing(MethodInformation::getMethodDependencies, Utils.sortedSetComparator(Comparator.comparing(MethodInformation::getName)))
+                .thenComparing(MethodInformation::getPackageDependencies, Utils.setComparator(Comparator.comparing(PackageInformation::getPackageName)))
+                .thenComparing(MethodInformation::getClassDependencies, Utils.setComparator(Comparator.comparing(ClassInformation::getClassName)))
+                .thenComparing(MethodInformation::getMethodDependencies, Utils.setComparator(Comparator.comparing(MethodInformation::getName)))
                 .compare(this, methodInformation);
     }
 

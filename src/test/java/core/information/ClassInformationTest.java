@@ -37,12 +37,12 @@ class ClassInformationTest {
 
     @Test
     void getPackageDependencies() {
-        assertThat(c2.getPackageDependencies().first()).isEqualTo(p1);
+        assertThat(c2.getPackageDependencies().iterator().next()).isEqualTo(p1);
     }
 
     @Test
     void getClassDependencies() {
-        assertThat(c2.getClassDependencies().first()).isEqualTo(c1);
+        assertThat(c2.getClassDependencies().iterator().next()).isEqualTo(c1);
     }
 
     @Test
@@ -61,6 +61,6 @@ class ClassInformationTest {
 
     @Test
     void getMethodDependencies() {
-        assertThat(c2.getMethodDependencies().first()).isEqualTo(test1);
+        assertThat(c2.getMethodDependencies().iterator().next()).isEqualTo(test1);
     }
 }

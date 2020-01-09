@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,12 +24,12 @@ class DependencyExtractorTest {
     private List<String> classFiles;
 
     @SuppressWarnings({"unused", "UnusedAssignment"})
-    private static SortedSet<PackageInformation> cmpData() {
+    private static Set<PackageInformation> cmpData() {
         PackageInformation pa, pb, pd;
         ClassInformation ca, cabase, cb, cc, cca, cci, ce;
         MethodInformation caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
 
-        SortedSet<PackageInformation> result = version(
+        Set<PackageInformation> result = version(
                 pa = pi("packageA",
                         ca = ci("packageA.ClassA", false, true,
                                 caC = mi("packageA.ClassA.<init>()"),
@@ -95,7 +95,7 @@ class DependencyExtractorTest {
 
     @Test
     void analyseClasses() {
-        SortedSet<PackageInformation> analysedClasses = depEx.analyseClasses(classFiles);
+        Set<PackageInformation> analysedClasses = depEx.analyseClasses(classFiles);
 
         assertThat(analysedClasses).isEqualTo(cmpData());
     }

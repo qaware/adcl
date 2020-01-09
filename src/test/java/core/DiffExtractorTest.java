@@ -1,6 +1,9 @@
 package core;
 
-import core.information.*;
+import core.information.ChangelogDependencyInformation;
+import core.information.ClassInformation;
+import core.information.MethodInformation;
+import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -64,19 +67,19 @@ class DiffExtractorTest {
         ChangelogDependencyInformation depedencyFour = new ChangelogDependencyInformation("sample.Class.method4(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.DELETED);
 
         //put dependency items into sets and add them to methods
-        SortedSet<MethodInformation> dsetOne = new TreeSet<>();
+        Set<MethodInformation> dsetOne = new TreeSet<>();
         dsetOne.add(depedencyOne);
         classOneMethodOne.setMethodDependencies(dsetOne);
 
-        SortedSet<MethodInformation> dsetTwo = new TreeSet<>();
+        Set<MethodInformation> dsetTwo = new TreeSet<>();
         dsetTwo.add(depedencyTwo);
         classTwoMethodTwo.setMethodDependencies(dsetTwo);
 
-        SortedSet<MethodInformation> dsetThree = new TreeSet<>();
+        Set<MethodInformation> dsetThree = new TreeSet<>();
         dsetThree.add(depedencyThree);
         classThreeMethodThree.setMethodDependencies(dsetThree);
 
-        SortedSet<MethodInformation> dsetFour = new TreeSet<>();
+        Set<MethodInformation> dsetFour = new TreeSet<>();
         dsetFour.add(depedencyFour);
         classCopyOneMethodCopyOne.setMethodDependencies(dsetFour);
 
@@ -91,9 +94,9 @@ class DiffExtractorTest {
         assertThat(change).isNotEmpty();
         assertThat(change.get(0).getPackageName()).isEqualTo("packageone");
         assertThat(change.get(0).getClassInformations().stream().map(ClassInformation::getClassName)).contains("packageone.ClassOne", "packageone.ClassTwo", "packageone.ClassThree");
-        assertThat(change.get(0).getClassInformations().first()
-                .getMethodInformations().first()
-                .getMethodDependencies().first()).isInstanceOf(ChangelogDependencyInformation.class)
+        assertThat(change.get(0).getClassInformations().iterator().next()
+                .getMethodInformations().iterator().next()
+                .getMethodDependencies().iterator().next()).isInstanceOf(ChangelogDependencyInformation.class)
                 .hasFieldOrPropertyWithValue("changeStatus", ChangelogDependencyInformation.ChangeStatus.DELETED);
     }
 

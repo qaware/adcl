@@ -7,7 +7,7 @@ import core.information.MethodInformation;
 import core.information.PackageInformation;
 import util.NameParserUtil;
 
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -76,7 +76,7 @@ public class DependencyPool {
      *
      * @return all created PackageInformation.
      */
-    SortedSet<PackageInformation> retrievePackageInformation() {
+    Set<PackageInformation> retrievePackageInformation() {
         return new TreeSet<>(packageInformationMap.values());
     }
 }

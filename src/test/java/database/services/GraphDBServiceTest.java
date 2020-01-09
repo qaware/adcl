@@ -78,10 +78,10 @@ public class GraphDBServiceTest {
         assertThat(testPackage).isNotNull();
         assertThat(testPackage).isInstanceOf(PackageInformation.class);
 
-        ClassInformation testClass = testPackage.getClassInformations().first();
+        ClassInformation testClass = testPackage.getClassInformations().iterator().next();
         assertThat(testClass.getClassName()).isEqualTo("packageB.ClassB");
 
-        MethodInformation testMethod = testClass.getMethodInformations().first();
+        MethodInformation testMethod = testClass.getMethodInformations().iterator().next();
         assertThat(testMethod.getName()).isEqualTo("packageB.ClassB.getInstanceA(java.lang.String,int,packageA.ClassA[])");
 
         assertThat(testMethod.getMethodDependencies()).hasOnlyElementsOfType(ChangelogDependencyInformation.class);
@@ -103,10 +103,10 @@ public class GraphDBServiceTest {
                 .filter(packageInformation -> packageInformation.getPackageName().equals("packageA"))
                 .findFirst().orElse(null));
 
-        ClassInformation testClass = testPackage.getClassInformations().first();
+        ClassInformation testClass = testPackage.getClassInformations().iterator().next();
         assertThat(testClass.getClassName()).isEqualTo("packageA.ClassA");
 
-        MethodInformation testMethod = testClass.getMethodInformations().first();
+        MethodInformation testMethod = testClass.getMethodInformations().iterator().next();
         assertThat(testMethod.getName()).isEqualTo("packageA.ClassA.empty()");
 
         graphDBService.getVersionRepository().delete(version);

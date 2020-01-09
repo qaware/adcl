@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.context.annotation.Lazy;
 
 import java.util.Collection;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -20,7 +20,7 @@ public class ChangelogInformation {
     private Long id;
 
     @Relationship(type = "CHANGELOG")
-    private SortedSet<PackageInformation> changelog;
+    private Set<PackageInformation> changelog;
 
     @Lazy
     @Relationship(type = "BEFORE")
@@ -50,7 +50,7 @@ public class ChangelogInformation {
      *
      * @return the changelog
      */
-    public SortedSet<PackageInformation> getChangelog() {
+    public Set<PackageInformation> getChangelog() {
         return changelog;
     }
 

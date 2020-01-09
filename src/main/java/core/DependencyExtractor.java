@@ -14,7 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -39,7 +39,7 @@ public class DependencyExtractor {
      * @param classFiles all list of class files that should be analysed for dependencies.
      * @return the collection
      */
-    public SortedSet<PackageInformation> analyseClasses(List<String> classFiles) {
+    public Set<PackageInformation> analyseClasses(List<String> classFiles) {
         classFiles.forEach(classFilename -> {
             try {
                 createClassInformation(classFilename);
@@ -92,7 +92,7 @@ public class DependencyExtractor {
         methodInformation.setClassDependencies(ctMethodBodyAnalyzer.getClassDependencies());
         methodInformation.setMethodDependencies(ctMethodBodyAnalyzer.getMethodDependencies());
 
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>();
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         ctMethodBodyAnalyzer.getClassDependencies().forEach(classDependency -> packageDependencies.add(dependencyPool.getOrCreatePackageInformation(NameParserUtil.extractPackageName(classDependency.getClassName()))));
         methodInformation.setPackageDependencies(packageDependencies);
     }

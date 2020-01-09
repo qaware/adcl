@@ -1,7 +1,7 @@
 package core.information;
 
 import java.util.Objects;
-import java.util.SortedSet;
+import java.util.Set;
 
 /**
  * MethodInformation with additional change meta (whether it was added or deleted).
@@ -45,7 +45,7 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * @param changeStatus        whenever this method was deleted or added
      */
     @Deprecated
-    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
+    public ChangelogDependencyInformation(String name, Set<PackageInformation> packageDependencies, Set<ClassInformation> classDependencies, Set<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
         super(name, packageDependencies, classDependencies, methodDependencies);
         this.changeStatus = changeStatus;
     }
@@ -70,7 +70,7 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * @param methodDependencies  the referenced method
      * @param changeStatus        whenever this method was deleted or added
      */
-    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, ChangeStatus changeStatus) {
+    public ChangelogDependencyInformation(String name, Set<PackageInformation> packageDependencies, Set<ClassInformation> classDependencies, Set<MethodInformation> methodDependencies, ChangeStatus changeStatus) {
         super(name, packageDependencies, classDependencies, methodDependencies);
         this.changeStatus = changeStatus;
     }
