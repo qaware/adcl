@@ -15,9 +15,7 @@ import java.util.TreeSet;
  * Diff gets computed upon constructor invocation.
  */
 public class DiffExtractor {
-
     private DependencyPool changelistDependencyPool = DependencyPool.getExtractorInstance();
-
 
     /**
      * Instantiates a new DiffExtractor.
@@ -26,12 +24,11 @@ public class DiffExtractor {
      * @param analysed the analysed
      */
     public DiffExtractor(Collection<PackageInformation> old, Collection<PackageInformation> analysed) {
-
+        changelistDependencyPool.resetDataStorage();
         SortedSet<PackageInformation> before = new TreeSet<>(old);
         SortedSet<PackageInformation> after = new TreeSet<>(analysed);
         diff(before, after);
     }
-
 
     /**
      * Helper Method to add a change into the changelist without making duplicates
@@ -56,7 +53,6 @@ public class DiffExtractor {
 
         mi.getMethodDependencies().add(md);
     }
-
 
     /**
      * Builds the difference between the packages in before and after.
@@ -94,7 +90,6 @@ public class DiffExtractor {
         }
     }
 
-
     /**
      * Builds the difference between the classes in before and after.
      *
@@ -102,7 +97,6 @@ public class DiffExtractor {
      * @param after  package after commit
      */
     private void packageDiff(PackageInformation before, PackageInformation after) {
-
         Iterator<ClassInformation> beforeIt = before.getClassInformations().iterator();
         Iterator<ClassInformation> afterIt = after.getClassInformations().iterator();
 
@@ -132,7 +126,6 @@ public class DiffExtractor {
         }
     }
 
-
     /**
      * Builds the difference between the Methods in before and after
      *
@@ -141,7 +134,6 @@ public class DiffExtractor {
      * @param inPackage package in which before and after are
      */
     private void classDiff(ClassInformation before, ClassInformation after, PackageInformation inPackage) {
-
         Iterator<MethodInformation> beforeIt = before.getMethodInformations().iterator();
         Iterator<MethodInformation> afterIt = after.getMethodInformations().iterator();
 
@@ -171,7 +163,6 @@ public class DiffExtractor {
         }
     }
 
-
     /**
      * Builds the difference between the Dependencies in before and after
      *
@@ -181,7 +172,6 @@ public class DiffExtractor {
      * @param inClass   class in which before and after are
      */
     private void methodDiff(MethodInformation before, MethodInformation after, PackageInformation inPackage, ClassInformation inClass) {
-
         Iterator<MethodInformation> beforeIt = before.getMethodDependencies().iterator();
         Iterator<MethodInformation> afterIt = after.getMethodDependencies().iterator();
 
@@ -211,7 +201,6 @@ public class DiffExtractor {
         }
     }
 
-
     /**
      * Adds all Dependencies in packageInformation to changed
      *
@@ -222,7 +211,6 @@ public class DiffExtractor {
         for (ClassInformation classInformation : packageInformation.getClassInformations())
             classChange(classInformation, packageInformation, changeStatus);
     }
-
 
     /**
      * Adds all Dependencies in classInformation to changed
@@ -235,7 +223,6 @@ public class DiffExtractor {
         for (MethodInformation MethodInformation : classInformation.getMethodInformations())
             behaviourChange(MethodInformation, classInformation, packageInformation, changeStatus);
     }
-
 
     /**
      * Adds all Dependencies in methodInformation to changed
@@ -250,7 +237,6 @@ public class DiffExtractor {
             addToChangelist(dependency, methodInformation, classInformation, packageInformation, changeStatus);
     }
 
-
     /**
      * Gets the changelist.
      *
@@ -259,7 +245,6 @@ public class DiffExtractor {
     public Collection<PackageInformation> getChangelist() {
         return changelistDependencyPool.retrievePackageInformation();
     }
-
 
     /**
      * HelperClass for comparing two tree structures while iterating through them. Iteration result is an Integer.
