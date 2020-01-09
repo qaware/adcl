@@ -10,9 +10,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ClassRepository extends Neo4jRepository<ClassInformation, Long> {
 
-    /**
-     * @param className name of the class that is searched
-     * @return a database stored {@link ClassInformation} with the name of className
-     */
-    ClassInformation findByClassName(String className);
 }

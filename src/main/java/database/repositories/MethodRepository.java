@@ -10,9 +10,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MethodRepository extends Neo4jRepository<MethodInformation, Long> {
 
-    /**
-     * @param name name of the Method/Constructor that is searched
-     * @return a database stored {@link MethodInformation} with the name of name
-     */
-    MethodInformation findByName(String name);
 }

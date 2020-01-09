@@ -10,10 +10,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PackageRepository extends Neo4jRepository<PackageInformation, Long> {
 
-    /**
-     * @param packageName name of the package that is searched
-     * @return a database stored {@link PackageInformation} with the name of packageName
-     */
-    PackageInformation findByPackageName(String packageName);
-
 }
