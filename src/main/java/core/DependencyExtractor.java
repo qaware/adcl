@@ -12,7 +12,10 @@ import util.NameParserUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * The DependencyExtractor can extract static dependencies from class files such as referenced packages, classes, methods.
@@ -21,15 +24,13 @@ public class DependencyExtractor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyExtractor.class);
 
     private ClassPool classPool;
-    private DependencyPool dependencyPool;
+    private DependencyPool dependencyPool = new DependencyPool();
 
     /**
      * Instantiates a new DependencyExtractor.
      */
     public DependencyExtractor() {
         this.classPool = new ClassPool(true);
-        this.dependencyPool = DependencyPool.getInstance();
-        dependencyPool.resetDataStorage();
     }
 
     /**
@@ -38,7 +39,7 @@ public class DependencyExtractor {
      * @param classFiles all list of class files that should be analysed for dependencies.
      * @return the collection
      */
-    public Collection<PackageInformation> analyseClasses(List<String> classFiles) {
+    public SortedSet<PackageInformation> analyseClasses(List<String> classFiles) {
         classFiles.forEach(classFilename -> {
             try {
                 createClassInformation(classFilename);
@@ -84,9 +85,9 @@ public class DependencyExtractor {
      */
     private void createMethodInformation(CtBehavior ctMethod) {
         String methodName = ctMethod instanceof CtConstructor && ((CtConstructor) ctMethod).isConstructor() ? ctMethod.getLongName().replace("(", ".<init>(") : ctMethod.getLongName();
-        MethodInformation methodInformation = dependencyPool.getOrCreateMethodInformation(methodName);
+        MethodInformation methodInformation = dependencyPool.getOrCreateMethodInformation(methodName, true);
 
-        CtMethodBodyAnalyzer ctMethodBodyAnalyzer = new CtMethodBodyAnalyzer();
+        CtMethodBodyAnalyzer ctMethodBodyAnalyzer = new CtMethodBodyAnalyzer(dependencyPool);
         ctMethodBodyAnalyzer.analyse(ctMethod);
         methodInformation.setClassDependencies(ctMethodBodyAnalyzer.getClassDependencies());
         methodInformation.setMethodDependencies(ctMethodBodyAnalyzer.getMethodDependencies());

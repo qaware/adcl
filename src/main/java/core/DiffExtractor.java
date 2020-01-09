@@ -15,7 +15,7 @@ import java.util.TreeSet;
  * Diff gets computed upon constructor invocation.
  */
 public class DiffExtractor {
-    private DependencyPool changelistDependencyPool = DependencyPool.getExtractorInstance();
+    private final DependencyPool changelistDependencyPool = new DependencyPool();
 
     /**
      * Instantiates a new DiffExtractor.
@@ -24,7 +24,6 @@ public class DiffExtractor {
      * @param analysed the analysed
      */
     public DiffExtractor(Collection<PackageInformation> old, Collection<PackageInformation> analysed) {
-        changelistDependencyPool.resetDataStorage();
         SortedSet<PackageInformation> before = new TreeSet<>(old);
         SortedSet<PackageInformation> after = new TreeSet<>(analysed);
         diff(before, after);
@@ -45,7 +44,7 @@ public class DiffExtractor {
         changelistDependencyPool.getOrCreateClassInformation(classInformation.getClassName(), classInformation.isService(), classInformation.isInternal());
 
         //create a copy of methodInformation
-        MethodInformation mi = changelistDependencyPool.getOrCreateMethodInformation(methodInformation.getName());
+        MethodInformation mi = changelistDependencyPool.getOrCreateMethodInformation(methodInformation.getName(), classInformation.isInternal());
 
         //addToChangelist ChangelogDependencyInformation to the copy of methodInformation
         MethodInformation md = new ChangelogDependencyInformation(methodDependency, status);
@@ -250,7 +249,7 @@ public class DiffExtractor {
      *
      * @param <T> should be one of {@link PackageInformation}, {@link ClassInformation}, {@link MethodInformation}
      */
-    private class CompareIterator<T extends Comparable<T>> implements Iterator<Integer> {
+    private static class CompareIterator<T extends Comparable<T>> implements Iterator<Integer> {
         private Iterator<T> beforeIt;
         private Iterator<T> afterIt;
         private T afterNext;

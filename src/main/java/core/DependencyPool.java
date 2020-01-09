@@ -1,63 +1,22 @@
 package core;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import core.information.ClassInformation;
 import core.information.MethodInformation;
 import core.information.PackageInformation;
 import util.NameParserUtil;
 
-import java.util.Collection;
-import java.util.TreeMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A container for PackageInformation, ClassInformation and MethodInformation to avoid duplicates of these.
  */
 public class DependencyPool {
-    private static DependencyPool instance;
-    private static DependencyPool extractorInstance;
-
-    private TreeMap<String, PackageInformation> packageInformationMap;
-    private TreeMap<String, ClassInformation> classInformationMap;
-    private TreeMap<String, MethodInformation> methodInformationMap;
-
-    /**
-     * private to avoid multiple instances
-     */
-    private DependencyPool() {
-        initializeDataStorage();
-    }
-
-    /**
-     * Initializes the Maps containing the information
-     */
-    private void initializeDataStorage() {
-        packageInformationMap = new TreeMap<>();
-        classInformationMap = new TreeMap<>();
-        methodInformationMap = new TreeMap<>();
-    }
-
-    /**
-     * Gets the available instance and creates it if necessary
-     *
-     * @return a instance of DependencyPool
-     */
-    public static DependencyPool getInstance() {
-        if (instance == null) {
-            instance = new DependencyPool();
-        }
-        return instance;
-    }
-
-    /**
-     * Gets the available instance for DiffExtractor or creates it if necessary
-     *
-     * @return a instance of DependencyPool
-     */
-    public static DependencyPool getExtractorInstance() {
-        if (extractorInstance == null) {
-            extractorInstance = new DependencyPool();
-        }
-        return extractorInstance;
-    }
+    private final BiMap<String, PackageInformation> packageInformationMap = HashBiMap.create();
+    private final BiMap<String, ClassInformation> classInformationMap = HashBiMap.create();
+    private final BiMap<String, MethodInformation> methodInformationMap = HashBiMap.create();
 
     /**
      * Gets the PackageInformation with the given packageName, if its not available it will be created.
@@ -75,8 +34,8 @@ public class DependencyPool {
      * @param className the name of the class
      * @return the ClassInformation for the given name
      */
-    ClassInformation getOrCreateClassInformation(String className) {
-        return getOrCreateClassInformation(className, false, false);
+    ClassInformation getOrCreateClassInformation(String className, boolean internal) {
+        return getOrCreateClassInformation(className, false, internal);
     }
 
     /**
@@ -101,22 +60,15 @@ public class DependencyPool {
     /**
      * Gets the MethodInformation with the given MethodName, if its not available it will be created.
      *
-     * @param methodName  the name of the method
+     * @param methodName the name of the method
      * @return the MethodInformation for the given name
      */
-    MethodInformation getOrCreateMethodInformation(String methodName) {
+    MethodInformation getOrCreateMethodInformation(String methodName, boolean internal) {
         return methodInformationMap.computeIfAbsent(methodName, name -> {
             MethodInformation result = new MethodInformation(name);
-            getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(methodName))).addMethodInformation(result);
+            getOrCreateClassInformation(NameParserUtil.extractClassName(NameParserUtil.cutOffParamaterList(methodName)), internal).addMethodInformation(result);
             return result;
         });
-    }
-
-    /**
-     * removes all acquired PackageInformation, ClassInformation and MethodInformation
-     */
-    void resetDataStorage() {
-        initializeDataStorage();
     }
 
     /**
@@ -124,7 +76,7 @@ public class DependencyPool {
      *
      * @return all created PackageInformation.
      */
-    Collection<PackageInformation> retrievePackageInformation() {
-        return packageInformationMap.values();
+    SortedSet<PackageInformation> retrievePackageInformation() {
+        return new TreeSet<>(packageInformationMap.values());
     }
 }
