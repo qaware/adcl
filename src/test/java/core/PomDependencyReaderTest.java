@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
+import java.util.Set;
 
 public class PomDependencyReaderTest {
     private static PomDependencyReader reader;
@@ -24,9 +25,9 @@ public class PomDependencyReaderTest {
         MavenXpp3Reader in = new MavenXpp3Reader();
         Model model = in.read(new FileReader("src/test/resources/Pom/pom.xml"));
         List<Dependency> list = model.getDependencies();
-        List<Dependency> list2 = reader.readDependency();
+        Set<Dependency> list2 = reader.readDependency();
         for(int i=0; i<list.size(); i++){
-            assertThat(list.get(i).toString().equals(list2.get(i).toString()));
+            assertThat(list2.containsAll(list));
         }
         reader.printListDependency();
     }

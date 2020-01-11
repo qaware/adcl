@@ -32,7 +32,7 @@ public class PomDependencyReader {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         try {
             Model model = reader.read(new FileReader(path));
-            Set<Dependency> dependencies = new TreeSet<Dependency>();
+            Set<Dependency> dependencies = new HashSet<Dependency>();
             dependencies.addAll(model.getDependencies());
             return dependencies;
         }
