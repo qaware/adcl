@@ -18,12 +18,12 @@ public class PomDependencyReaderTest {
     private static PomDependencyReader reader;
     @BeforeAll
     static void setup() throws FileNotFoundException {
-        reader = new PomDependencyReader("src/test/resources/Pom/pom.xml");
+        reader = new PomDependencyReader("src/test/resources/pom/pom.xml");
     }
     @Test
     void test() throws IOException, XmlPullParserException {
         MavenXpp3Reader in = new MavenXpp3Reader();
-        Model model = in.read(new FileReader("src/test/resources/Pom/pom.xml"));
+        Model model = in.read(new FileReader("src/test/resources/pom/pom.xml"));
         List<Dependency> list = model.getDependencies();
         Set<Dependency> list2 = reader.readDependency();
         for(int i=0; i<list.size(); i++){
