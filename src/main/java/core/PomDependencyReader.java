@@ -34,7 +34,7 @@ public class PomDependencyReader {
             Model model = reader.read(new FileReader(path));
             return model.getDependencies();
         }
-        catch(Exception ex){
+        catch(XmlPullParserException | IOException ex) {
             LOGGER.info(ex.getMessage());
         }
         return new ArrayList<>();
