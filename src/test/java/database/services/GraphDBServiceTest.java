@@ -1,6 +1,6 @@
 package database.services;
 
-import core.Application;
+import core.ApplicationMojo;
 import core.DependencyExtractor;
 import core.DiffExtractor;
 import core.information.*;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = Application.class)
+@SpringBootTest(classes = ApplicationMojo.class)
 @Transactional
 @ActiveProfiles(profiles = "test")
 public class GraphDBServiceTest {
