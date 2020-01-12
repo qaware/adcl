@@ -16,18 +16,20 @@ public class ClassCollector {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassCollector.class);
 
     /**
-     * @param path
+     * Initialize the instance with a path set through parameters
+     * @param path decides from which folder the files are added to the classesList
      */
-    public ClassCollector(String path) {        //if path is declared, init stream, list, file
+    public ClassCollector(String path) {
         folder = new File(path);
         list = new ArrayList<>();
         classesList = new ArrayList<>();
     }
 
     /**
-     * @param folder
+     * Add all files into the list
+     * @param folder is root data for all files to add
      */
-    private void getAllFiles(File folder) {       //return an arrayList with all files which the given folder or file contains
+    private void getAllFiles(File folder) {
         File[] file = folder.listFiles();
 
         for (int i = 0; i < file.length; i++) {
@@ -45,15 +47,17 @@ public class ClassCollector {
     }
 
     /**
-     *
+     * Calls function getAllFiles with the given Path from constructor
      */
     public void generateFileList() {
         list.clear();
         getAllFiles(this.folder);
     }
 
-
-    public void printFile() {  //generates in the folder from the given path an file as Test.txt und write all absolute pathes from all files in it
+    /**
+     * Prints classesList out in folder path as Test.txt
+     */
+    public void printFile() {
         try (PrintWriter out = new PrintWriter(folder.getAbsolutePath() + "/Test.txt")) {
             for (File file : getList()) {
                 out.println(file.getAbsolutePath());
