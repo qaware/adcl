@@ -17,7 +17,7 @@ public class ClassCollector {
 
     /**
      * Initialize the instance with a path set through parameters
-     * @param path decides from which folder the files are added to the classesList
+     * @param path decide from which folder the files are added to the classesList
      */
     public ClassCollector(String path) {
         folder = new File(path);
