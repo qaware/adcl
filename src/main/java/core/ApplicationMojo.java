@@ -44,15 +44,11 @@ public class ApplicationMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         //Loading config
-        getLog().info("Start, Willkommen");
+        getLog().info("Start, Welcome");
+        getLog().info("Start your Configuration here");
         Scanner scanner = new Scanner(System.in);
-        ArrayList<String> args = new ArrayList<>();
-        while(scanner.hasNext() != false) {
-            args.add(scanner.next());
-        }
-        String[] args2 = new String[args.size()];
-        int i = 0;
-        args2 = args.toArray(args2);
+        String t = scanner.nextLine();
+        String args2[] = t.split(" ");
         Config.load(args2);
         //Analysing current version
         Path scanLocation = Config.getPath("project.uri", null);
