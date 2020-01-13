@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
     private static final Map<String, String> properties = new HashMap<>();
-    private static final Pattern pattern = Pattern.compile("(?<key>[^=\\s]+)(?:(?<hasEqual>=)(?<value>(?:(?<hasQuotes>\").*?\"|.+?))\\s)?");
+    private static final Pattern pattern = Pattern.compile("(?<key>[^=\\s]+)=?(?:(?<quoted>\".+?\")|(?<unquoted>[^\\s]+))?\\s");
     private static final String prefix = "adcl.";
 
     /**
@@ -189,6 +189,7 @@ public class Config {
      * @param args the program arguments of the main class
      */
     static void load(@NotNull String[] args) {
+        properties.clear();
         properties.putAll(argsToMap(args));
         properties.putAll(propertiesToMap()); // overrides options from args
 
@@ -207,13 +208,19 @@ public class Config {
             }
             if (configPath != null) fileToMap(configPath).forEach(properties::putIfAbsent); // does not override
         }
+
+        logger.info("Configuration loaded:" + properties);
     }
 
     private static Map<String, String> fileToMap(Path configPath) {
         try {
             Properties prop = new Properties();
             prop.load(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
-            return new MapTool<>(prop).castKeys(String.class).castValues(String.class).mapValues(Config::stripQuote).get();
+            return new MapTool<>(prop)
+                    .castKeys(String.class)
+                    .castValues(String.class)
+                    .mapValues(in -> in.startsWith("\"") && in.endsWith("\"") ? in.substring(1, in.length() - 1) : in)
+                    .get();
         } catch (IOException e) {
             logger.error("Cloud not open config file $configPath", e);
             return Collections.emptyMap();
@@ -226,7 +233,6 @@ public class Config {
                 .castValues(String.class)
                 .filterKeys(k -> k.startsWith(prefix))
                 .mapKeys(k -> k.substring(prefix.length()))
-                .mapValues(Config::stripQuote)
                 .get();
     }
 
@@ -234,15 +240,15 @@ public class Config {
         Map<String, String> result = new HashMap<>();
         Matcher matcher = pattern.matcher(Arrays.stream(args).collect(Collectors.joining(" ", "", " ")));
         while (matcher.find()) {
-            String val = matcher.group("value");
-            if (val == null) val = "";
-            result.put(matcher.group("key"), stripQuote(val));
+            String val = matcher.group("quoted");
+            if (val == null) {
+                val = matcher.group("unquoted");
+            } else {
+                val = val.substring(1, val.length() - 1);
+            }
+            result.put(matcher.group("key"), val == null ? "" : val);
         }
         return result;
-    }
-
-    private static String stripQuote(String in) {
-        return (in.startsWith("\"") && in.endsWith("\"")) ? in.substring(1, in.length() - 1) : in;
     }
 
     private static <T> T tryParse(String key, @NotNull Function<String, T> parser, T def) {
