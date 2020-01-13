@@ -146,7 +146,9 @@ public class ConfigTest {
                     "b=",
                     "c",
                     "d=\"3\"",
-                    "e=\"a b\""
+                    "e=\"a b\"",
+                    "f==\"",
+                    "g=\""
             ));
 
             Config.load(new String[]{"configPath=myconf.properties"});
@@ -156,6 +158,8 @@ public class ConfigTest {
             assertThat(Config.get("c", false)).isTrue();
             assertThat(Config.get("d", 0)).isEqualTo(3);
             assertThat(Config.get("e", null)).isEqualTo("a b");
+            assertThat(Config.get("f", null)).isEqualTo("=\"");
+            assertThat(Config.get("g", null)).isEqualTo("\"");
         } finally {
             Files.deleteIfExists(path);
         }
@@ -170,7 +174,9 @@ public class ConfigTest {
                     "b=",
                     "c",
                     "d=\"3\"",
-                    "e=\"a b\""
+                    "e=\"a b\"",
+                    "f==\"",
+                    "g=\""
             ));
 
             Config.load(new String[0]);
@@ -180,6 +186,8 @@ public class ConfigTest {
             assertThat(Config.get("c", false)).isTrue();
             assertThat(Config.get("d", 0)).isEqualTo(3);
             assertThat(Config.get("e", null)).isEqualTo("a b");
+            assertThat(Config.get("f", null)).isEqualTo("=\"");
+            assertThat(Config.get("g", null)).isEqualTo("\"");
         } finally {
             Files.deleteIfExists(path);
         }

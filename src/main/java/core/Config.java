@@ -222,7 +222,7 @@ public class Config {
             return new MapTool<>(prop)
                     .castKeys(String.class)
                     .castValues(String.class)
-                    .mapValues(in -> in.startsWith("\"") && in.endsWith("\"") ? in.substring(1, in.length() - 1) : in)
+                    .mapValues(in -> in.matches("\".*\"") ? in.substring(1, in.length() - 1) : in)
                     .get();
         } catch (IOException e) {
             logger.error("Cloud not open config file $configPath", e);
