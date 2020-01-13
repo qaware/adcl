@@ -13,7 +13,6 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigTest {
     private static Properties defaultProps;
@@ -33,18 +32,18 @@ public class ConfigTest {
                 Pair.of("e", ".")
         );
 
-        assertTrue(Config.valuePresent("a"));
+        assertThat(Config.valuePresent("a")).isTrue();
 
-        assertEquals(Config.get("b", 0), 3);
-        assertEquals(Config.get("b", (long) 0), 3);
-        assertEquals(Config.get("b", (float) 0), 3);
-        assertEquals(Config.get("b", (double) 0), 3);
-        assertEquals(Config.get("b", (byte) 0), 3);
-        assertEquals(Config.get("b", (short) 0), 3);
+        assertThat(Config.get("b", 0)).isEqualTo(3);
+        assertThat(Config.get("b", (long) 0)).isEqualTo(3);
+        assertThat(Config.get("b", (float) 0)).isEqualTo(3);
+        assertThat(Config.get("b", (double) 0)).isEqualTo(3);
+        assertThat(Config.get("b", (byte) 0)).isEqualTo((byte) 3);
+        assertThat(Config.get("b", (short) 0)).isEqualTo((short) 3);
 
-        assertTrue(Config.get("c", false));
-        assertEquals(Config.get("b", '0'), '3');
-        assertEquals(Config.get("a", null), "Hello World");
+        assertThat(Config.get("c", false)).isTrue();
+        assertThat(Config.get("b", '0')).isEqualTo('3');
+        assertThat(Config.get("a", null)).isEqualTo("Hello World");
         assertThat(Config.getStringList("d", null)).containsExactly("a", "b", "c");
         assertThat(Config.getPath("e", null)).isEqualTo(Paths.get("."));
     }
@@ -57,44 +56,44 @@ public class ConfigTest {
                 Pair.of("e", "???")
         );
 
-        assertEquals(Config.get("b", 4), 4);
-        assertEquals(Config.get("b", (long) 4), 4);
-        assertEquals(Config.get("b", (float) 4), 4);
-        assertEquals(Config.get("b", (double) 4), 4);
-        assertEquals(Config.get("b", (byte) 4), 4);
-        assertEquals(Config.get("b", (short) 4), 4);
+        assertThat(Config.get("b", 4)).isEqualTo(4);
+        assertThat(Config.get("b", (long) 4)).isEqualTo(4);
+        assertThat(Config.get("b", (float) 4)).isEqualTo(4);
+        assertThat(Config.get("b", (double) 4)).isEqualTo(4);
+        assertThat(Config.get("b", (byte) 4)).isEqualTo((byte) 4);
+        assertThat(Config.get("b", (short) 4)).isEqualTo((short) 4);
 
-        assertTrue(Config.get("c", true));
-        assertEquals(Config.get("e", '4'), '4');
-        assertNull(Config.getPath("e", null));
+        assertThat(Config.get("c", true)).isTrue();
+        assertThat(Config.get("e", '4')).isEqualTo('4');
+        assertThat(Config.getPath("e", null)).isNull();
     }
 
     @Test
     void testGetNotExistent() {
         configByArgs();
 
-        assertFalse(Config.valuePresent("a"));
+        assertThat(Config.valuePresent("a")).isFalse();
 
-        assertEquals(Config.get("b", 4), 4);
-        assertEquals(Config.get("b", (long) 4), 4);
-        assertEquals(Config.get("b", (float) 4), 4);
-        assertEquals(Config.get("b", (double) 4), 4);
-        assertEquals(Config.get("b", (byte) 4), 4);
-        assertEquals(Config.get("b", (short) 4), 4);
+        assertThat(Config.get("b", 4)).isEqualTo(4);
+        assertThat(Config.get("b", (long) 4)).isEqualTo(4);
+        assertThat(Config.get("b", (float) 4)).isEqualTo(4);
+        assertThat(Config.get("b", (double) 4)).isEqualTo(4);
+        assertThat(Config.get("b", (byte) 4)).isEqualTo((byte) 4);
+        assertThat(Config.get("b", (short) 4)).isEqualTo((short) 4);
 
-        assertTrue(Config.get("c", true));
-        assertEquals(Config.get("b", '4'), '4');
-        assertEquals(Config.get("a", "X"), "X");
-        assertNull(Config.getStringList("d", null));
-        assertNull(Config.getPath("e", null));
+        assertThat(Config.get("c", true)).isTrue();
+        assertThat(Config.get("b", '4')).isEqualTo('4');
+        assertThat(Config.get("a", "X")).isEqualTo("X");
+        assertThat(Config.getStringList("d", null)).isNull();
+        assertThat(Config.getPath("e", null)).isNull();
     }
 
     @Test
     void testGetNoValue() {
         configByArgs(Pair.of("a", null));
 
-        assertTrue(Config.valuePresent("a"));
-        assertTrue(Config.get("a", false));
+        assertThat(Config.valuePresent("a")).isTrue();
+        assertThat(Config.get("a", false)).isTrue();
     }
 
     @Test
@@ -102,11 +101,11 @@ public class ConfigTest {
         String input = "a=1 b= c d=\"3\" e=\"a b\"";
         Config.load(input.split(" "));
 
-        assertEquals(Config.get("a", 0), 1);
-        assertTrue(Config.get("b", false));
-        assertTrue(Config.get("c", false));
-        assertEquals(Config.get("d", 0), 3);
-        assertEquals(Config.get("e", null), "a b");
+        assertThat(Config.get("a", 0)).isEqualTo(1);
+        assertThat(Config.get("b", false)).isTrue();
+        assertThat(Config.get("c", false)).isTrue();
+        assertThat(Config.get("d", 0)).isEqualTo(3);
+        assertThat(Config.get("e", null)).isEqualTo("a b");
     }
 
     @Test
@@ -117,10 +116,10 @@ public class ConfigTest {
         System.setProperty("adcl.e", "a b");
         Config.load(new String[0]);
 
-        assertEquals(Config.get("a", 0), 1);
-        assertTrue(Config.get("b", false));
-        assertEquals(Config.get("d", 0), 3);
-        assertEquals(Config.get("e", null), "a b");
+        assertThat(Config.get("a", 0)).isEqualTo(1);
+        assertThat(Config.get("b", false)).isTrue();
+        assertThat(Config.get("d", 0)).isEqualTo(3);
+        assertThat(Config.get("e", null)).isEqualTo("a b");
 
         System.setProperties(defaultProps);
     }
@@ -138,11 +137,11 @@ public class ConfigTest {
 
         Config.load(new String[]{"configPath=myconf.properties"});
 
-        assertEquals(Config.get("a", 0), 1);
-        assertTrue(Config.get("b", false));
-        assertTrue(Config.get("c", false));
-        assertEquals(Config.get("d", 0), 3);
-        assertEquals(Config.get("e", null), "a b");
+        assertThat(Config.get("a", 0)).isEqualTo(1);
+        assertThat(Config.get("b", false)).isTrue();
+        assertThat(Config.get("c", false)).isTrue();
+        assertThat(Config.get("d", 0)).isEqualTo(3);
+        assertThat(Config.get("e", null)).isEqualTo("a b");
 
         Files.delete(path);
     }
@@ -160,11 +159,11 @@ public class ConfigTest {
 
         Config.load(new String[0]);
 
-        assertEquals(Config.get("a", 0), 1);
-        assertTrue(Config.get("b", false));
-        assertTrue(Config.get("c", false));
-        assertEquals(Config.get("d", 0), 3);
-        assertEquals(Config.get("e", null), "a b");
+        assertThat(Config.get("a", 0)).isEqualTo(1);
+        assertThat(Config.get("b", false)).isTrue();
+        assertThat(Config.get("c", false)).isTrue();
+        assertThat(Config.get("d", 0)).isEqualTo(3);
+        assertThat(Config.get("e", null)).isEqualTo("a b");
 
         Files.delete(path);
     }
