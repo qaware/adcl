@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn" name="XMLConfiguration" packages="">
     <Appenders>
-        <Console name="STDOUT" target="SYSTEM_OUT">
+        <Console name="STDOUT" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="[%t] %-5level %logger{36} - %msg%n"/>
             <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
         </Console>
-        <Console name="STDERR" target="SYSTEM_ERR">
+        <Console name="STDERR" target="SYSTEM_ERR" follow="true">
             <PatternLayout pattern="[%t] %-5level %logger{36} - %msg%n"/>
             <ThresholdFilter level="error" onMatch="NEUTRAL" onMismatch="DENY"/>
         </Console>
