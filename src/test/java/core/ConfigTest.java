@@ -1,5 +1,6 @@
 package core;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ public class ConfigTest {
 
         assertThat(Config.get("c", true)).isTrue();
         assertThat(Config.get("e", '4')).isEqualTo('4');
-        assertThat(Config.getPath("e", null)).isNull();
+        if (SystemUtils.IS_OS_WINDOWS) assertThat(Config.getPath("e", null)).isNull();
     }
 
     @Test
