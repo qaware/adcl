@@ -1,9 +1,13 @@
 package core;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
+import util.LogInspector;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,6 +19,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(OutputCaptureExtension.class)
 public class ConfigTest {
     private static Properties defaultProps;
 
@@ -30,7 +35,8 @@ public class ConfigTest {
                 Pair.of("b", 3),
                 Pair.of("c", true),
                 Pair.of("d", "a,b,c"),
-                Pair.of("e", ".")
+                Pair.of("e", "."),
+                Pair.of("f", "FaLsE")
         );
 
         assertThat(Config.valuePresent("a")).isTrue();
@@ -43,6 +49,7 @@ public class ConfigTest {
         assertThat(Config.get("b", (short) 0)).isEqualTo((short) 3);
 
         assertThat(Config.get("c", false)).isTrue();
+        assertThat(Config.get("f", true)).isFalse();
         assertThat(Config.get("b", '0')).isEqualTo('3');
         assertThat(Config.get("a", null)).isEqualTo("Hello World");
         assertThat(Config.getStringList("d", null)).containsExactly("a", "b", "c");
@@ -54,7 +61,8 @@ public class ConfigTest {
         configByArgs(
                 Pair.of("b", "x"),
                 Pair.of("c", 3),
-                Pair.of("e", "???")
+                Pair.of("d", "xxx"),
+                Pair.of("e", "\0")
         );
 
         assertThat(Config.get("b", 4)).isEqualTo(4);
@@ -65,8 +73,8 @@ public class ConfigTest {
         assertThat(Config.get("b", (short) 4)).isEqualTo((short) 4);
 
         assertThat(Config.get("c", true)).isTrue();
-        assertThat(Config.get("e", '4')).isEqualTo('4');
-        if (SystemUtils.IS_OS_WINDOWS) assertThat(Config.getPath("e", null)).isNull();
+        assertThat(Config.get("d", '4')).isEqualTo('4');
+        assertThat(Config.getPath("e", null)).isNull();
     }
 
     @Test
@@ -99,7 +107,7 @@ public class ConfigTest {
 
     @Test
     void testInputArgs() {
-        String input = "a=1 b= c d=\"3\" e=\"a b\"";
+        String input = "a=1 b= c d=\"3\" e=\"a b\" f==\" g=\"";
         Config.load(input.split(" "));
 
         assertThat(Config.get("a", 0)).isEqualTo(1);
@@ -107,6 +115,8 @@ public class ConfigTest {
         assertThat(Config.get("c", false)).isTrue();
         assertThat(Config.get("d", 0)).isEqualTo(3);
         assertThat(Config.get("e", null)).isEqualTo("a b");
+        assertThat(Config.get("f", null)).isEqualTo("=\"");
+        assertThat(Config.get("g", null)).isEqualTo("\"");
     }
 
     @Test
@@ -115,6 +125,8 @@ public class ConfigTest {
         System.setProperty("adcl.b", "");
         System.setProperty("adcl.d", "3");
         System.setProperty("adcl.e", "a b");
+        System.getProperties().put("adcl.x", new Object());
+        System.getProperties().put(new Object(), "x");
         Config.load(new String[0]);
 
         assertThat(Config.get("a", 0)).isEqualTo(1);
@@ -128,45 +140,76 @@ public class ConfigTest {
     @Test
     void testInputFilePathGiven() throws IOException {
         Path path = Paths.get("myconf.properties");
-        Files.write(path, Arrays.asList(
-                "a=1",
-                "b=",
-                "c",
-                "d=\"3\"",
-                "e=\"a b\""
-        ));
+        try {
+            Files.write(path, Arrays.asList(
+                    "a=1",
+                    "b=",
+                    "c",
+                    "d=\"3\"",
+                    "e=\"a b\""
+            ));
 
-        Config.load(new String[]{"configPath=myconf.properties"});
+            Config.load(new String[]{"configPath=myconf.properties"});
 
-        assertThat(Config.get("a", 0)).isEqualTo(1);
-        assertThat(Config.get("b", false)).isTrue();
-        assertThat(Config.get("c", false)).isTrue();
-        assertThat(Config.get("d", 0)).isEqualTo(3);
-        assertThat(Config.get("e", null)).isEqualTo("a b");
-
-        Files.delete(path);
+            assertThat(Config.get("a", 0)).isEqualTo(1);
+            assertThat(Config.get("b", false)).isTrue();
+            assertThat(Config.get("c", false)).isTrue();
+            assertThat(Config.get("d", 0)).isEqualTo(3);
+            assertThat(Config.get("e", null)).isEqualTo("a b");
+        } finally {
+            Files.deleteIfExists(path);
+        }
     }
 
     @Test
     void testInputFileDefaultPath() throws IOException {
         Path path = Paths.get("config.properties");
-        Files.write(path, Arrays.asList(
-                "a=1",
-                "b=",
-                "c",
-                "d=\"3\"",
-                "e=\"a b\""
-        ));
+        try {
+            Files.write(path, Arrays.asList(
+                    "a=1",
+                    "b=",
+                    "c",
+                    "d=\"3\"",
+                    "e=\"a b\""
+            ));
 
+            Config.load(new String[0]);
+
+            assertThat(Config.get("a", 0)).isEqualTo(1);
+            assertThat(Config.get("b", false)).isTrue();
+            assertThat(Config.get("c", false)).isTrue();
+            assertThat(Config.get("d", 0)).isEqualTo(3);
+            assertThat(Config.get("e", null)).isEqualTo("a b");
+        } finally {
+            Files.deleteIfExists(path);
+        }
+    }
+
+    @Test
+    void testInputPathFailing(@NotNull CapturedOutput output) throws IOException {
+        LogInspector log = new LogInspector(output);
+        Path path = Paths.get("config.properties");
+
+        try {
+            Files.deleteIfExists(path);
+            Config.load(new String[]{"configPath=config.properties"});
+            assertThat(log.getNewErr()).contains("configPath points to a non-existent file");
+            Config.load(new String[]{"configPath=\0"});
+            assertThat(log.getNewErr()).contains("configPath is present but invalid");
+            Files.createDirectory(path);
+            Config.load(new String[0]); // load default config while config is folder
+            assertThat(log.getNewOut()).contains("Configuration loaded");
+            Config.load(new String[]{"configPath=config.properties"});
+            assertThat(log.getNewErr()).contains("configPath points to a directory");
+        } finally {
+            Files.deleteIfExists(path);
+        }
+    }
+
+    @Test
+    void testOther() {
         Config.load(new String[0]);
-
-        assertThat(Config.get("a", 0)).isEqualTo(1);
-        assertThat(Config.get("b", false)).isTrue();
-        assertThat(Config.get("c", false)).isTrue();
-        assertThat(Config.get("d", 0)).isEqualTo(3);
-        assertThat(Config.get("e", null)).isEqualTo("a b");
-
-        Files.delete(path);
+        assertThat(Config.get(null, 5)).isEqualTo(5);
     }
 
     @SafeVarargs

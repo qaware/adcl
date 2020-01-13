@@ -33,8 +33,11 @@ import java.util.stream.Collectors;
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
     private static final Map<String, String> properties = new HashMap<>();
-    private static final Pattern pattern = Pattern.compile("(?<key>[^=\\s]+)=?(?:(?<quoted>\".+?\")|(?<unquoted>[^\\s]+))?\\s");
-    private static final String prefix = "adcl.";
+    private static final Pattern stringToArgsPattern = Pattern.compile("(?<key>[^=\\s]+)=?(?:(?<quoted>\".+?\")|(?<unquoted>[^\\s]+))?\\s");
+    private static final String PREFIX = "adcl.";
+
+    private Config() {
+    }
 
     /**
      * Determines whether a given key has a value in the Config.
@@ -209,7 +212,7 @@ public class Config {
             if (configPath != null) fileToMap(configPath).forEach(properties::putIfAbsent); // does not override
         }
 
-        logger.info("Configuration loaded:" + properties);
+        logger.info("Configuration loaded: {}", properties);
     }
 
     private static Map<String, String> fileToMap(Path configPath) {
@@ -231,14 +234,14 @@ public class Config {
         return new MapTool<>(System.getProperties())
                 .castKeys(String.class)
                 .castValues(String.class)
-                .filterKeys(k -> k.startsWith(prefix))
-                .mapKeys(k -> k.substring(prefix.length()))
+                .filterKeys(k -> k.startsWith(PREFIX))
+                .mapKeys(k -> k.substring(PREFIX.length()))
                 .get();
     }
 
     private static Map<String, String> argsToMap(String[] args) {
         Map<String, String> result = new HashMap<>();
-        Matcher matcher = pattern.matcher(Arrays.stream(args).collect(Collectors.joining(" ", "", " ")));
+        Matcher matcher = stringToArgsPattern.matcher(Arrays.stream(args).collect(Collectors.joining(" ", "", " ")));
         while (matcher.find()) {
             String val = matcher.group("quoted");
             if (val == null) {
