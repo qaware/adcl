@@ -225,7 +225,7 @@ public class Config {
                     .mapValues(in -> in.matches("\".*\"") ? in.substring(1, in.length() - 1) : in)
                     .get();
         } catch (IOException e) {
-            logger.error("Cloud not open config file $configPath", e);
+            logger.error("Cloud not open config file at {}", configPath, e);
             return Collections.emptyMap();
         }
     }
