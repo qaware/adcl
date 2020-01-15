@@ -6,7 +6,6 @@ import core.information.MethodInformation;
 import core.information.PackageInformation;
 
 import java.util.*;
-import java.util.stream.Collector;
 
 
 /**
