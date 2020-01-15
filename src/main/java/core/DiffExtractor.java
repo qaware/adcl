@@ -8,7 +8,6 @@ import core.information.PackageInformation;
 import java.util.*;
 import java.util.stream.Collector;
 
-import static java.util.stream.Collectors.toList;
 
 /**
  * The DiffExtractor searches for differences between two Collections of PackageInformations and writes the result in changed.
