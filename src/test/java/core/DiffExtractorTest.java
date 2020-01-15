@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DiffExtractorTest {
 
-    private static DiffExtractor diffExtractor;
     private static Collection<PackageInformation> packageOld;
     private static Collection<PackageInformation> packageNew;
 
@@ -87,7 +86,7 @@ class DiffExtractorTest {
 
     @Test
     void getChanged() {
-        diffExtractor = new DiffExtractor(packageOld, packageNew);
+        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageNew);
         ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelist());
         Collections.sort(change);
 
@@ -140,6 +139,7 @@ class DiffExtractorTest {
                     .getMethodInformations().iterator().next()
                     .getMethodDependencies().stream().filter(methodInformation -> methodInformation.getName().equals(rc.getName())).findFirst().orElse(null);
 
+            assertThat(c).isNotNull();
             assertThat(rc).hasFieldOrPropertyWithValue("changeStatus", c.getChangeStatus() == ChangelogDependencyInformation.ChangeStatus.ADDED ?
                     ChangelogDependencyInformation.ChangeStatus.DELETED : ChangelogDependencyInformation.ChangeStatus.ADDED);
         }
