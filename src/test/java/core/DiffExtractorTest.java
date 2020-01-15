@@ -106,4 +106,42 @@ class DiffExtractorTest {
 
         assertThat(diffExtractor.getChangelist()).isEmpty();
     }
+
+
+    @Test
+    void reverseChangelog() {
+        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageNew);
+        DiffExtractor reverseExtractor = new DiffExtractor(packageNew, packageOld);
+
+        ArrayList<PackageInformation> changelog = new ArrayList<>(diffExtractor.getChangelist());
+        ArrayList<PackageInformation> reverseChangelog = new ArrayList<>(reverseExtractor.getChangelist());
+
+        assertThat(changelog).isNotEmpty();
+        assertThat(changelog.get(0).getPackageName()).isEqualTo("packageone");
+        assertThat(changelog.get(0).getClassInformations().stream().map(ClassInformation::getClassName)).contains("packageone.ClassOne", "packageone.ClassTwo", "packageone.ClassThree");
+        assertThat(changelog.get(0).getClassInformations().iterator().next()
+                .getMethodInformations().iterator().next()
+                .getMethodDependencies().iterator().next()).isInstanceOf(ChangelogDependencyInformation.class)
+                .hasFieldOrPropertyWithValue("changeStatus", ChangelogDependencyInformation.ChangeStatus.DELETED);
+
+        assertThat(reverseChangelog).isNotEmpty();
+        assertThat(reverseChangelog.get(0).getPackageName()).isEqualTo("packageone");
+        assertThat(reverseChangelog.get(0).getClassInformations().stream().map(ClassInformation::getClassName)).contains("packageone.ClassOne", "packageone.ClassTwo", "packageone.ClassThree");
+        assertThat(reverseChangelog.get(0).getClassInformations().iterator().next()
+                .getMethodInformations().iterator().next()
+                .getMethodDependencies().iterator().next()).isInstanceOf(ChangelogDependencyInformation.class);
+
+
+        for (MethodInformation rc : reverseChangelog.get(0).getClassInformations().iterator().next()
+                .getMethodInformations().iterator().next()
+                .getMethodDependencies()) {
+
+            ChangelogDependencyInformation c = (ChangelogDependencyInformation) changelog.get(0).getClassInformations().iterator().next()
+                    .getMethodInformations().iterator().next()
+                    .getMethodDependencies().stream().filter(methodInformation -> methodInformation.getName().equals(rc.getName())).findFirst().orElse(null);
+
+            assertThat(rc).hasFieldOrPropertyWithValue("changeStatus", c.getChangeStatus() == ChangelogDependencyInformation.ChangeStatus.ADDED ?
+                    ChangelogDependencyInformation.ChangeStatus.DELETED : ChangelogDependencyInformation.ChangeStatus.ADDED);
+        }
+    }
 }
