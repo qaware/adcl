@@ -47,13 +47,13 @@ public class Application {
         DependencyListWriter.writeListToFile(packages, Config.get("report.destination", "report"), "report");
 
         //Starting Database Service
-        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class, args);
+        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
         GraphDBService graphDBService = ctx.getBean(GraphDBService.class);
 
         //Getting previous Commit
         VersionInformation previous;
         String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
-        VersionInformation current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA));
+        VersionInformation current = new VersionInformation(packages, Config.get("project.commit.current", COMMIT_NA));
 
         if (!previousCommitName.equals(COMMIT_NA)) {
             previous = graphDBService.getVersion(previousCommitName);

@@ -20,7 +20,7 @@ spring.data.neo4j.password=Test
 project.uri=C:\\\\Users\\\\Daniel Drießen\\\\Documents\\\\TestDaten\\\\classes  
 
 ###### Der Commit Name unter dem das Ergebnis zu finden ist:  
-project.commit=chummer2  
+project.commit.current=chummer2  
 
 #### Was kann alles in der Config zusätzlich konfiguriert werden?  
 
@@ -39,6 +39,6 @@ spring.data.neo4j.username=neo4j
 spring.data.neo4j.password=Test  
 project.uri=C:\\\\Users\\\\Daniel Drießen\\\\Documents\\\\TestDaten\\\\classes  
 project.commit.previous=chummer1  
-project.commit=chummer2  
+project.commit.current=chummer2  
 report.destination=C:\\\\ADCLTest  
 ```
