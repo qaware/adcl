@@ -1,7 +1,7 @@
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {Component, Injectable} from '@angular/core';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
 
@@ -48,7 +48,7 @@ export class DependencyTreeDatabase {
     // Build the tree nodes from Json object. The result is a list of `changelog notes` with nested
     this.connectToDatabase();
     this.loadChangelogIds();
-    const data = this.buildDependencyTree(this.treeData, '0');
+    const data = this.buildDependencyTree(this.treeData, 'root');
     // Notify the change.
     this.dataChange.next(data);
   }
@@ -119,111 +119,87 @@ export class DependencyTreeDatabase {
       'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
       'WITH c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) ' +
       'WITH m MATCH (dm:ChangelogDependencyInformation)<-[r:USES]-(m:MethodInformation)' +
-      'return dm.name, toString(dm.isConstructor), dm.changeStatus, m.name';
+      'return dm.name, toString(m.isConstructor), dm.changeStatus, m.name';
 
 
-    const packageInformation: any[] = [{text: '', code: '0'}];
+    const packageInformation: any[] = [{text: '', code: 'root'}];
     const classInformation: any[] = [];
     const methodInformation: any[] = [];
     const dependencyInformationMethod: any[] = [];
-
+    const root = 'root';
     // executing the queries and saving the data in appropriate way for display in tree view
-    this.neo4j.run(queryPackageInformation, params).then(packageInfo => {
-      let index = 1;
+    const packageResult = this.neo4j.run(queryPackageInformation, params).then(packageInfo => {
       packageInfo.forEach(pInfo => {
-        let code = '0';
-        let name = '';
+        let code = root;
         const splitPackageName = (pInfo[0] as string).toString().split('.');
         splitPackageName.forEach((pn) => {
-            if (!Boolean(packageInformation.find((element) => (element.text === (name + pn))))) {
-              code = packageInformation.find((element) => {
-                return (element.text === name.substr(0, name.length - 1));
-              }).code;
-              const obj: { [k: string]: any } = {};
-              obj.text = name + pn;
-              name = obj.text + '.';
-              obj.code = code + '.' + index++;
-              code = obj.code;
-              obj.label = 'Package';
-              packageInformation.push(obj);
-            } else {
-              name = name + pn + '.';
-            }
-          }
-        );
-      });
-    }).then(() => {
-      this.neo4j.run(queryClassInformation, params).then(classInfo => {
-          let index = 1;
-          classInfo.forEach(cInfo => {
+          code = code + '.' + pn;
+          if (packageInformation.find(e => e.code === code) === undefined) {
             const obj: { [k: string]: any } = {};
-            obj.text = cInfo[0];
-            const pCode = packageInformation.filter((element) => {
-              return (element.text === cInfo[2]);
-            });
-            obj.code = pCode[0].code + '.' + index++;
-            obj.service = cInfo[1];
-            obj.package = cInfo[2];
-            obj.label = 'Class';
-            classInformation.push(obj);
-          });
+            obj.text = pn;
+            obj.code = code;
+            code = obj.code;
+            obj.label = 'Package';
+            packageInformation.push(obj);
         }
-      ).then(() => {
-        this.neo4j.run(queryMethodInformation, params).then(methodInfo => {
-          let index = 1;
-          methodInfo.forEach(mInfo => {
-            const obj: { [k: string]: any } = {};
-            obj.text = mInfo[0];
-            const cCode = classInformation.filter((element) => {
-              return (element.text === mInfo[2]);
-            });
-            obj.code = cCode[0].code + '.' + index++;
-            obj.constructor = mInfo[1];
-            obj.className = mInfo[2];
-            obj.label = 'Method';
-            methodInformation.push(obj);
-
-            const added: { [k: string]: any } = {};
-            added.label = 'Added dependencies';
-            added.text = '';
-            added.code = obj.code + '.0';
-            methodInformation.push(added);
-            const deleted: { [k: string]: any } = {};
-            deleted.label = 'Deleted dependencies';
-            deleted.text = '';
-            deleted.code = obj.code + '.1';
-            methodInformation.push(deleted);
-          });
-        }).then(() => {
-          this.neo4j.run(queryDependencyInformationMethod, params).then(dependencyClassInfo => {
-              let index = 1;
-              dependencyClassInfo.forEach(dcInfo => {
-                const obj: { [k: string]: any } = {};
-                obj.text = dcInfo[0];
-                const mCode = methodInformation.filter((element) => {
-                  return (element.text === dcInfo[3]);
-                });
-                const status = (dcInfo[2] === 'ADDED') ? '.0' : '.1';
-                obj.code = mCode[0].code + status + '.' + index++;
-                obj.constructor = dcInfo[1];
-                obj.changeStatus = dcInfo[2];
-                obj.usedByMethod = dcInfo[3];
-                if (status === '.0') {
-                  obj.label = '🔒 Dependency';
-                } else {
-                  obj.label = '🔓 Dependency';
-                }
-                dependencyInformationMethod.push(obj);
-              });
-            }
-          ).then(() => {
-              this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyInformationMethod];
-              const data = this.buildDependencyTree(this.treeData, '0');
-              this.dataChange.next(data);
-            }
-          );
         });
       });
+    });
+
+    const classResult = this.neo4j.run(queryClassInformation, params).then(classInfo => {
+      classInfo.forEach(cInfo => {
+        const obj: { [k: string]: any } = {};
+        obj.text = cInfo[0].match( /[^.]*$/)[0];
+        obj.code = root + '.' + cInfo[0];
+        obj.service = cInfo[1];
+        obj.package = cInfo[2];
+        obj.label = 'Class';
+        classInformation.push(obj);
+      });
+    });
+
+    const methodResult = this.neo4j.run(queryMethodInformation, params).then(methodInfo => {
+      methodInfo.forEach(mInfo => {
+        const obj: { [k: string]: any } = {};
+        obj.text = mInfo[0].match(/\w*\(.*\)/)[0];
+        obj.code = root + '.' + mInfo[2] + '.' + obj.text;
+        obj.constructor = mInfo[1];
+        obj.className = mInfo[2];
+        obj.label = 'Method';
+        methodInformation.push(obj);
+
+        const added: { [k: string]: any } = {};
+        added.label = 'Added dependencies';
+        added.text = '';
+        added.code = obj.code + '.added';
+        methodInformation.push(added);
+        const deleted: { [k: string]: any } = {};
+        deleted.label = 'Deleted dependencies';
+        deleted.text = '';
+        deleted.code = obj.code + '.deleted';
+        methodInformation.push(deleted);
+      });
+    });
+
+    const dependencyMethodResult = this.neo4j.run(queryDependencyInformationMethod, params).then(dependencyClassInfo => {
+      dependencyClassInfo.forEach(dcInfo => {
+        const status = (dcInfo[2] === 'ADDED') ? '.added' : '.deleted';
+        const obj: { [k: string]: any } = {};
+        obj.text = dcInfo[0];
+        obj.code = root + '.' + ((dcInfo[1] === 'true') ? dcInfo[3].split('(')[0] + '.' +
+          dcInfo[3].match(/\w*\(.*\)/)[0] : dcInfo[3]) + status + '.' + 0;
+        obj.changeStatus = dcInfo[2];
+        obj.usedByMethod = dcInfo[3];
+        obj.label = (status === '.added') ? '🔒 Dependency' : '🔓 Dependency';
+        dependencyInformationMethod.push(obj);
+      });
+    });
+    // wait for all query results before building the tree
+    forkJoin(packageResult, classResult, methodResult, dependencyMethodResult).subscribe(_ => {
+      this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyInformationMethod];
+      console.log(this.treeData);
+      const data = this.buildDependencyTree(this.treeData, 'root');
+      this.dataChange.next(data);
     });
   }
 
@@ -235,7 +211,7 @@ export class DependencyTreeDatabase {
   buildDependencyTree(obj: any[], level: string): TreeItemNode[] {
     return obj.filter(o =>
       (o.code as string).startsWith(level + '.')
-      && (o.code.match(/\./g) || []).length === (level.match(/\./g) || []).length + 1
+      && (o.code.replace(/\(.*\)/g, '').match(/\./g) || []).length === (level.replace(/\(.*\)/g, '').match(/\./g) || []).length + 1
     )
       .map(o => {
         const node = new TreeItemNode();
@@ -272,7 +248,7 @@ export class DependencyTreeDatabase {
     }
     // Build the tree nodes from Json object. The result is a list of `TodoItemNode` with nested
     // file node as children.
-    const data = this.buildDependencyTree(filteredTreeData, '0');
+    const data = this.buildDependencyTree(filteredTreeData, 'root');
     // Notify the change.
     this.dataChange.next(data);
   }
@@ -341,7 +317,7 @@ export class DependencytreeComponent {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  };
+  }
 
   filterChanged(filterText: string) {
     this.database.filter(filterText);
