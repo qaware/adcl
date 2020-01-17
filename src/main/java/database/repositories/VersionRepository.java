@@ -15,6 +15,6 @@ public interface VersionRepository extends Neo4jRepository<VersionInformation, L
      * @param versionName name of the package that is searched
      * @return a database stored {@link VersionInformation} with the name of versionName
      */
-    @Depth(value = 7)
+    @Depth(value = -1)
     VersionInformation findVersionInformationByVersionName(String versionName);
 }

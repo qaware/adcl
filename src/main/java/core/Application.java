@@ -53,7 +53,8 @@ public class Application {
         //Getting previous Commit
         VersionInformation previous;
         String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
-        VersionInformation current = new VersionInformation(packages, Config.get("project.commit.current", COMMIT_NA));
+        VersionInformation current = new VersionInformation(packages, Config.valuePresent("project.commit.current") ?
+                Config.get("project.commit.current", COMMIT_NA) : Config.get("project.commit", COMMIT_NA));
 
         if (!previousCommitName.equals(COMMIT_NA)) {
             previous = graphDBService.getVersion(previousCommitName);
