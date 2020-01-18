@@ -12,7 +12,7 @@ project.uri=path/to/project/classes
 # Name for last data to create a changelog against
 project.commit.previous=versionRef1  
 # Name to store new analysed data  
-project.commit=versionRef2  
+project.commit.current=versionRef2  
 # Folder where report data will be placed  
 report.destination=path/to/report  
 ```
