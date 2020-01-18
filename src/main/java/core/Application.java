@@ -5,6 +5,8 @@ import core.information.PackageInformation;
 import core.information.VersionInformation;
 import database.services.GraphDBService;
 import org.neo4j.ogm.config.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @SpringBootConfiguration
 @ComponentScan(basePackages = "database.*")
 public class Application {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
     private static final String COMMIT_NA = "COMMIT_NA";
 
     public static void main(String[] args) throws IOException {
@@ -50,11 +53,23 @@ public class Application {
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
         GraphDBService graphDBService = ctx.getBean(GraphDBService.class);
 
+        //Instantiating current VersionInformation
+        String currentName = COMMIT_NA;
+        if (Config.valuePresent("project.commit.current")) {
+            currentName = Config.get("project.commit.current", COMMIT_NA);
+        } else if (Config.valuePresent("project.commit")) {
+            LOGGER.warn("Option project.commit is deprecated and should not be used anymore.");
+            currentName = Config.get("project.commit", COMMIT_NA);
+        }
+
+        if (currentName.equals(COMMIT_NA))
+            throw new NullPointerException("Commit name is missing, please specify it in project.commit.current");
+
+        VersionInformation current = new VersionInformation(packages, currentName);
+
         //Getting previous Commit
         VersionInformation previous;
         String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
-        VersionInformation current = new VersionInformation(packages, Config.valuePresent("project.commit.current") ?
-                Config.get("project.commit.current", COMMIT_NA) : Config.get("project.commit", COMMIT_NA));
 
         if (!previousCommitName.equals(COMMIT_NA)) {
             previous = graphDBService.getVersion(previousCommitName);
