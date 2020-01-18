@@ -1,13 +1,17 @@
 package core.information;
 
+import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import util.Utils;
 
 import java.util.Comparator;
-import java.util.SortedSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * The type Class information contains Information about the static dependencies of a java class.
@@ -19,10 +23,11 @@ public class ClassInformation implements Comparable<ClassInformation> {
     @GeneratedValue
     private Long id;
     private String className;
-    @Relationship(type = "IS_BEHAVIOR_OF")
-    private SortedSet<MethodInformation> methodInformations;
+    @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
+    private Set<MethodInformation> methodInformations;
 
     private boolean isService;
+    private boolean isInternal;
 
     /**
      * Instantiates a new Class information.
@@ -30,7 +35,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param className the name of the java class
      */
     public ClassInformation(String className) {
-        this(className, new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance()), false);
+        this(className, new TreeSet<>(), false);
     }
 
     /**
@@ -40,7 +45,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param isService true if this class is a Service
      */
     public ClassInformation(String className, boolean isService) {
-        this(className, new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance()), isService);
+        this(className, new TreeSet<>(), isService);
     }
 
     /**
@@ -50,10 +55,17 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @param behaviorInformations the behavior informations of the java class
      * @param isService            true if Class has service annotation
      */
-    public ClassInformation(String className, SortedSet<MethodInformation> behaviorInformations, boolean isService) {
+    public ClassInformation(String className, Set<MethodInformation> behaviorInformations, boolean isService) {
         this.className = className;
         this.methodInformations = behaviorInformations;
         this.isService = isService;
+    }
+
+    /**
+     * Should not be used is for Spring Data
+     */
+    public ClassInformation() {
+        methodInformations = new TreeSet<>();
     }
 
     /**
@@ -70,8 +82,8 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return the referenced packages
      */
-    public SortedSet<PackageInformation> getPackageDependencies() {
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+    public Set<PackageInformation> getPackageDependencies() {
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         methodInformations.forEach(behaviorInformation -> packageDependencies.addAll(behaviorInformation.getPackageDependencies()));
         return packageDependencies;
     }
@@ -81,8 +93,8 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getClassDependencies() {
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformationComparator.getInstance());
+    public Set<ClassInformation> getClassDependencies() {
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         methodInformations.forEach(behaviorInformation -> classDependencies.addAll(behaviorInformation.getClassDependencies()));
         return classDependencies;
     }
@@ -92,7 +104,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return a set of the behavior information
      */
-    public SortedSet<MethodInformation> getMethodInformations() {
+    public Set<MethodInformation> getMethodInformations() {
         return methodInformations;
     }
 
@@ -101,8 +113,8 @@ public class ClassInformation implements Comparable<ClassInformation> {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getMethodDependencies() {
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+    public Set<MethodInformation> getMethodDependencies() {
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         methodInformations.forEach(behaviorInformation -> methodDependencies.addAll(behaviorInformation.getMethodDependencies()));
         return methodDependencies;
     }
@@ -131,49 +143,43 @@ public class ClassInformation implements Comparable<ClassInformation> {
         this.isService = isService;
     }
 
+    /**
+     * @return True if class is in analyzed project (false for class of library)
+     */
+    public boolean isInternal() {
+        return isInternal;
+    }
+
+    /**
+     * @param internal whether the class is in the analyzed project
+     */
+    public void setInternal(boolean internal) {
+        this.isInternal = internal;
+    }
+
     @Override
-    public int compareTo(ClassInformation classInformation) {
-        return ClassInformationComparator.getInstance().compare(this, classInformation);
+    public int compareTo(@NotNull ClassInformation classInformation) {
+        return Comparator.comparing(ClassInformation::isInternal)
+                .thenComparing(ClassInformation::isService)
+                .thenComparing(ClassInformation::getClassName)
+                .thenComparing(ClassInformation::getMethodInformations, Utils.setComparator())
+                .compare(this, classInformation);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ClassInformation)
-            return this.compareTo((ClassInformation) obj) == 0 && isService == ((ClassInformation) obj).isService;
-        return false;
+        return obj instanceof ClassInformation && ((ClassInformation) obj).compareTo(this) == 0;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(isInternal, isService, className, methodInformations);
     }
 
-    /**
-     * Comparator for the type ClassInformation based on the class name.
-     */
-    public static class ClassInformationComparator implements Comparator<ClassInformation> {
-
-        private static ClassInformation.ClassInformationComparator instance;
-
-        public static ClassInformation.ClassInformationComparator getInstance() {
-            if (instance == null) {
-                instance = new ClassInformation.ClassInformationComparator();
-            }
-            return instance;
-        }
-
-        private ClassInformationComparator() {
-        }
-
-        @Override
-        public int compare(ClassInformation classInformation, ClassInformation otherClassInformation) {
-            if (classInformation.isService && !otherClassInformation.isService) {
-                return 1;
-            }
-            if (!classInformation.isService && otherClassInformation.isService) {
-                return -1;
-            }
-            return classInformation.className.compareTo(otherClassInformation.className);
-        }
+    @Override
+    public String toString() {
+        return ("Class " + className + " (id=" + id + ", " + (isInternal ? "internal" : "external") + ", " + (isService ? "service" : "no-service") + ") {\n"
+                + methodInformations.stream().map(MethodInformation::toString).collect(Collectors.joining(",\n"))
+        ).replace("\n", "\n    ") + "\n}";
     }
 }

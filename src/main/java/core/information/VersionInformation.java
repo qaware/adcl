@@ -4,9 +4,10 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.Collection;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -20,8 +21,9 @@ public class VersionInformation {
     private String versionName;
 
     @Relationship(type = "IS_VERSION_OF")
-    private SortedSet<PackageInformation> packageInformations;
+    private Set<PackageInformation> packageInformations;
 
+    @Lazy
     @Relationship(type = "FOLLOWED")
     private VersionInformation previousVersion = null;
 
@@ -69,7 +71,7 @@ public class VersionInformation {
      *
      * @return the package informations
      */
-    public SortedSet<PackageInformation> getPackageInformations() {
+    public Set<PackageInformation> getPackageInformations() {
         return packageInformations;
     }
 
@@ -80,5 +82,14 @@ public class VersionInformation {
      */
     public VersionInformation getPreviousVersion() {
         return previousVersion;
+    }
+
+    /**
+     * Sets previous version.
+     *
+     * @param previousVersion the previous version
+     */
+    public void setPreviousVersion(VersionInformation previousVersion) {
+        this.previousVersion = previousVersion;
     }
 }

@@ -15,9 +15,9 @@ git:
   depth: false
 
 script:
+  - mvn clean verify sonar:sonar javadoc:jar
+  - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
   - |
-    mvn clean verify sonar:sonar javadoc:jar
-    mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
     if [ $TRAVIS_PULL_REQUEST == "false" ]; then
     curl --output githubdeployer.jar -sL https://github.com/deregges/githubdeployer/releases/download/1.0.0/githubdeployer.jar
     export TRAVIS_TAG=${TRAVIS_TAG:-build$TRAVIS_BUILD_NUMBER}

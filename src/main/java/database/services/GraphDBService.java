@@ -1,13 +1,10 @@
 package database.services;
 
 import core.information.ChangelogInformation;
-import core.information.PackageInformation;
 import core.information.VersionInformation;
 import database.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
 
 /**
  * Service which imports the Data from the Neo4j-Database and maps it to POJOs.
@@ -40,22 +37,6 @@ public class GraphDBService {
     }
 
     /**
-     * Saves all Nodes in the database.
-     *
-     * @param packages Output of DependencyExtractor
-     */
-    @Transactional
-    public void saveAllNodes(Collection<PackageInformation> packages) {
-        packages.forEach(packageInformation -> {
-            packageInformation.getClassInformations().forEach(classInformation -> {
-                getMethodRepository().saveAll(classInformation.getMethodInformations());
-                getClassRepository().save(classInformation);
-            });
-            getPackageRepository().save(packageInformation);
-        });
-    }
-
-    /**
      * Saves a changelog in the database.
      *
      * @param changelog the change log
@@ -63,6 +44,11 @@ public class GraphDBService {
     @Transactional
     public void saveChangelog(ChangelogInformation changelog) {
         changeLogRepository.save(changelog);
+    }
+
+    @Transactional
+    public VersionInformation getVersion(String versionName) {
+        return getVersionRepository().findVersionInformationByVersionName(versionName);
     }
 
     /**

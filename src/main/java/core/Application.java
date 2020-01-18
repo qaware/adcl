@@ -5,6 +5,8 @@ import core.information.PackageInformation;
 import core.information.VersionInformation;
 import database.services.GraphDBService;
 import org.neo4j.ogm.config.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,7 +19,6 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @SpringBootConfiguration
 @ComponentScan(basePackages = "database.*")
 public class Application {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
     private static final String COMMIT_NA = "COMMIT_NA";
 
     public static void main(String[] args) throws IOException {
@@ -48,29 +50,43 @@ public class Application {
         DependencyListWriter.writeListToFile(packages, Config.get("report.destination", "report"), "report");
 
         //Starting Database Service
-        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class, args);
+        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
         GraphDBService graphDBService = ctx.getBean(GraphDBService.class);
+
+        //Instantiating current VersionInformation
+        String currentName = COMMIT_NA;
+        if (Config.valuePresent("project.commit.current")) {
+            currentName = Config.get("project.commit.current", COMMIT_NA);
+        } else if (Config.valuePresent("project.commit")) {
+            LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
+            currentName = Config.get("project.commit", COMMIT_NA);
+        }
+
+        if (currentName.equals(COMMIT_NA))
+            throw new NullPointerException("Commit name is missing, please specify it in project.commit.current");
+
+        VersionInformation current = new VersionInformation(packages, currentName);
 
         //Getting previous Commit
         VersionInformation previous;
         String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
 
-        if (previousCommitName.equals(COMMIT_NA)) {
-            previous = new VersionInformation(new ArrayList<>(), "init");
-        } else {
-            previous = graphDBService.getVersionRepository().findVersionInformationByVersionName(previousCommitName);
+        if (!previousCommitName.equals(COMMIT_NA)) {
+            previous = graphDBService.getVersion(previousCommitName);
             if (previous == null)
                 throw new NoSuchElementException("Commit " + previousCommitName + " does not exist in the database");
+
+            current.setPreviousVersion(previous);
+
+            //Analyse differences between current and previous Commit
+            DiffExtractor diffExtractor = new DiffExtractor(previous.getPackageInformations(), packages);
+
+            //Save the Analysis in the Database
+            graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChangelist(), previous, current));
         }
 
-        VersionInformation current = new VersionInformation(packages, Config.get("project.commit", COMMIT_NA), previous);
-
-        //Analyse differences between current and previous Commit
-        DiffExtractor diffExtractor = new DiffExtractor(previous.getPackageInformations(), packages);
-
-        //Save the Analysis in the Database
+        //Save the Version in the Database
         graphDBService.saveVersion(current);
-        graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChangelist(), previous, current));
 
         ctx.close();
     }

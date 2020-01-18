@@ -1,7 +1,7 @@
 package core.information;
 
 import java.util.Objects;
-import java.util.SortedSet;
+import java.util.Set;
 
 /**
  * MethodInformation with additional change meta (whether it was added or deleted).
@@ -17,7 +17,7 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * @param changeStatus      whenever this method was deleted or added
      */
     public ChangelogDependencyInformation(MethodInformation methodInformation, ChangeStatus changeStatus) {
-        super(methodInformation.getName(), methodInformation.getPackageDependencies(), methodInformation.getClassDependencies(), methodInformation.getMethodDependencies(), methodInformation.isConstructor());
+        super(methodInformation.getName(), methodInformation.getPackageDependencies(), methodInformation.getClassDependencies(), methodInformation.getMethodDependencies());
         this.changeStatus = changeStatus;
     }
 
@@ -28,8 +28,9 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * @param isConstructor true if this method is a constructor
      * @param changeStatus  whenever this method was deleted or added
      */
+    @Deprecated
     public ChangelogDependencyInformation(String name, boolean isConstructor, ChangeStatus changeStatus) {
-        super(name, isConstructor);
+        super(name);
         this.changeStatus = changeStatus;
     }
 
@@ -43,9 +44,41 @@ public class ChangelogDependencyInformation extends MethodInformation {
      * @param isConstructor       true if method is constructor
      * @param changeStatus        whenever this method was deleted or added
      */
-    public ChangelogDependencyInformation(String name, SortedSet<PackageInformation> packageDependencies, SortedSet<ClassInformation> classDependencies, SortedSet<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
-        super(name, packageDependencies, classDependencies, methodDependencies, isConstructor);
+    @Deprecated
+    public ChangelogDependencyInformation(String name, Set<PackageInformation> packageDependencies, Set<ClassInformation> classDependencies, Set<MethodInformation> methodDependencies, boolean isConstructor, ChangeStatus changeStatus) {
+        super(name, packageDependencies, classDependencies, methodDependencies);
         this.changeStatus = changeStatus;
+    }
+
+    /**
+     * Instantiates a new ChangelogDependencyInformation.
+     *
+     * @param name         the name of the method
+     * @param changeStatus whenever this method was deleted or added
+     */
+    public ChangelogDependencyInformation(String name, ChangeStatus changeStatus) {
+        super(name);
+        this.changeStatus = changeStatus;
+    }
+
+    /**
+     * Instantiates a new ChangelogDependencyInformation.
+     *
+     * @param name                the name of the method
+     * @param packageDependencies the referenced packages
+     * @param classDependencies   the referenced classes
+     * @param methodDependencies  the referenced method
+     * @param changeStatus        whenever this method was deleted or added
+     */
+    public ChangelogDependencyInformation(String name, Set<PackageInformation> packageDependencies, Set<ClassInformation> classDependencies, Set<MethodInformation> methodDependencies, ChangeStatus changeStatus) {
+        super(name, packageDependencies, classDependencies, methodDependencies);
+        this.changeStatus = changeStatus;
+    }
+
+    /**
+     * Should not be used is for Spring Data
+     */
+    public ChangelogDependencyInformation() {
     }
 
     /**

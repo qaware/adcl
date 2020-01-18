@@ -3,70 +3,64 @@ package core.information;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static util.DataGenerationUtil.*;
 
 class ClassInformationTest {
-
-    private static final String TEST_PACKAGE_2 = "testPackage2";
-    private static final String TEST_TEST_CLASS = "test.TestClass";
-    private static final String TEST_CLASS_TEST_2 = "TestClass.test2";
-    private static final String TEST_CLASS = "TestClass";
-    private static final String TEST_CLASS_TEST_1 = "TestClass.test1";
-    private ClassInformation sut;
+    PackageInformation p1, pd;
+    ClassInformation c1, c2;
+    MethodInformation test1, test2, testc;
 
     @BeforeEach
     void setUp() {
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
-        packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
-        classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        methodDependencies.add(new MethodInformation(TEST_CLASS_TEST_2, false));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
-        methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
-        methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, packageDependencies, classDependencies, methodDependencies, false));
 
-        sut = new ClassInformation(TEST_TEST_CLASS, methodInformations, false);
+        version(
+                p1 = pi("p1",
+                        c1 = ci("p1.c1", false, true,
+                                test1 = mi("c1.test1()")
+                        )
+                ),
+                pd = pi("default",
+                        c2 = ci("c2", false, true,
+                                testc = mi("c2.<init>()"),
+                                test2 = mi("c2.test2()")
+                        )
+                )
+        );
+        p(test2, p1, c1, test1);
     }
 
     @Test
     void getClassName() {
-        assertThat(sut.getClassName()).isEqualTo(TEST_TEST_CLASS);
+        assertThat(c2.getClassName()).isEqualTo("c2");
     }
 
     @Test
     void getPackageDependencies() {
-        assertThat(sut.getPackageDependencies().first().getPackageName()).isEqualTo(TEST_PACKAGE_2);
+        assertThat(c2.getPackageDependencies().iterator().next()).isEqualTo(p1);
     }
 
     @Test
     void getClassDependencies() {
-        assertThat(sut.getClassDependencies().first().getClassName()).isEqualTo(TEST_TEST_CLASS);
+        assertThat(c2.getClassDependencies().iterator().next()).isEqualTo(c1);
     }
 
     @Test
     void getConstructorInformations() {
-        sut.getMethodInformations().forEach(methodInformation -> {
-            if (methodInformation.isConstructor()) {
-                assertThat(methodInformation.getName()).isEqualTo(TEST_CLASS);
-            }
+        c2.getMethodInformations().forEach(methodInformation -> {
+            if (methodInformation.isConstructor()) assertThat(methodInformation).isEqualTo(testc);
         });
     }
 
     @Test
     void getMethodInformations() {
-        sut.getMethodInformations().forEach(methodInformation -> {
-            if (!methodInformation.isConstructor()) {
-                assertThat(methodInformation.getName()).isEqualTo(TEST_CLASS_TEST_1);
-            }
+        c2.getMethodInformations().forEach(methodInformation -> {
+            if (!methodInformation.isConstructor()) assertThat(methodInformation).isEqualTo(test2);
         });
     }
 
     @Test
     void getMethodDependencies() {
-        assertThat(sut.getMethodDependencies().first().getName()).isEqualTo(TEST_CLASS_TEST_2);
+        assertThat(c2.getMethodDependencies().iterator().next()).isEqualTo(test1);
     }
 }

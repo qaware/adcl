@@ -1,8 +1,8 @@
 package view;
 
-import core.information.MethodInformation;
 import core.information.ChangelogDependencyInformation;
 import core.information.ClassInformation;
+import core.information.MethodInformation;
 import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,11 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -71,19 +67,19 @@ class HTMLReportBuilderTest {
         ChangelogDependencyInformation depedencyFour = new ChangelogDependencyInformation("sample.Class.method4(java.lang.String)", false, ChangelogDependencyInformation.ChangeStatus.DELETED);
 
         //put dependency items into sets and add them methods
-        SortedSet<MethodInformation> dsetOne = new TreeSet<>();
+        Set<MethodInformation> dsetOne = new TreeSet<>();
         dsetOne.add(depedencyOne);
         classOneMethodOne.setMethodDependencies(dsetOne);
 
-        SortedSet<MethodInformation> dsetTwo = new TreeSet<>();
+        Set<MethodInformation> dsetTwo = new TreeSet<>();
         dsetTwo.add(depedencyTwo);
         classTwoMethodTwo.setMethodDependencies(dsetTwo);
 
-        SortedSet<MethodInformation> dsetThree = new TreeSet<>();
+        Set<MethodInformation> dsetThree = new TreeSet<>();
         dsetThree.add(depedencyThree);
         classThreeMethodThree.setMethodDependencies(dsetThree);
 
-        SortedSet<MethodInformation> dsetFour = new TreeSet<>();
+        Set<MethodInformation> dsetFour = new TreeSet<>();
         dsetFour.add(depedencyFour);
         classFourMethodFour.setMethodDependencies(dsetFour);
 

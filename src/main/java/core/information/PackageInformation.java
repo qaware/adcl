@@ -1,13 +1,18 @@
 package core.information;
 
+import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.slf4j.LoggerFactory;
+import util.Utils;
 
 import java.util.Comparator;
-import java.util.SortedSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * The type Package information contains Information about the static dependencies of a java package.
@@ -20,8 +25,9 @@ public class PackageInformation implements Comparable<PackageInformation> {
     private Long id;
     private String packageName;
     @Relationship(type = "IS_CLASS_OF", direction = Relationship.INCOMING)
-    private SortedSet<ClassInformation> classInformations;
+    private Set<ClassInformation> classInformations;
 
+    @Deprecated
     private boolean isInternalPackage;
 
     /**
@@ -31,7 +37,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
      */
     public PackageInformation(String packageName) {
         this.packageName = packageName;
-        this.classInformations = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        this.classInformations = new TreeSet<>();
     }
 
     /**
@@ -48,8 +54,8 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced packages
      */
-    public SortedSet<PackageInformation> getPackageDependencies() {
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+    public Set<PackageInformation> getPackageDependencies() {
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         classInformations.forEach(classInformation -> packageDependencies.addAll(classInformation.getPackageDependencies()));
         return packageDependencies;
     }
@@ -59,8 +65,8 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced classes
      */
-    public SortedSet<ClassInformation> getClassDependencies() {
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+    public Set<ClassInformation> getClassDependencies() {
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         classInformations.forEach(classInformation -> classDependencies.addAll(classInformation.getClassDependencies()));
         return classDependencies;
     }
@@ -70,10 +76,19 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return the referenced methods
      */
-    public SortedSet<MethodInformation> getMethodDependencies() {
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+    public Set<MethodInformation> getMethodDependencies() {
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         classInformations.forEach(classInformation -> methodDependencies.addAll(classInformation.getMethodDependencies()));
         return methodDependencies;
+    }
+
+    /**
+     * @return if internal package or not.
+     * @see ClassInformation#isInternal()
+     */
+    @Deprecated
+    public boolean isInternalPackage() {
+        return classInformations.stream().allMatch(ClassInformation::isInternal);
     }
 
     /**
@@ -81,15 +96,10 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @param internalPackage true if package is interal
      */
+    @Deprecated
     public void setInternalPackage(boolean internalPackage) {
+        LoggerFactory.getLogger(getClass()).warn("setInternalPackage called, but not in use anymore!", new Exception());
         isInternalPackage = internalPackage;
-    }
-
-    /**
-     * @return if internal package or not.
-     */
-    public boolean isInternalPackage() {
-        return isInternalPackage;
     }
 
     /**
@@ -97,7 +107,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
      *
      * @return all class information.
      */
-    public SortedSet<ClassInformation> getClassInformations() {
+    public Set<ClassInformation> getClassInformations() {
         return classInformations;
     }
 
@@ -107,48 +117,32 @@ public class PackageInformation implements Comparable<PackageInformation> {
      * @param classInformation the class information
      */
     public void addClassInformation(ClassInformation classInformation) {
+        if (isInternalPackage) classInformation.setInternal(true);
         this.classInformations.add(classInformation);
     }
 
     @Override
-    public int compareTo(PackageInformation packageInformation) {
-        return PackageInformationComparator.getInstance().compare(this, packageInformation);
+    public int compareTo(@NotNull PackageInformation packageInformation) {
+        return Comparator.comparing(PackageInformation::getPackageName)
+                .thenComparing(PackageInformation::isInternalPackage)
+                .thenComparing(PackageInformation::getClassInformations, Utils.setComparator())
+                .compare(this, packageInformation);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof PackageInformation) {
-            PackageInformation packageInformation = (PackageInformation) obj;
-            return packageInformation.compareTo(this) == 0 && packageInformation.isInternalPackage == isInternalPackage;
-        }
-        return false;
+        return obj instanceof PackageInformation && ((PackageInformation) obj).compareTo(this) == 0;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hash(packageName, classInformations);
     }
 
-    /**
-     * Comparator for the type PackageInformation based on the package name.
-     */
-    public static class PackageInformationComparator implements Comparator<PackageInformation> {
-
-        private static PackageInformationComparator instance;
-
-        public static PackageInformationComparator getInstance() {
-            if (instance == null) {
-                instance = new PackageInformationComparator();
-            }
-            return instance;
-        }
-
-        private PackageInformationComparator() {
-        }
-
-        @Override
-        public int compare(PackageInformation packageInformation, PackageInformation otherPackageInformation) {
-            return packageInformation.packageName.compareTo(otherPackageInformation.packageName);
-        }
+    @Override
+    public String toString() {
+        return ("Package " + packageName + " (id=" + id + ") {\n"
+                + classInformations.stream().map(ClassInformation::toString).collect(Collectors.joining(",\n"))
+        ).replace("\n", "\n    ") + "\n}";
     }
 }

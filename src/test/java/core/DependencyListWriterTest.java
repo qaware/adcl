@@ -1,10 +1,11 @@
 package core;
 
-import core.information.MethodInformation;
 import core.information.ClassInformation;
+import core.information.MethodInformation;
 import core.information.PackageInformation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,14 +16,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled("Deprecated, will no longer be maintained")
+@Deprecated
 class DependencyListWriterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyListWriterTest.class);
     private static final String TEST_PACKAGE_2 = "testPackage2";
@@ -48,13 +47,13 @@ class DependencyListWriterTest {
     @BeforeEach
     void setUp() {
 
-        SortedSet<PackageInformation> packageDependencies = new TreeSet<>(PackageInformation.PackageInformationComparator.getInstance());
+        Set<PackageInformation> packageDependencies = new TreeSet<>();
         packageDependencies.add(new PackageInformation(TEST_PACKAGE_2));
-        SortedSet<ClassInformation> classDependencies = new TreeSet<>(ClassInformation.ClassInformationComparator.getInstance());
+        Set<ClassInformation> classDependencies = new TreeSet<>();
         classDependencies.add(new ClassInformation(TEST_TEST_CLASS));
-        SortedSet<MethodInformation> methodDependencies = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        Set<MethodInformation> methodDependencies = new TreeSet<>();
         methodDependencies.add(new MethodInformation(TEST_CLASS_TEST_2, false));
-        SortedSet<MethodInformation> methodInformations = new TreeSet<>(MethodInformation.MethodInformationComparator.getInstance());
+        Set<MethodInformation> methodInformations = new TreeSet<>();
         methodInformations.add(new MethodInformation(TEST_CLASS, packageDependencies, classDependencies, methodDependencies, true));
         methodInformations.add(new MethodInformation(TEST_CLASS_TEST_1, packageDependencies, classDependencies, methodDependencies, false));
 
