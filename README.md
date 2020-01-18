@@ -1,7 +1,7 @@
 # adcl
 Automatic Dependency Change Log - project together with TH Bingen
 
-### Configuration: 
+### Configuration:   
 ```properties
 # Database connection  
 spring.data.neo4j.uri=bolt://localhost:7687  
