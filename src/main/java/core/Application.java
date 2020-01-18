@@ -58,7 +58,7 @@ public class Application {
         if (Config.valuePresent("project.commit.current")) {
             currentName = Config.get("project.commit.current", COMMIT_NA);
         } else if (Config.valuePresent("project.commit")) {
-            LOGGER.warn("Option project.commit is deprecated and should not be used anymore.");
+            LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
             currentName = Config.get("project.commit", COMMIT_NA);
         }
 
