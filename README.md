@@ -9,7 +9,7 @@ spring.data.neo4j.username=neo4j
 spring.data.neo4j.password=neo4j  
 # Folder where .class files of the project are located  
 project.uri=path/to/project/classes  
-# Name for last data to create diff against  
+# Name for last data to create a changelog against
 project.commit.previous=versionRef1  
 # Name to store new analysed data  
 project.commit=versionRef2  
