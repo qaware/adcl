@@ -1,5 +1,5 @@
 import {FlatTreeControl} from '@angular/cdk/tree';
-import {Component, Injectable} from '@angular/core';
+import {Component, Injectable, ViewChild} from '@angular/core';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
@@ -13,6 +13,7 @@ export class TreeItemNode {
   item: string;
   code: string;
   label: string;
+  filterType: FilterType;
 }
 
 /** Flat  item node with expandable and level information */
@@ -22,8 +23,16 @@ export class TreeItemFlatNode {
   level: number;
   expandable: boolean;
   code: string;
+  filterType: FilterType;
 }
 
+/** Filter types */
+export enum FilterType {
+  Package = 'p',
+  Class = 'c',
+  Method = 'm',
+  Dependency = 'd'
+}
 
 /**
  * Dependency database, it can build a tree structured Json object.
@@ -140,6 +149,7 @@ export class DependencyTreeDatabase {
             obj.code = code;
             code = obj.code;
             obj.label = 'Package';
+            obj.filterType = FilterType.Package;
             packageInformation.push(obj);
         }
         });
@@ -154,6 +164,7 @@ export class DependencyTreeDatabase {
         obj.service = cInfo[1];
         obj.package = cInfo[2];
         obj.label = 'Class';
+        obj.filterType = FilterType.Class;
         classInformation.push(obj);
       });
     });
@@ -166,6 +177,7 @@ export class DependencyTreeDatabase {
         obj.constructor = mInfo[1];
         obj.className = mInfo[2];
         obj.label = 'Method';
+        obj.filterType = FilterType.Method;
         methodInformation.push(obj);
 
         const added: { [k: string]: any } = {};
@@ -191,6 +203,7 @@ export class DependencyTreeDatabase {
         obj.changeStatus = dcInfo[2];
         obj.usedByMethod = dcInfo[3];
         obj.label = (status === '.added') ? '🔒 Dependency' : '🔓 Dependency';
+        obj.filterType = FilterType.Dependency;
         dependencyInformationMethod.push(obj);
       });
     });
@@ -205,7 +218,7 @@ export class DependencyTreeDatabase {
 
   /**
    * Build the structure tree. The `value` is the Json object, or a sub-tree of a Json object.
-   * The return value is the list of `changelogItemNode`.
+   * The return value is the list of `TreeItemNode`.
    */
 
   buildDependencyTree(obj: any[], level: string): TreeItemNode[] {
@@ -218,6 +231,7 @@ export class DependencyTreeDatabase {
         node.item = o.text;
         node.code = o.code;
         node.label = o.label;
+        node.filterType = o.filterType;
         const children = obj.filter(so => (so.code as string).startsWith(level + '.'));
         if (children && children.length > 0) {
           node.children = this.buildDependencyTree(children, o.code);
@@ -228,26 +242,44 @@ export class DependencyTreeDatabase {
 
   public filter(filterText: string) {
     let filteredTreeData;
-    if (filterText) {
-      filteredTreeData = this.treeData.filter(d => d.text.toLocaleLowerCase().indexOf(filterText.toLocaleLowerCase()) > -1);
-      Object.assign([], filteredTreeData).forEach(ftd => {
-        let str = (ftd.code as string);
-        while (str.lastIndexOf('.') > -1) {
-          const index = str.lastIndexOf('.');
-          str = str.substring(0, index);
-          if (filteredTreeData.findIndex(t => t.code === str) === -1) {
-            const obj = this.treeData.find(d => d.code === str);
-            if (obj) {
-              filteredTreeData.push(obj);
+    const parentAndChildNodes = [];
+    const splitFilterText = filterText.split( ':');
+
+    const filterType = (filterText.match(/^[pcmd]:/) !== null) ? splitFilterText[0] : null;
+    filterText = ( splitFilterText.length > 1) ? splitFilterText[1] : splitFilterText[0];
+    if (filterText && filterText.length > 1) {
+        filteredTreeData = this.treeData.filter(d => ((filterType === null || d.filterType === filterType)
+          && d.text.toLocaleLowerCase().indexOf(filterText.toLocaleLowerCase()) > -1));
+
+        filteredTreeData.forEach(ftd => {
+          let codeString = (ftd.code as string);
+          // load nodes parent nodes of the found nodes
+          while (codeString.lastIndexOf('.') > -1) {
+            const index = codeString.lastIndexOf('.');
+            codeString = codeString.substring(0, index);
+            if (filteredTreeData.findIndex(t => t.code === codeString) === -1) {
+              const obj = this.treeData.find(d => d.code === codeString);
+              if (obj) {
+                filteredTreeData.push(obj);
+              }
             }
           }
-        }
-      });
-    } else {
-      filteredTreeData = this.treeData;
-    }
-    // Build the tree nodes from Json object. The result is a list of `TodoItemNode` with nested
-    // file node as children.
+          if (filterType !== null && filterType !== FilterType.Dependency) {
+            this.treeData.filter(n => (n.code !== ftd.code)
+            && (n.code.indexOf(ftd.code + '.')  > -1)).forEach(child => {
+              if (parentAndChildNodes.findIndex(n => n.code === child.code) === -1) {
+                 parentAndChildNodes.push(child);
+            }
+          });
+          }
+
+        });
+        filteredTreeData = filteredTreeData.concat(parentAndChildNodes);
+      } else {
+        filteredTreeData = this.treeData;
+      }
+
+    // Built the filtered tree
     const data = this.buildDependencyTree(filteredTreeData, 'root');
     // Notify the change.
     this.dataChange.next(data);
@@ -278,6 +310,8 @@ export class DependencytreeComponent {
 
   private db: DependencyTreeDatabase;
 
+  @ViewChild('searchField', {static: false} ) input;
+
   constructor(private database: DependencyTreeDatabase) {
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
       this.isExpandable, this.getChildren);
@@ -297,13 +331,9 @@ export class DependencytreeComponent {
 
   hasChild = (_: number, nodeData: TreeItemFlatNode) => nodeData.expandable;
 
-  changeDependencyTree(value) {
-    this.db.loadChangelogFromDatabase(value);
-  }
+  get FilterType() { return FilterType; }
 
-  /**
-   * Transformer to convert nested node to flat node. Record the nodes in maps for later use.
-   */
+  /** Transformer to convert nested node to flat node. Record the nodes in maps for later use. */
   transformer = (node: TreeItemNode, level: number) => {
     const existingNode = this.nestedNodeMap.get(node);
     const flatNode = existingNode && existingNode.item === node.item
@@ -313,18 +343,31 @@ export class DependencytreeComponent {
     flatNode.level = level;
     flatNode.code = node.code;
     flatNode.label = node.label;
+    flatNode.filterType = node.filterType;
     flatNode.expandable = node.children && node.children.length > 0;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
   }
-
+  /** Event-Handler changes displayed Changelog */
+  changeDependencyTree(value) {
+    this.db.loadChangelogFromDatabase(value);
+  }
+  /** Event-Handler triggered then input text in search field changes */
   filterChanged(filterText: string) {
     this.database.filter(filterText);
     if (filterText) {
       this.treeControl.expandAll();
     } else {
       this.treeControl.collapseAll();
+    }
+  }
+  /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
+  searchFilterSelected(selectedFilter: FilterType) {
+    if (this.input.nativeElement.value.match(/^[pcmd]:/ ) !== null) {
+      this.input.nativeElement.value = selectedFilter + this.input.nativeElement.value.substr(1);
+    } else {
+      this.input.nativeElement.value = selectedFilter + ':' + this.input.nativeElement.value;
     }
   }
 }
