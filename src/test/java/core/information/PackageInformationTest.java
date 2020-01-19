@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -60,5 +62,24 @@ class PackageInformationTest {
     @Test
     void getMethodDependencies() {
         assertThat(sut.getMethodDependencies().iterator().next().getName()).isEqualTo(TEST_CLASS_TEST);
+    }
+
+    @Test
+    void getClassByName(){
+      assertThat(sut.getClassByName(TEST_TEST_CLASS)).isEqualTo(classInformation);
+    }
+
+    @Test
+    void getSortedClassInformation(){
+        sut.addClassInformation(new ClassInformation("c"));
+        sut.addClassInformation(new ClassInformation("a"));
+        sut.addClassInformation(new ClassInformation("b"));
+        List<ClassInformation> al=sut.getSortedClassInformation();
+        ArrayList<ClassInformation> testList=new ArrayList<>();
+        testList.add(new ClassInformation("a"));
+        testList.add(new ClassInformation("b"));
+        testList.add(new ClassInformation("c"));
+        testList.add(classInformation);
+        assertThat(sut.getSortedClassInformation()).isEqualTo(testList);
     }
 }

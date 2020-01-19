@@ -8,10 +8,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.LoggerFactory;
 import util.Utils;
 
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -144,5 +141,39 @@ public class PackageInformation implements Comparable<PackageInformation> {
         return ("Package " + packageName + " (id=" + id + ") {\n"
                 + classInformations.stream().map(ClassInformation::toString).collect(Collectors.joining(",\n"))
         ).replace("\n", "\n    ") + "\n}";
+    }
+
+    /**
+     * @param className  indicates the name of the Classname of the ClassInformation that is wanted
+     * @return the ClassInformation for the specified Classname
+     */
+    public ClassInformation getClassByName(String className){
+        int counter=0;
+        boolean found=false;
+        ClassInformation [] ci=classInformations.toArray(new ClassInformation[classInformations.size()]);
+        while(counter<ci.length && !found){
+            if(ci[counter].getClassName().equals(className)){
+                found=true;
+            }
+            else{
+             counter=counter+1;
+            }
+        }
+        if(found){
+            return ci[counter];
+        }
+        else return null;
+    }
+
+    /**
+     * Method sorts all ClassInformation of a PackageInformation in lexicographical order of Classnames
+     * @return sorted List of ClassInformation
+     */
+    public List<ClassInformation> getSortedClassInformation(){
+        ArrayList<ClassInformation> newList=new ArrayList<>();
+        ClassInformation[] ca=classInformations.toArray(new ClassInformation[classInformations.size()]);
+        Collections.addAll(newList,ca);
+        Collections.sort(newList ,new SortComparator());
+        return newList;
     }
 }
