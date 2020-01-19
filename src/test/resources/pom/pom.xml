@@ -57,9 +57,9 @@
 
         <!-- Logger -->
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.13.0</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.29</version>
         </dependency>
 
         <!-- IDE annotations -->
@@ -92,8 +92,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- Maven POM reader -->
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
