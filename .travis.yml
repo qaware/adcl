@@ -16,6 +16,8 @@ git:
 
 script:
   - mvn clean verify sonar:sonar javadoc:jar
+  - (cd target; mv $(find . -name '*.jar' -a ! -name '*sources.jar') $(find . -name '*.jar' -a ! -name '*sources.jar' | rev | cut -c 5- | rev)-fat.jar)
+  - mvn install -DskipTests -Dspring-boot.repackage.skip
   - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
   - |
     if [ $TRAVIS_PULL_REQUEST == "false" ]; then
