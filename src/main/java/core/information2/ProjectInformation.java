@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @NodeEntity
-public class ProjectInformation extends Information<ProjectInformation> {
+public class ProjectInformation extends Information<RootInformation> {
     @Convert(VersionInformation.Converter.class)
     public final List<VersionInformation> versions = new ArrayList<>();
     @Property("internal")
@@ -45,17 +45,6 @@ public class ProjectInformation extends Information<ProjectInformation> {
 
     public List<VersionInformation> getVersions() {
         return versions;
-    }
-
-    @NotNull
-    @Override
-    public ProjectInformation getParent() {
-        return this;
-    }
-
-    @Override
-    public boolean exists(VersionInformation version) {
-        return true;
     }
 
     @Override

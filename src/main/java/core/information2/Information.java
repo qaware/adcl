@@ -204,6 +204,6 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     enum Type {
-        PROJECT, PACKAGE, CLASS, METHOD
+        ROOT, PROJECT, PACKAGE, CLASS, METHOD
     }
 }
