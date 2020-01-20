@@ -1,15 +1,9 @@
 package core.information;
 
-import core.ClassCollector;
-import core.Config;
-import core.DiffExtractor;
-import org.assertj.core.api.Assert;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
