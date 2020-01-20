@@ -10,9 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Configuration class. The amount of options is indefinite.
@@ -29,52 +32,19 @@ import java.util.function.Function;
 @SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
-    @NotNull
-    private static Properties properties = new Properties();
+    private static final Map<String, String> properties = new HashMap<>();
+    private static final Pattern stringToArgsPattern = Pattern.compile("(?<key>[^=\\s]+)=?(?:(?<quoted>\".+?\")|(?<unquoted>[^\\s]+))?\\s");
+    private static final String PREFIX = "adcl.";
+
+    private Config() {
+    }
 
     /**
-     * To be called from the main class. Loads all config sources
-     *
-     * @param args the program arguments of the main class
+     * Determines whether a given key has a value in the Config.
+     * Use this if you want to differentiate between a non-existent value and an invalid value if get() returns null.
      */
-    static void load(@NotNull String[] args) {
-        properties = new Properties();
-
-        // Prio 2: args
-        for (String arg : args) {
-            int pos = arg.indexOf('=');
-            if (pos == -1) {
-                properties.setProperty(arg, "");
-            } else if (pos > 0 && pos < arg.length()) {
-                properties.setProperty(arg.substring(0, pos), arg.substring(pos + 1));
-            }
-        }
-
-        // Prio 1: properties !properties have to start with 'adcl.'
-        for (Map.Entry<Object, Object> property : System.getProperties().entrySet()) {
-            if (property.getKey() instanceof String && property.getValue() instanceof String) {
-                String key = (String) property.getKey();
-                if (key.startsWith("adcl.")) properties.put(key.substring(5), property.getValue());
-            }
-        }
-
-        // Prio 3: properties file
-        Path configPath = getPath("configPath", Paths.get("config.properties"));
-
-        if (Files.exists(configPath)) {
-            Properties tmp = properties;
-            properties = new Properties();
-
-            try {
-                properties.load(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
-            } catch (IOException e) {
-                logger.error("Cloud not open config file " + configPath, e);
-            }
-
-            properties.putAll(tmp);
-        }
-
-        properties.replaceAll((k, v) -> ((String) v).trim());
+    public static boolean valuePresent(String key) {
+        return properties.containsKey(key);
     }
 
     /**
@@ -216,14 +186,137 @@ public class Config {
         }, def);
     }
 
+    /**
+     * To be called from the main class. Loads all config sources
+     *
+     * @param args the program arguments of the main class
+     */
+    static void load(@NotNull String[] args) {
+        properties.clear();
+        properties.putAll(argsToMap(args));
+        properties.putAll(propertiesToMap()); // overrides options from args
+
+        Path configPath = getPath("configPath", null);
+        String raw = get("configPath", null);
+        if (configPath == null && raw != null) {
+            logger.error("configPath is present but invalid. Is: \"{}\"", raw);
+        } else if (configPath != null && Files.notExists(configPath)) {
+            logger.error("configPath points to a non-existent file");
+        } else if (configPath != null && Files.isDirectory(configPath)) {
+            logger.error("configPath points to a directory");
+        } else {
+            if (configPath == null) {
+                Path alternate = Paths.get("config.properties");
+                if (Files.exists(alternate) && !Files.isDirectory(alternate)) configPath = alternate;
+            }
+            if (configPath != null) fileToMap(configPath).forEach(properties::putIfAbsent); // does not override
+        }
+
+        logger.info("Configuration loaded: {}", properties);
+    }
+
+    private static Map<String, String> fileToMap(Path configPath) {
+        try {
+            Properties prop = new Properties();
+            prop.load(Files.newBufferedReader(configPath, StandardCharsets.UTF_8));
+            return new MapTool<>(prop)
+                    .castKeys(String.class)
+                    .castValues(String.class)
+                    .mapValues(in -> in.matches("\".*\"") ? in.substring(1, in.length() - 1) : in)
+                    .get();
+        } catch (IOException e) {
+            logger.error("Cloud not open config file at {}", configPath, e);
+            return Collections.emptyMap();
+        }
+    }
+
+    private static Map<String, String> propertiesToMap() {
+        return new MapTool<>(System.getProperties())
+                .castKeys(String.class)
+                .castValues(String.class)
+                .filterKeys(k -> k.startsWith(PREFIX))
+                .mapKeys(k -> k.substring(PREFIX.length()))
+                .get();
+    }
+
+    private static Map<String, String> argsToMap(String[] args) {
+        Map<String, String> result = new HashMap<>();
+        Matcher matcher = stringToArgsPattern.matcher(Arrays.stream(args).collect(Collectors.joining(" ", "", " ")));
+        while (matcher.find()) {
+            String val = matcher.group("quoted");
+            if (val == null) {
+                val = matcher.group("unquoted");
+            } else {
+                val = val.substring(1, val.length() - 1);
+            }
+            result.put(matcher.group("key"), val == null ? "" : val);
+        }
+        return result;
+    }
+
     private static <T> T tryParse(String key, @NotNull Function<String, T> parser, T def) {
         try {
-            String raw = key == null ? null : properties.getProperty(key);
+            String raw = key == null ? null : properties.get(key);
             if (raw == null) return def;
             T res = parser.apply(raw);
             return res == null ? def : res;
         } catch (NumberFormatException e) {
             return def;
+        }
+    }
+
+    /**
+     * A util class for easy Map transformation
+     * Use {@link MapTool#get()} to retrieve the resulting map
+     * Other Methods are self-explanatory
+     */
+    private static class MapTool<K, V> {
+        private final Map<K, V> map;
+
+        public MapTool(Map<K, V> map) {
+            this.map = map;
+        }
+
+        public MapTool<K, V> filterKeys(Predicate<K> filter) {
+            return transform((m, k, v) -> {
+                if (filter.test(k)) m.put(k, v);
+            });
+        }
+
+        public MapTool<K, V> filterValues(Predicate<V> filter) {
+            return transform((m, k, v) -> {
+                if (filter.test(v)) m.put(k, v);
+            });
+        }
+
+        public <K2> MapTool<K2, V> mapKeys(Function<K, K2> mapper) {
+            return transform((m, k, v) -> m.put(mapper.apply(k), v));
+        }
+
+        public <V2> MapTool<K, V2> mapValues(Function<V, V2> mapper) {
+            return transform((m, k, v) -> m.put(k, mapper.apply(v)));
+        }
+
+        public <K2> MapTool<K2, V> castKeys(Class<K2> keyClass) {
+            return filterKeys(keyClass::isInstance).mapKeys(keyClass::cast);
+        }
+
+        public <V2> MapTool<K, V2> castValues(Class<V2> valueClass) {
+            return filterValues(valueClass::isInstance).mapValues(valueClass::cast);
+        }
+
+        public Map<K, V> get() {
+            return map;
+        }
+
+        private <K2, V2> MapTool<K2, V2> transform(TriConsumer<Map<K2, V2>, K, V> transformer) {
+            Map<K2, V2> result = new HashMap<>();
+            map.forEach((k, v) -> transformer.accept(result, k, v));
+            return new MapTool<>(result);
+        }
+
+        interface TriConsumer<A, B, C> {
+            void accept(A a, B b, C c);
         }
     }
 }

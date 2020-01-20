@@ -5,10 +5,8 @@ import core.information.ClassInformation;
 import core.information.MethodInformation;
 import core.information.PackageInformation;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+
 
 /**
  * The DiffExtractor searches for differences between two Collections of PackageInformations and writes the result in changed.
@@ -59,8 +57,8 @@ public class DiffExtractor {
      * @param after  packages after commit
      */
     private void diff(Set<PackageInformation> before, Set<PackageInformation> after) {
-        Iterator<PackageInformation> beforeIt = before.stream().sorted().iterator();
-        Iterator<PackageInformation> afterIt = after.stream().sorted().iterator();
+        Iterator<PackageInformation> beforeIt = new ArrayList<>(before).stream().sorted().iterator();
+        Iterator<PackageInformation> afterIt = new ArrayList<>(after).stream().sorted().iterator();
 
         CompareIterator<PackageInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt);
 
@@ -95,8 +93,8 @@ public class DiffExtractor {
      * @param after  package after commit
      */
     private void packageDiff(PackageInformation before, PackageInformation after) {
-        Iterator<ClassInformation> beforeIt = before.getClassInformations().stream().sorted().iterator();
-        Iterator<ClassInformation> afterIt = after.getClassInformations().stream().sorted().iterator();
+        Iterator<ClassInformation> beforeIt = new ArrayList<>(before.getClassInformations()).stream().sorted().iterator();
+        Iterator<ClassInformation> afterIt = new ArrayList<>(after.getClassInformations()).stream().sorted().iterator();
 
         CompareIterator<ClassInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt);
 
@@ -131,8 +129,8 @@ public class DiffExtractor {
      * @param after     class after commit
      */
     private void classDiff(ClassInformation before, ClassInformation after) {
-        Iterator<MethodInformation> beforeIt = before.getMethodInformations().stream().sorted().iterator();
-        Iterator<MethodInformation> afterIt = after.getMethodInformations().stream().sorted().iterator();
+        Iterator<MethodInformation> beforeIt = new ArrayList<>(before.getMethodInformations()).stream().sorted().iterator();
+        Iterator<MethodInformation> afterIt = new ArrayList<>(after.getMethodInformations()).stream().sorted().iterator();
 
         CompareIterator<MethodInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt);
         while (compareIterator.hasNext()) {
@@ -168,8 +166,8 @@ public class DiffExtractor {
      * @param inClass   class in which before and after are
      */
     private void methodDiff(MethodInformation before, MethodInformation after, ClassInformation inClass) {
-        Iterator<MethodInformation> beforeIt = before.getMethodDependencies().stream().sorted().iterator();
-        Iterator<MethodInformation> afterIt = after.getMethodDependencies().stream().sorted().iterator();
+        Iterator<MethodInformation> beforeIt = new ArrayList<>(before.getMethodDependencies()).stream().sorted().iterator();
+        Iterator<MethodInformation> afterIt = new ArrayList<>(after.getMethodDependencies()).stream().sorted().iterator();
 
         CompareIterator<MethodInformation> compareIterator = new CompareIterator<>(beforeIt, afterIt);
 
