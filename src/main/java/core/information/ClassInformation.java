@@ -5,8 +5,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import util.Utils;
-
+import util.CompareHelper;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,7 +21,6 @@ public class ClassInformation implements Comparable<ClassInformation> {
     private String className;
     @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
     private Set<MethodInformation> methodInformations;
-
 
     private boolean isService;
     private boolean isInternal;
@@ -160,7 +158,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
         return Comparator.comparing(ClassInformation::isInternal)
                 .thenComparing(ClassInformation::isService)
                 .thenComparing(ClassInformation::getClassName)
-                .thenComparing(ClassInformation::getMethodInformations, Utils.setComparator())
+                .thenComparing(ClassInformation::getMethodInformations, CompareHelper.collectionComparator())
                 .compare(this, classInformation);
     }
 

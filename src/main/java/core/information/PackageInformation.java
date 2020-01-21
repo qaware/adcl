@@ -6,7 +6,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.slf4j.LoggerFactory;
-import util.Utils;
+import util.CompareHelper;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -122,7 +122,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
     public int compareTo(@NotNull PackageInformation packageInformation) {
         return Comparator.comparing(PackageInformation::getPackageName)
                 .thenComparing(PackageInformation::isInternalPackage)
-                .thenComparing(PackageInformation::getClassInformations, Utils.setComparator())
+                .thenComparing(PackageInformation::getClassInformations, CompareHelper.collectionComparator())
                 .compare(this, packageInformation);
     }
 

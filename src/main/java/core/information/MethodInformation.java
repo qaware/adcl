@@ -4,7 +4,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import util.Utils;
+import util.CompareHelper;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -142,9 +142,9 @@ public class MethodInformation implements Comparable<MethodInformation> {
     public int compareTo(MethodInformation methodInformation) {
         return Comparator.comparing(MethodInformation::isConstructor)
                 .thenComparing(MethodInformation::getName)
-                .thenComparing(MethodInformation::getPackageDependencies, Utils.setComparator(Comparator.comparing(PackageInformation::getPackageName)))
-                .thenComparing(MethodInformation::getClassDependencies, Utils.setComparator(Comparator.comparing(ClassInformation::getClassName)))
-                .thenComparing(MethodInformation::getMethodDependencies, Utils.setComparator(Comparator.comparing(MethodInformation::getName)))
+                .thenComparing(MethodInformation::getPackageDependencies, CompareHelper.collectionComparator(Comparator.comparing(PackageInformation::getPackageName)))
+                .thenComparing(MethodInformation::getClassDependencies, CompareHelper.collectionComparator(Comparator.comparing(ClassInformation::getClassName)))
+                .thenComparing(MethodInformation::getMethodDependencies, CompareHelper.collectionComparator(Comparator.comparing(MethodInformation::getName)))
                 .compare(this, methodInformation);
     }
 
