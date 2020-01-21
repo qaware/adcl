@@ -18,10 +18,10 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @SuppressWarnings("rawtypes" /* Compatibility for neo4j */)
     @StartNode
     @NotNull
-    public final Information from;
+    private final Information from;
     @EndNode
     @NotNull
-    public final T to;
+    private final T to;
     @Properties(prefix = "versionInfo")
     private final Map<String, Boolean> versionInfoInternal = new HashMap<>();
     @Transient
@@ -43,6 +43,16 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @PostLoad
     private void postLoad() {
         versionInfoInternal.forEach((v, c) -> versionInfoBacking.put(new VersionInformation(v, getOwner().getProject()), c));
+    }
+
+    @NotNull
+    public Information<?> getFrom() {
+        return from;
+    }
+
+    @NotNull
+    public T getTo() {
+        return to;
     }
 
     abstract Information<?> getOwner();
@@ -88,6 +98,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         return ownLatestChange.getKey().isBefore(parentLatestChange.getKey()) ? parentLatestChange : ownLatestChange;
     }
 
+    @SuppressWarnings("java:S2159" /* wrong, types to and ro.to might be related */)
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof RelationshipInformation)) return false;

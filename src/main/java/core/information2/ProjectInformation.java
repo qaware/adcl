@@ -1,6 +1,7 @@
 package core.information2;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.PostLoad;
 import org.neo4j.ogm.annotation.Property;
@@ -30,13 +31,23 @@ public class ProjectInformation extends Information<RootInformation> {
         versions.forEach(v -> v.postLoad(this));
     }
 
+    /**
+     * Returns all *own* Pom Dependencies at a given version. If version is null dependencies at any time are returned.
+     */
     @NotNull
-    public final Set<ProjectInformation> getPomDependencies() {
-        return pomDependencies.stream().map(d -> d.to).collect(Collectors.toSet());
+    public final Set<ProjectInformation> getPomDependencies(@Nullable VersionInformation at) {
+        return pomDependencies.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getTo).collect(Collectors.toSet());
     }
 
-    public final void addPomDependency(ProjectInformation to) {
-        pomDependencies.add(new PomDependencyInformation(this, to));
+    /**
+     * Adds a new pom dependency at given version. If version is null existence will be ensured for latest version
+     */
+    public final void addPomDependency(@NotNull VersionInformation to, @Nullable VersionInformation at) {
+        if (at == null) at = getProject().getLatestVersion();
+        PomDependencyInformation dep = new PomDependencyInformation(this, to.getProject());
+        dep.ensureStateAt(at, true);
+        dep.addVersionMarker(at, to);
+        pomDependencies.add(dep);
     }
 
     public boolean isInternal() {

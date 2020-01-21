@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.*;
 import util.CompareHelper;
 import util.DeepComparable;
+import util.Utils;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -107,28 +108,6 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return parent.exists(version);
     }
 
-    /**
-     * Returns the root node
-     */
-    @NotNull
-    public final RootInformation getRoot() {
-        Information<?> result = this;
-        while (!(result instanceof RootInformation)) result = result.getParent();
-        return (RootInformation) result;
-    }
-
-    /**
-     * Returns the project node.
-     *
-     * @throws UnsupportedOperationException if called on root node
-     */
-    @NotNull
-    public ProjectInformation getProject() {
-        Information<?> result = this;
-        while (!(result instanceof ProjectInformation)) result = result.getParent();
-        return (ProjectInformation) result;
-    }
-
     ////////// DEPS //////////
 
     /**
@@ -136,7 +115,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     @NotNull
     public final Set<ProjectInformation> getProjectDependencies(@Nullable VersionInformation at) {
-        return projectDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
+        return projectDependencies.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getTo).collect(Collectors.toSet());
     }
 
     /**
@@ -158,11 +137,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns all *own* Project Dependencies at a given version. If version is null dependencies at any time are returned.
+     * Returns all *own* Package Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
     public final Set<PackageInformation<?>> getPackageDependencies(@Nullable VersionInformation at) {
-        return packageDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
+        return packageDependencies.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getTo).collect(Collectors.toSet());
     }
 
     /**
@@ -176,19 +155,19 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     /**
      * Adds a new package dependency at given version. If version is null existence will be ensured for latest version
      */
-    public final void addPackageDependency(@NotNull PackageInformation to, @Nullable VersionInformation at) {
+    public final void addPackageDependency(@NotNull PackageInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
-        DependencyInformation<PackageInformation<?>> dep = new DependencyInformation<PackageInformation<?>>(this, to);
+        DependencyInformation<PackageInformation<?>> dep = new DependencyInformation<>(this, to);
         dep.ensureStateAt(at, true);
         packageDependencies.add(dep);
     }
 
     /**
-     * Returns all *own* Project Dependencies at a given version. If version is null dependencies at any time are returned.
+     * Returns all *own* Class Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
     public final Set<ClassInformation<?>> getClassDependencies(@Nullable VersionInformation at) {
-        return classDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
+        return classDependencies.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getTo).collect(Collectors.toSet());
     }
 
     /**
@@ -202,19 +181,19 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     /**
      * Adds a new class dependency at given version. If version is null existence will be ensured for latest version
      */
-    public final void addClassDependency(@NotNull ClassInformation to, @Nullable VersionInformation at) {
+    public final void addClassDependency(@NotNull ClassInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
-        DependencyInformation<ClassInformation<?>> dep = new DependencyInformation<ClassInformation<?>>(this, to);
+        DependencyInformation<ClassInformation<?>> dep = new DependencyInformation<>(this, to);
         dep.ensureStateAt(at, true);
         classDependencies.add(dep);
     }
 
     /**
-     * Returns all *own* Project Dependencies at a given version. If version is null dependencies at any time are returned.
+     * Returns all *own* Method Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
     public final Set<MethodInformation> getMethodDependencies(@Nullable VersionInformation at) {
-        return methodDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
+        return methodDependencies.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getTo).collect(Collectors.toSet());
     }
 
     /**
@@ -238,13 +217,22 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     ////////// TREE //////////
 
     /**
+     * Returns the parent of the node; returns root for root
+     */
+    @NotNull
+    public P getParent() {
+        if (parent != null) return parent.getTo();
+        else throw new IllegalStateException(getPath() + " has no parent!");
+    }
+
+    /**
      * Returns the direct children of the node at given version. Direct children are represented by an incoming parent edge in the graph.
      * If version is null children at any time are returned.
      * Keep in mind that it is unknown of which concrete type the children are (e.g. a direct children of a class can be a method or an inner class)
      */
     @NotNull
     public final Set<Information<?>> getDirectChildren(@Nullable VersionInformation at) {
-        return directChildren.stream().filter(d -> at == null || d.exists(at)).map(p -> (Information<?>) p.from).collect(Collectors.toSet());
+        return directChildren.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getFrom).collect(Collectors.toSet());
     }
 
     /**
@@ -257,12 +245,40 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns the parent of the node; returns root for root
+     * Returns the root node
      */
     @NotNull
-    public P getParent() {
-        if (parent != null) return parent.to;
-        else throw new IllegalStateException(getPath() + " has no parent!");
+    public final RootInformation getRoot() {
+        Information<?> result = this;
+        while (!(result instanceof RootInformation)) result = result.getParent();
+        return (RootInformation) result;
+    }
+
+    /**
+     * Returns the project node.
+     *
+     * @throws UnsupportedOperationException if called on root node
+     */
+    @NotNull
+    public ProjectInformation getProject() {
+        Information<?> result = this;
+        while (!(result instanceof ProjectInformation)) result = result.getParent();
+        return (ProjectInformation) result;
+    }
+
+    /**
+     * Returns all direct children which are fitting to the given type at given version
+     */
+    public <T extends Information<?>> Set<T> find(@NotNull Class<T> clazz, @Nullable VersionInformation at) {
+        return Utils.cast(getDirectChildren(at), clazz);
+    }
+
+    /**
+     * Returns *all* children which are fitting to the given type
+     * e.g. findAll(MethodInformation.class, null) returns all methods in the class/package/project at any time
+     */
+    public <T extends Information<?>> Set<T> findAll(@NotNull Class<T> clazz, @Nullable VersionInformation at) {
+        return Utils.cast(getAllChildren(at), clazz);
     }
 
     ////////// DEFAULT //////////
