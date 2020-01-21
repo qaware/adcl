@@ -14,7 +14,7 @@ public class ApplicationMojo extends AbstractMojo {
         try {
             Application.main(new String[0]);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error while executing ADCL application", e);
+            throw new MojoExecutionException("Error while executing ADCL maven goal 'start'", e);
         }
     }
 }
