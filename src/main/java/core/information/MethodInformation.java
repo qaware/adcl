@@ -5,11 +5,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import util.Utils;
-
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -170,4 +166,38 @@ public class MethodInformation implements Comparable<MethodInformation> {
                 + "methodDependencies=[" + methodDependencies.stream().map(MethodInformation::getName).collect(Collectors.joining(", ")) + "]"
         ).replace("\n", "\n    ") + "\n}";
     }
+
+
+    /**
+     * Method which returns The classname without packages
+     * @return String
+     */
+    public String getShortMethodName(){
+        String s=getName();
+        String res=s;
+        for (int i=0;i<s.length();i++){
+            if(s.charAt(i)=='.'){
+                res=s.substring(i+1);
+            }
+        }
+        return res;
+    }
+
+
+    /**
+     * Method to search for the Class in which the current Method resides.
+     * Since we only have a downward dependency Tree a List of all ClassInformation has to be given as Parameter
+     * @param piList mentioned parameter
+     * @return ClassInformation in which the Method resides
+     */
+
+    public ClassInformation getClassInformation(List<ClassInformation> piList){
+        for (ClassInformation pi : piList) {
+            if (pi.getMethodInformations().contains(this)) {
+                return pi;
+            }
+        }
+        return null;
+    }
+
 }
