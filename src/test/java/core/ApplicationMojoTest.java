@@ -35,4 +35,5 @@ public class ApplicationMojoTest {
         List<TestFailure> list = Collections.list(errors);
         assertThat(list).overridingErrorMessage(list.stream().map(TestFailure::trace).collect(Collectors.joining("\n\n"))).isEmpty();
     }
+
 }

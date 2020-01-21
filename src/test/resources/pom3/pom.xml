@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>MavenTest</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>de.thbingen</groupId>
+                <artifactId>adcl</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <configuration>
+                    <properties>
+                        <property>
+                            <name>adcl.project.commit.current</name>
+                            <value>test</value>
+                        </property>
+                        <property>
+                            <name>adcl.spring.data.uri</name>
+                            <value>bolt://localhost:7687</value>
+                        </property>
+                        <property>
+                            <name>adcl.spring.data.neo4j.uri.username</name>
+                            <value>neo4j</value>
+                        </property>
+                        <property>
+                            <name>adcl.spring.data.neo4j.uri.password</name>
+                            <value>test</value>
+                        </property>
+                        <property>
+                            <name>adcl.project.uri</name>
+                            <value>src/test/resources/epro1</value>
+                        </property>
+                        <property>
+                            <name>adcl.report.destination</name>
+                            <value>home/t</value>
+                        </property>
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

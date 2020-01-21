@@ -51,4 +51,10 @@ public class ApplicationMojoTestInternal extends AbstractMojoTestCase {
             return ex;
         }
     }
+  /*  public void test() throws Exception {
+        ApplicationMojo mojo = (ApplicationMojo) lookupMojo("start", "src/test/resources/pom3/pom.xml");
+        ApplicationMojo mojo2 = (ApplicationMojo) lookupMojo("start", "src/test/resources/pom4/pom.xml");
+        runMojo(mojo);
+        runMojo(mojo2);
+    }*/
 }
