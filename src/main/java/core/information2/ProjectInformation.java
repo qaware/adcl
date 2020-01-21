@@ -47,6 +47,10 @@ public class ProjectInformation extends Information<RootInformation> {
         return versions;
     }
 
+    public VersionInformation getLatestVersion() {
+        return versions.get(versions.size() - 1);
+    }
+
     @Override
     public @NotNull Type getType() {
         return Type.PROJECT;

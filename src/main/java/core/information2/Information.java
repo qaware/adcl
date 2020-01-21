@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-//TODO adapt calls for search for given version
 @SuppressWarnings({"unused", "java:S1452" /* Wildcards are needed */})
 @NodeEntity
 public abstract class Information<P extends Information<?>> implements Comparable<Information<?>>, DeepComparable<Information<?>> {
@@ -74,7 +73,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return (getParent() == this ? "" : getParent().getPath() + '.') + getName();
     }
 
-    public boolean exists(VersionInformation version) {
+    public boolean exists(@NotNull VersionInformation version) {
         assert parent != null;
         return parent.exists(version);
     }
@@ -88,8 +87,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     ////////// DEPS //////////
 
     @NotNull
-    public final Set<ProjectInformation> getProjectDependencies() {
-        return projectDependencies.stream().map(d -> d.to).collect(Collectors.toSet());
+    public final Set<ProjectInformation> getProjectDependencies(@Nullable VersionInformation at) {
+        return projectDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
     }
 
     public final void addProjectDependency(ProjectInformation to) {
@@ -97,8 +96,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     @NotNull
-    public final Set<PackageInformation<?>> getPackageDependencies() {
-        return packageDependencies.stream().map(d -> d.to).collect(Collectors.toSet());
+    public final Set<PackageInformation<?>> getPackageDependencies(@Nullable VersionInformation at) {
+        return packageDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
     }
 
     public final void addPackageDependency(PackageInformation<?> to) {
@@ -106,8 +105,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     @NotNull
-    public final Set<ClassInformation<?>> getClassDependencies() {
-        return classDependencies.stream().map(d -> d.to).collect(Collectors.toSet());
+    public final Set<ClassInformation<?>> getClassDependencies(@Nullable VersionInformation at) {
+        return classDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
     }
 
     public final void addClassDependency(ClassInformation<?> to) {
@@ -115,8 +114,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     @NotNull
-    public final Set<MethodInformation> getMethodDependencies() {
-        return methodDependencies.stream().map(d -> d.to).collect(Collectors.toSet());
+    public final Set<MethodInformation> getMethodDependencies(@Nullable VersionInformation at) {
+        return methodDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.to).collect(Collectors.toSet());
     }
 
     public final void addMethodDependency(MethodInformation to) {
@@ -126,13 +125,13 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     ////////// TREE //////////
 
     @NotNull
-    public final Set<Information<?>> getDirectChildren() {
-        return directChildren.stream().map(p -> (Information<?>) p.from).collect(Collectors.toSet());
+    public final Set<Information<?>> getDirectChildren(@Nullable VersionInformation at) {
+        return directChildren.stream().filter(d -> at == null || d.exists(at)).map(p -> (Information<?>) p.from).collect(Collectors.toSet());
     }
 
     @NotNull
-    public final Set<Information<?>> getAllChildren() {
-        return getDirectChildren().stream().flatMap(c -> Stream.concat(Stream.of(c), c.getDirectChildren().stream())).collect(Collectors.toSet());
+    public final Set<Information<?>> getAllChildren(@Nullable VersionInformation at) {
+        return getDirectChildren(at).stream().flatMap(c -> Stream.concat(Stream.of(c), c.getDirectChildren(at).stream())).collect(Collectors.toSet());
     }
 
     @NotNull
@@ -147,7 +146,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Override
     public final String toString() {
         return (getClass().getSimpleName() + " " + getName() + " {\n"
-                + getDirectChildren().stream().map(Object::toString).collect(Collectors.joining(",\n"))
+                + getDirectChildren(null).stream().map(Object::toString).collect(Collectors.joining(",\n"))
         ).replace("\n", "\n    ") + "\n}";
     }
 
@@ -172,11 +171,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     final void edgesCompareElements(@NotNull CompareHelper<Information<?>> cmp) {
-        cmp.add(Information::getProjectDependencies, CompareHelper.collectionComparator());
-        cmp.add(Information::getPackageDependencies, CompareHelper.collectionComparator());
-        cmp.add(Information::getClassDependencies, CompareHelper.collectionComparator());
-        cmp.add(Information::getMethodDependencies, CompareHelper.collectionComparator());
-        cmp.add(Information::getDirectChildren, CompareHelper.deepCollectionComparator());
+        cmp.add(i -> i.getProjectDependencies(null), CompareHelper.collectionComparator());
+        cmp.add(i -> i.getPackageDependencies(null), CompareHelper.collectionComparator());
+        cmp.add(i -> i.getClassDependencies(null), CompareHelper.collectionComparator());
+        cmp.add(i -> i.getMethodDependencies(null), CompareHelper.collectionComparator());
+        cmp.add(i -> i.getDirectChildren(null), CompareHelper.deepCollectionComparator());
     }
 
     @Override
