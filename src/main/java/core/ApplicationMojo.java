@@ -22,7 +22,9 @@ public class ApplicationMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try {
-            properties.forEach((key, value) -> System.setProperty("adcl." + key.toString(), value.toString()));
+            if (properties != null) {
+                properties.forEach((key, value) -> System.setProperty("adcl." + key.toString(), value.toString()));
+            }
             Application.main(new String[0]);
         } catch (IOException e) {
             throw new MojoExecutionException("Error while executing ADCL maven goal 'start'", e);
