@@ -29,7 +29,7 @@ public class ApplicationMojoTest extends AbstractMojoTestCase {
         if (configPath != null) {
             try {
                 Xpp3Dom thisProject = Xpp3DomBuilder.build(ReaderFactory.newXmlReader(new File("pom.xml")));
-                configuration = extractPluginConfiguration(thisProject.getChild("artifactId").getValue(), Xpp3DomBuilder.build(ReaderFactory.newXmlReader(new File("src/test/resources/pom2/pom.xml"))));
+                configuration = extractPluginConfiguration(thisProject.getChild("artifactId").getValue(), Xpp3DomBuilder.build(ReaderFactory.newXmlReader(configPath.toFile())));
             } catch (ConfigurationException ignored) {
 
             }
