@@ -16,28 +16,24 @@
                 <configuration>
                     <properties>
                         <property>
-                            <name>adcl.project.commit.current</name>
+                            <name>project.commit.current</name>
                             <value>test</value>
                         </property>
                         <property>
-                            <name>adcl.spring.data.uri</name>
+                            <name>spring.data.neo4j.uri</name>
                             <value>bolt://localhost:7687</value>
                         </property>
                         <property>
-                            <name>adcl.spring.data.neo4j.uri.username</name>
+                            <name>spring.data.neo4j.username</name>
                             <value>neo4j</value>
                         </property>
                         <property>
-                            <name>adcl.spring.data.neo4j.uri.password</name>
+                            <name>spring.data.neo4j.password</name>
                             <value>test</value>
                         </property>
                         <property>
-                            <name>adcl.project.uri</name>
-                            <value>src/test/resources/epro1</value>
-                        </property>
-                        <property>
-                            <name>adcl.report.destination</name>
-                            <value>home/t</value>
+                            <name>project.uri</name>
+                            <value>src/test/resources/test classfiles3/epro1</value>
                         </property>
                     </properties>
                 </configuration>
