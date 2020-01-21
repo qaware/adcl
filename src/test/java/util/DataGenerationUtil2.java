@@ -108,10 +108,11 @@ public class DataGenerationUtil2 {
     public static void p(Ref<?, ?> f, @NotNull Ref<?, ?>... t) {
         for (Ref<?, ?> wo : t) {
             Information<?> o = wo.getStored();
-            if (o instanceof ProjectInformation) f.getStored().addProjectDependency((ProjectInformation) o);
-            else if (o instanceof PackageInformation) f.getStored().addPackageDependency((PackageInformation<?>) o);
-            else if (o instanceof ClassInformation) f.getStored().addClassDependency((ClassInformation<?>) o);
-            else if (o instanceof MethodInformation) f.getStored().addMethodDependency((MethodInformation) o);
+            if (o instanceof ProjectInformation) f.getStored().addProjectDependency((ProjectInformation) o, null);
+            else if (o instanceof PackageInformation)
+                f.getStored().addPackageDependency((PackageInformation<?>) o, null);
+            else if (o instanceof ClassInformation) f.getStored().addClassDependency((ClassInformation<?>) o, null);
+            else if (o instanceof MethodInformation) f.getStored().addMethodDependency((MethodInformation) o, null);
             else throw new IllegalStateException("Unknown pointer aim " + o.getClass().getSimpleName());
         }
     }

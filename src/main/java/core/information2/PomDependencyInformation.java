@@ -32,18 +32,20 @@ public class PomDependencyInformation extends DependencyInformation<ProjectInfor
 
     @PostLoad
     private void postLoad() {
-        remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, from.getProject()), new VersionInformation(r, to.getProject())));
+        remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, getFrom().getProject()), new VersionInformation(r, getTo().getProject())));
     }
 
-    public void addVersionMarker(VersionInformation version, VersionInformation remoteVersion) {
+    public void addVersionMarker(@NotNull VersionInformation version, @NotNull VersionInformation remoteVersion) {
+        if (!remoteVersion.getProject().equals(getTo().getProject()))
+            throw new IllegalArgumentException("Project of remoteVersion (" + remoteVersion.getProject().getName() + ") does not fit to dependency project (" + getTo().getProject().toString() + ")");
         remoteVersionMap.put(version, remoteVersion);
     }
 
+    @SuppressWarnings("java:S2159" /* wrong, types might be related */)
     @Contract(value = "null -> false", pure = true)
     @Override
     public boolean equals(Object o) {
-        if (!((o instanceof PomDependencyInformation) && super.equals(o))) return false;
-        return remoteVersionMap.equals(((PomDependencyInformation) o).remoteVersionMap);
+        return o instanceof PomDependencyInformation && super.equals(o) && remoteVersionMap.equals(((PomDependencyInformation) o).remoteVersionMap);
     }
 
     @Override

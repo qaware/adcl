@@ -11,6 +11,6 @@ public class ParentInformation<T extends Information<?>> extends RelationshipInf
 
     @Override
     Information<?> getOwner() {
-        return to;
+        return getTo();
     }
 }

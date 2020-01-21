@@ -11,6 +11,6 @@ public class DependencyInformation<T extends Information<?>> extends Relationshi
 
     @Override
     Information<?> getOwner() {
-        return from;
+        return getFrom();
     }
 }
