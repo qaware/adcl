@@ -150,7 +150,7 @@ public class PackageInformation implements Comparable<PackageInformation> {
     public ClassInformation getClassByName(String className){
         int counter=0;
         boolean found=false;
-        ClassInformation [] ci=classInformations.toArray(new ClassInformation[classInformations.size()]);
+        ClassInformation [] ci= classInformations.toArray(new ClassInformation[0]);
         while(counter<ci.length && !found){
             if(ci[counter].getClassName().equals(className)){
                 found=true;
@@ -171,9 +171,9 @@ public class PackageInformation implements Comparable<PackageInformation> {
      */
     public List<ClassInformation> getSortedClassInformation(){
         ArrayList<ClassInformation> newList=new ArrayList<>();
-        ClassInformation[] ca=classInformations.toArray(new ClassInformation[classInformations.size()]);
+        ClassInformation[] ca= classInformations.toArray(new ClassInformation[0]);
         Collections.addAll(newList,ca);
-        Collections.sort(newList ,new SortComparator());
+        Collections.sort(newList);
         return newList;
     }
 }

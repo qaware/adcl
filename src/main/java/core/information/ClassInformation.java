@@ -5,10 +5,7 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import util.Utils;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +21,6 @@ public class ClassInformation implements Comparable<ClassInformation> {
     private String className;
     @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
     private Set<MethodInformation> methodInformations;
-    private static final Logger logger = LoggerFactory.getLogger(ClassInformation.class);
 
 
     private boolean isService;
@@ -186,19 +182,18 @@ public class ClassInformation implements Comparable<ClassInformation> {
 
 
     /**
-     * Method to search for the Package in which the current Class resides.
-     * Since we only have a downward dependency Tree a List of all PackageInformation has to be given as Parameter
-     * @param piList mentioned Parameter
-     * @return PackageName in which the Class resides
+     * Method which returns the PackageName of the current class
+     * @return mentioned PackageName as String
      */
-    public String getPackageName(List<PackageInformation> piList){
-        String s="";
-        for (PackageInformation pi : piList) {
-            if (pi.getClassInformations().contains(this)) {
-                return pi.getPackageName();
+    public String getPackageName(){
+        String s=getClassName();
+        String result=s;
+        for (int i=0;i<s.length();i++){
+            if(s.charAt(i)=='.'){
+                result=s.substring(0,i);
             }
         }
-        return s;
+        return result;
     }
 
     /**
@@ -222,40 +217,6 @@ public class ClassInformation implements Comparable<ClassInformation> {
      * @return set with only constructors
      */
     public Set<MethodInformation> getConstructorInformation() {
-        Set<MethodInformation> mi = getMethodInformations();
-        Iterator value = mi.iterator();
-        List<MethodInformation> rList = new ArrayList<>();
-        while (value.hasNext()) {
-            MethodInformation mi2 = (MethodInformation) value.next();
-            if (!mi2.isConstructor()) {
-                rList.add(mi2);
-            }
-        }
-        for (MethodInformation mi3 : rList) {
-            mi.remove(mi3);
-        }
-        return mi;
-    }
-
-    /**
-     * Method to print constructorinformation only
-     * @return only made for the test
-     */
-    public List<String> printConstructorInformation(){
-        List<String> resultContainer=new ArrayList<>();
-        Set<MethodInformation> mi=getMethodInformations();
-        Iterator value=mi.iterator();
-        List<MethodInformation>miList=new ArrayList<>();
-        while(value.hasNext()){
-            MethodInformation mi2=(MethodInformation) value.next();
-            if(mi2.isConstructor()){
-                miList.add(mi2);
-            }
-        }
-        for (MethodInformation mi3 : miList) {
-            logger.info(mi3.getName());
-            resultContainer.add(mi3.getName());
-        }
-        return resultContainer;
+        return getMethodInformations().stream().filter(MethodInformation::isConstructor).collect(Collectors.toSet());
     }
 }
