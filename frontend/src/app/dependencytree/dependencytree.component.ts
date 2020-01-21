@@ -119,7 +119,7 @@ export class DependencyTreeDatabase {
     const queryMethodInformation = 'MATCH (b:VersionInformation{versionName: {before}})-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
       '(a:VersionInformation{versionName: {after}}) WITH n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) ' +
       'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
-      'WITH c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) return m.name, toString(m.isConstructor), c.className;';
+      'WITH c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) return m.name, c.className;';
 
     // Query fetching the dependency information regarding methods related to the changelog
     const queryDependencyInformationMethod = 'MATCH (b:VersionInformation{versionName: {before}})' +
@@ -128,7 +128,7 @@ export class DependencyTreeDatabase {
       'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
       'WITH c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) ' +
       'WITH m MATCH (dm:ChangelogDependencyInformation)<-[r:USES]-(m:MethodInformation)' +
-      'return dm.name, toString(m.isConstructor), dm.changeStatus, m.name';
+      'return dm.name, dm.changeStatus, m.name';
 
 
     const packageInformation: any[] = [{text: '', code: 'root'}];
@@ -172,10 +172,9 @@ export class DependencyTreeDatabase {
     const methodResult = this.neo4j.run(queryMethodInformation, params).then(methodInfo => {
       methodInfo.forEach(mInfo => {
         const obj: { [k: string]: any } = {};
-        obj.text = mInfo[0].match(/\w*\(.*\)/)[0];
-        obj.code = root + '.' + mInfo[2] + '.' + obj.text;
-        obj.constructor = mInfo[1];
-        obj.className = mInfo[2];
+        obj.text = mInfo[0].match(/\..[^.]*\(.*\)/)[0].substr(1);
+        obj.code = root + '.' + mInfo[1] + '.' + obj.text;
+        obj.className = mInfo[1];
         obj.label = 'Method';
         obj.filterType = FilterType.Method;
         methodInformation.push(obj);
@@ -195,13 +194,12 @@ export class DependencyTreeDatabase {
 
     const dependencyMethodResult = this.neo4j.run(queryDependencyInformationMethod, params).then(dependencyClassInfo => {
       dependencyClassInfo.forEach(dcInfo => {
-        const status = (dcInfo[2] === 'ADDED') ? '.added' : '.deleted';
+        const status = (dcInfo[1] === 'ADDED') ? '.added' : '.deleted';
         const obj: { [k: string]: any } = {};
         obj.text = dcInfo[0];
-        obj.code = root + '.' + ((dcInfo[1] === 'true') ? dcInfo[3].split('(')[0] + '.' +
-          dcInfo[3].match(/\w*\(.*\)/)[0] : dcInfo[3]) + status + '.' + 0;
-        obj.changeStatus = dcInfo[2];
-        obj.usedByMethod = dcInfo[3];
+        obj.code = root + '.' + dcInfo[2] + status + '.' + 0;
+        obj.changeStatus = dcInfo[1];
+        obj.usedByMethod = dcInfo[2];
         obj.label = (status === '.added') ? '🔒 Dependency' : '🔓 Dependency';
         obj.filterType = FilterType.Dependency;
         dependencyInformationMethod.push(obj);
@@ -242,49 +240,57 @@ export class DependencyTreeDatabase {
 
   public filter(filterText: string) {
     let filteredTreeData;
-    const parentAndChildNodes = [];
-    const splitFilterText = filterText.split( ':');
+    const splitFilterText = filterText.split(':');
 
     const filterType = (filterText.match(/^[pcmd]:/) !== null) ? splitFilterText[0] : null;
-    filterText = ( splitFilterText.length > 1) ? splitFilterText[1] : splitFilterText[0];
-    if (filterText && filterText.length > 1) {
-        filteredTreeData = this.treeData.filter(d => ((filterType === null || d.filterType === filterType)
-          && d.text.toLocaleLowerCase().indexOf(filterText.toLocaleLowerCase()) > -1));
+    filterText = (splitFilterText.length > 1) ? splitFilterText[1] : splitFilterText[0];
+    if (filterText && filterText.length > 0) {
+      filteredTreeData = this.treeData.filter(d => ((filterType === null || d.filterType === filterType)
+        && d.text.toLocaleLowerCase().indexOf(filterText.toLocaleLowerCase()) > -1));
 
-        filteredTreeData.forEach(ftd => {
-          let codeString = (ftd.code as string);
-          // load nodes parent nodes of the found nodes
-          while (codeString.lastIndexOf('.') > -1) {
-            const index = codeString.lastIndexOf('.');
-            codeString = codeString.substring(0, index);
-            if (filteredTreeData.findIndex(t => t.code === codeString) === -1) {
-              const obj = this.treeData.find(d => d.code === codeString);
-              if (obj) {
-                filteredTreeData.push(obj);
-              }
-            }
-          }
-          if (filterType !== null && filterType !== FilterType.Dependency) {
-            this.treeData.filter(n => (n.code !== ftd.code)
-            && (n.code.indexOf(ftd.code + '.')  > -1)).forEach(child => {
-              if (parentAndChildNodes.findIndex(n => n.code === child.code) === -1) {
-                 parentAndChildNodes.push(child);
-            }
-          });
-          }
+      filteredTreeData.forEach(ftd => {
+        // load nodes parent nodes of the found nodes
+        this.addParentNodes(filteredTreeData, (ftd.code as string));
+        // load child nodes
+        this.addChildNodes(filteredTreeData, ftd.code, filterType);
+      });
 
-        });
-        filteredTreeData = filteredTreeData.concat(parentAndChildNodes);
-      } else {
-        filteredTreeData = this.treeData;
-      }
+    } else {
+      filteredTreeData = this.treeData;
+    }
 
     // Built the filtered tree
     const data = this.buildDependencyTree(filteredTreeData, 'root');
     // Notify the change.
     this.dataChange.next(data);
   }
+
+  private addParentNodes(filteredTreeData: any[], codeString: string) {
+    while (codeString.lastIndexOf('.') > -1) {
+      const index = codeString.lastIndexOf('.');
+      codeString = codeString.substring(0, index);
+      if (filteredTreeData.findIndex(t => t.code === codeString) === -1) {
+        const obj = this.treeData.find(d => d.code === codeString);
+        if (obj) {
+          filteredTreeData.push(obj);
+        }
+      }
+    }
+  }
+
+  private addChildNodes(filteredTreeData: any[], code: string, filterType: string) {
+    if (filterType !== FilterType.Dependency) {
+      this.treeData.filter(n => (n.code !== code)
+        && (n.code.indexOf(code + '.') > -1)).forEach(child => {
+        if (filteredTreeData.findIndex(n => n.code === child.code) === -1) {
+          filteredTreeData.push(child);
+        }
+      });
+    }
+  }
 }
+
+
 
 /**
  * @title Dependency tree
@@ -348,7 +354,7 @@ export class DependencytreeComponent {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  }
+  };
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
     this.db.loadChangelogFromDatabase(value);
@@ -369,5 +375,6 @@ export class DependencytreeComponent {
     } else {
       this.input.nativeElement.value = selectedFilter + ':' + this.input.nativeElement.value;
     }
+    this.filterChanged(this.input.nativeElement.value);
   }
 }
