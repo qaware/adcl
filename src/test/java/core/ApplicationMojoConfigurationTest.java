@@ -2,7 +2,7 @@ package core;
 
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
-public class ApplicationMojoErrorFreeInternalTest extends AbstractMojoTestCase {
+public class ApplicationMojoConfigurationTest extends AbstractMojoTestCase {
 
     public void test() throws Exception {
         ApplicationMojo mojo = (ApplicationMojo) lookupMojo("start", "src/test/resources/pom3/pom.xml");

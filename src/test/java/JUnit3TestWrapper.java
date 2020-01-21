@@ -1,4 +1,4 @@
-import core.ApplicationMojoErrorFreeInternalTest;
+import core.ApplicationMojoConfigurationTest;
 import core.ApplicationMojoTest;
 import junit.framework.TestCase;
 import junit.framework.TestFailure;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JUnit3TestWrapper {
     private static final Stream<Class<? extends TestCase>> JUNIT3_TESTCLASSES = Stream.of(
             ApplicationMojoTest.class,
-            ApplicationMojoErrorFreeInternalTest.class
+            ApplicationMojoConfigurationTest.class
     );
 
     private static final PrintStream NULL_STREAM = new PrintStream(new OutputStream() {
