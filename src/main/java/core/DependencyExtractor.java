@@ -2,6 +2,7 @@ package core;
 
 import core.information.MethodInformation;
 import core.information.PackageInformation;
+import core.information.VersionInformation;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -22,6 +23,7 @@ import java.util.TreeSet;
  */
 public class DependencyExtractor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyExtractor.class);
+    private static final String COMMIT_NA = "COMMIT_NA";
 
     private ClassPool classPool;
     private DependencyPool dependencyPool = new DependencyPool();
@@ -37,9 +39,9 @@ public class DependencyExtractor {
      * Analyse classes collection.
      *
      * @param classFiles all list of class files that should be analysed for dependencies.
-     * @return the collection
+     * @return the current VersionInformation
      */
-    public Set<PackageInformation> analyseClasses(List<String> classFiles) {
+    public VersionInformation analyseClasses(List<String> classFiles) {
         classFiles.forEach(classFilename -> {
             try {
                 createClassInformation(classFilename);
@@ -47,11 +49,24 @@ public class DependencyExtractor {
                 LOGGER.error(e.getMessage());
             }
         });
-        return dependencyPool.retrievePackageInformation();
+
+        String currentName = COMMIT_NA;
+        if (Config.valuePresent("project.commit.current")) {
+            currentName = Config.get("project.commit.current", COMMIT_NA);
+        } else if (Config.valuePresent("project.commit")) {
+            LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
+            currentName = Config.get("project.commit", COMMIT_NA);
+        }
+
+        if (currentName.equals(COMMIT_NA))
+            throw new NullPointerException("Commit name is missing, you have to specify it in project.commit.current");
+
+        return new VersionInformation(dependencyPool.retrievePackageInformation(), currentName);
     }
 
     /**
      * Gets CtClass from the ClassPool, if the Class is not contained in the ClassPool it gets created and added to the ClassPool.
+     *
      * @param classFile path to the classfile
      * @return the corresponding CTClass
      * @throws IOException then the class file on the given is not found

@@ -1,9 +1,6 @@
 package core;
 
-import core.information.ChangelogDependencyInformation;
-import core.information.ClassInformation;
-import core.information.MethodInformation;
-import core.information.PackageInformation;
+import core.information.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +12,8 @@ class DiffExtractorTest {
 
     private static Collection<PackageInformation> packageOld;
     private static Collection<PackageInformation> packageNew;
+    private static VersionInformation before;
+    private static VersionInformation after;
 
     @BeforeAll
     static void beforeAll() {
@@ -82,11 +81,13 @@ class DiffExtractorTest {
         dsetFour.add(depedencyFour);
         classCopyOneMethodCopyOne.setMethodDependencies(dsetFour);
 
+        before = new VersionInformation(packageOld, "before");
+        after = new VersionInformation(packageNew, "after", before);
     }
 
     @Test
     void getChanged() {
-        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageNew);
+        DiffExtractor diffExtractor = new DiffExtractor(before, after);
         ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelist());
         Collections.sort(change);
 
@@ -101,7 +102,7 @@ class DiffExtractorTest {
 
     @Test
     void analyseSame() {
-        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageOld);
+        DiffExtractor diffExtractor = new DiffExtractor(before, before);
 
         assertThat(diffExtractor.getChangelist()).isEmpty();
     }
@@ -109,8 +110,8 @@ class DiffExtractorTest {
 
     @Test
     void reverseChangelog() {
-        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageNew);
-        DiffExtractor reverseExtractor = new DiffExtractor(packageNew, packageOld);
+        DiffExtractor diffExtractor = new DiffExtractor(before, after);
+        DiffExtractor reverseExtractor = new DiffExtractor(after, before);
 
         ArrayList<PackageInformation> changelog = new ArrayList<>(diffExtractor.getChangelist());
         ArrayList<PackageInformation> reverseChangelog = new ArrayList<>(reverseExtractor.getChangelist());

@@ -35,6 +35,7 @@ public class GraphDBServiceTest {
     private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
 
     private static Collection<PackageInformation> packages;
+    private static VersionInformation version;
     private static GraphDatabaseService dbService;
 
     @Autowired
@@ -52,7 +53,8 @@ public class GraphDBServiceTest {
                 .newGraphDatabase();
 
         List<String> classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
-        packages = new DependencyExtractor().analyseClasses(classFiles);
+        version = new DependencyExtractor().analyseClasses(classFiles);
+        packages = version.getPackageInformations();
     }
 
     @AfterAll
@@ -65,7 +67,7 @@ public class GraphDBServiceTest {
 
     @Test
     void saveChangelogTest() {
-        Collection<PackageInformation> changes = new DiffExtractor(packages, new ArrayList<>()).getChangelist();
+        Collection<PackageInformation> changes = new DiffExtractor(version, new VersionInformation(new ArrayList<>(), "Empty")).getChangelist();
         ChangelogInformation changelogInformation = new ChangelogInformation(changes, null, null);
         graphDBService.saveChangelog(changelogInformation);
 
@@ -115,7 +117,7 @@ public class GraphDBServiceTest {
     @Test
     void analyseSame() {
         graphDBService.saveVersion(new VersionInformation(packages, "test"));
-        DiffExtractor diffExtractor = new DiffExtractor(packages, graphDBService.getVersion("test").getPackageInformations());
+        DiffExtractor diffExtractor = new DiffExtractor(version, graphDBService.getVersion("test"));
 
         assertThat(diffExtractor.getChangelist()).isEmpty();
     }

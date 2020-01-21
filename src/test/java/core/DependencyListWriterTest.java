@@ -3,6 +3,8 @@ package core;
 import core.information.ClassInformation;
 import core.information.MethodInformation;
 import core.information.PackageInformation;
+import core.information.VersionInformation;
+import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -16,7 +18,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,6 +66,8 @@ class DependencyListWriterTest {
         packageInformation = new PackageInformation(TEST_PACKAGE);
         packageInformation.addClassInformation(classInformation);
         dependencyExtractor = new DependencyExtractor();
+
+        Config.load(Arrays.append(new String[0], "project.commit.current=test"));
     }
 
     @Test
@@ -69,9 +76,9 @@ class DependencyListWriterTest {
         Path path = Files.createTempDirectory("DependencyWriterTest");
 
         classes.add("src/test/resources/testclassfiles/Testclass.class");
-        Collection<PackageInformation> analysedClasses = dependencyExtractor.analyseClasses(classes);
+        VersionInformation analysedClasses = dependencyExtractor.analyseClasses(classes);
 
-        DependencyListWriter.writeListToFile(analysedClasses, path.toString(), "writeListToFileResult");
+        DependencyListWriter.writeListToFile(analysedClasses.getPackageInformations(), path.toString(), "writeListToFileResult");
         String generatedList = IOUtil.readFile(Paths.get(path.toString(), "writeListToFileResult.txt").toString(), StandardCharsets.UTF_8);
 
         assertThat(generatedList).isEqualTo(expectedResultText);

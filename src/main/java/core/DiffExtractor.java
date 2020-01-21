@@ -1,9 +1,6 @@
 package core;
 
-import core.information.ChangelogDependencyInformation;
-import core.information.ClassInformation;
-import core.information.MethodInformation;
-import core.information.PackageInformation;
+import core.information.*;
 
 import java.util.*;
 
@@ -21,19 +18,19 @@ public class DiffExtractor {
      * @param old      the old
      * @param analysed the analysed
      */
-    public DiffExtractor(Collection<PackageInformation> old, Collection<PackageInformation> analysed) {
-        Set<PackageInformation> before = new TreeSet<>(old);
-        Set<PackageInformation> after = new TreeSet<>(analysed);
+    public DiffExtractor(VersionInformation old, VersionInformation analysed) {
+        Set<PackageInformation> before = new TreeSet<>(old.getPackageInformations());
+        Set<PackageInformation> after = new TreeSet<>(analysed.getPackageInformations());
         diff(before, after);
     }
 
     /**
      * Helper Method to add a change into the changelist without making duplicates
      *
-     * @param methodDependency   the changed dependency
-     * @param methodInformation  which refers to methodDependency
-     * @param classInformation   which has methodInformation
-     * @param status             signals if the dependency was added or deleted
+     * @param methodDependency  the changed dependency
+     * @param methodInformation which refers to methodDependency
+     * @param classInformation  which has methodInformation
+     * @param status            signals if the dependency was added or deleted
      */
     private void addToChangelist(MethodInformation methodDependency, MethodInformation methodInformation, ClassInformation classInformation,
                                  ChangelogDependencyInformation.ChangeStatus status) {
@@ -125,8 +122,8 @@ public class DiffExtractor {
     /**
      * Builds the difference between the Methods in before and after
      *
-     * @param before    class before commit
-     * @param after     class after commit
+     * @param before class before commit
+     * @param after  class after commit
      */
     private void classDiff(ClassInformation before, ClassInformation after) {
         Iterator<MethodInformation> beforeIt = new ArrayList<>(before.getMethodInformations()).stream().sorted().iterator();
@@ -161,9 +158,9 @@ public class DiffExtractor {
     /**
      * Builds the difference between the Dependencies in before and after
      *
-     * @param before    Method before commit
-     * @param after     Method after commit
-     * @param inClass   class in which before and after are
+     * @param before  Method before commit
+     * @param after   Method after commit
+     * @param inClass class in which before and after are
      */
     private void methodDiff(MethodInformation before, MethodInformation after, ClassInformation inClass) {
         Iterator<MethodInformation> beforeIt = new ArrayList<>(before.getMethodDependencies()).stream().sorted().iterator();
@@ -209,8 +206,8 @@ public class DiffExtractor {
     /**
      * Adds all Dependencies in classInformation to changed
      *
-     * @param classInformation   which has been changed
-     * @param changeStatus       signals if the dependency was added or deleted
+     * @param classInformation which has been changed
+     * @param changeStatus     signals if the dependency was added or deleted
      */
     private void classChange(ClassInformation classInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
         for (MethodInformation MethodInformation : classInformation.getMethodInformations())
@@ -220,9 +217,9 @@ public class DiffExtractor {
     /**
      * Adds all Dependencies in methodInformation to changed
      *
-     * @param methodInformation  which has been changed
-     * @param classInformation   in which methodInformation is
-     * @param changeStatus       signals if the dependency was added or deleted
+     * @param methodInformation which has been changed
+     * @param classInformation  in which methodInformation is
+     * @param changeStatus      signals if the dependency was added or deleted
      */
     private void behaviourChange(MethodInformation methodInformation, ClassInformation classInformation, ChangelogDependencyInformation.ChangeStatus changeStatus) {
         for (MethodInformation dependency : methodInformation.getMethodDependencies())
