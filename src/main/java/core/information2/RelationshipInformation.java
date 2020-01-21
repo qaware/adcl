@@ -35,7 +35,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @GeneratedValue
     private Long id;
 
-    protected RelationshipInformation(@NotNull Information<?> from, @NotNull T to) {
+    RelationshipInformation(@NotNull Information<?> from, @NotNull T to) {
         this.from = from;
         this.to = to;
     }
@@ -52,6 +52,12 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         if (versions.isEmpty()) return false;
         Pair<VersionInformation, Boolean> latestChange = getLatestChangeInPath(versions.get(0), version);
         return latestChange == null || latestChange.getValue();
+    }
+
+    public final void ensureStateAt(@NotNull VersionInformation version, boolean exists) {
+        if (exists(version) != exists) {
+            addVersionMarker(version, exists);
+        }
     }
 
     public final void addVersionMarker(VersionInformation version, boolean exists) {

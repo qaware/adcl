@@ -1,5 +1,6 @@
 package core.information2;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.annotation.PostLoad;
 import org.neo4j.ogm.annotation.Properties;
@@ -38,10 +39,10 @@ public class PomDependencyInformation extends DependencyInformation<ProjectInfor
         remoteVersionMap.put(version, remoteVersion);
     }
 
+    @Contract(value = "null -> false", pure = true)
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof PomDependencyInformation)) return false;
-        if (!super.equals(o)) return false;
+        if (!((o instanceof PomDependencyInformation) && super.equals(o))) return false;
         return remoteVersionMap.equals(((PomDependencyInformation) o).remoteVersionMap);
     }
 
