@@ -27,7 +27,7 @@ public class RootInformation extends Information<RootInformation> {
     }
 
     @Override
-    public boolean exists(VersionInformation version) {
+    public boolean exists(@NotNull VersionInformation version) {
         return true;
     }
 }

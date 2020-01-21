@@ -47,7 +47,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
 
     abstract Information<?> getOwner();
 
-    public final boolean exists(VersionInformation version) {
+    public final boolean exists(@NotNull VersionInformation version) {
         List<VersionInformation> versions = getOwner().getProject().versions;
         if (versions.isEmpty()) return false;
         Pair<VersionInformation, Boolean> latestChange = getLatestChangeInPath(versions.get(0), version);
