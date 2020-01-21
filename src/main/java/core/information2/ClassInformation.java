@@ -12,7 +12,7 @@ public abstract class ClassInformation<P extends Information<?>> extends Informa
     @Property
     private final boolean isService;
 
-    public ClassInformation(P parent, String name, boolean isService) {
+    ClassInformation(P parent, String name, boolean isService) {
         super(parent, name);
         this.isService = isService;
     }

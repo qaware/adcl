@@ -68,4 +68,9 @@ public class ProjectInformation extends Information<RootInformation> {
         cmp.casted(ProjectInformation.class).add(ProjectInformation::isInternal)
                 .add(ProjectInformation::getVersions, CompareHelper.collectionComparator());
     }
+
+    @Override
+    public @NotNull String getPath() {
+        return getName();
+    }
 }
