@@ -6,11 +6,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import util.Utils;
-
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +21,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
     private String className;
     @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
     private Set<MethodInformation> methodInformations;
+
 
     private boolean isService;
     private boolean isInternal;
@@ -181,5 +178,45 @@ public class ClassInformation implements Comparable<ClassInformation> {
         return ("Class " + className + " (id=" + id + ", " + (isInternal ? "internal" : "external") + ", " + (isService ? "service" : "no-service") + ") {\n"
                 + methodInformations.stream().map(MethodInformation::toString).collect(Collectors.joining(",\n"))
         ).replace("\n", "\n    ") + "\n}";
+    }
+
+
+    /**
+     * Method which returns the PackageName of the current class
+     * @return mentioned PackageName as String
+     */
+    public String getPackageName(){
+        String s=getClassName();
+        String result=s;
+        for (int i=0;i<s.length();i++){
+            if(s.charAt(i)=='.'){
+                result=s.substring(0,i);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Method to search for the Package in which the current Class resides.
+     * Since we only have a downward dependency Tree a List of all PackageInformation has to be given as Parameter
+     * @param piList mentioned parameter
+     * @return PackageInformation in which the Class resides
+     */
+
+    public PackageInformation getPackageInformation(List<PackageInformation> piList){
+        for (PackageInformation pi : piList) {
+            if (pi.getClassInformations().contains(this)) {
+                return pi;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Method to filter Methods to constructors only
+     * @return set with only constructors
+     */
+    public Set<MethodInformation> getConstructorInformation() {
+        return getMethodInformations().stream().filter(MethodInformation::isConstructor).collect(Collectors.toSet());
     }
 }
