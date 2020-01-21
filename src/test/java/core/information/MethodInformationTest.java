@@ -3,6 +3,8 @@ package core.information;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -44,5 +46,24 @@ class MethodInformationTest {
     @Test
     void getMethodDependencies() {
         assertThat(sut.getMethodDependencies().iterator().next().getName()).isEqualTo(TEST_CLASS_TEST);
+    }
+
+    @Test
+    void getShortMethodName(){
+        assertThat(sut.getShortMethodName()).isEqualTo("testMethod");
+    }
+
+    @Test
+    void getClassInformation(){
+        ClassInformation p1=new ClassInformation("one");
+        ClassInformation p2=new ClassInformation("two");
+        ClassInformation p3=new ClassInformation("three");
+        List<ClassInformation> setPi = new ArrayList<>();
+        setPi.add(p1);
+        setPi.add(p2);
+        setPi.add(p3);
+        MethodInformation ci=new MethodInformation("whatever");
+        p2.addMethodInformation(ci);
+        assertThat(ci.getClassInformation(setPi)).isEqualTo(p2);
     }
 }

@@ -25,7 +25,7 @@ public class ApplicationMojo extends AbstractMojo {
             properties.forEach((key, value) -> System.setProperty("adcl." + key.toString(), value.toString()));
             Application.main(new String[0]);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error while executing ADCL application", e);
+            throw new MojoExecutionException("Error while executing ADCL maven goal 'start'", e);
         }
     }
 }
