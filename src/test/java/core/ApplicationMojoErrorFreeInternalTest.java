@@ -13,8 +13,8 @@ public class ApplicationMojoErrorFreeInternalTest extends AbstractMojoTestCase {
         } catch (Exception ignored) {
         }
         assertEquals(Config.get("spring.data.neo4j.uri", "NA"), "bolt://localhost:7687");
-        assertEquals(Config.get("spring.data.neo4j.username", "NA"), "neo4j");
-        assertEquals(Config.get("spring.data.neo4j.password", "NA"), "test");
+        assertEquals(Config.get("spring.data.neo4j.username", "NA"), "");
+        assertEquals(Config.get("spring.data.neo4j.password", "NA"), "");
         assertEquals(Config.get("project.commit.current", "NA"), "test");
         assertEquals(Config.get("project.uri", "NA"), "src/test/resources/test classfiles3/epro1");
 

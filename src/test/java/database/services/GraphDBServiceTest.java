@@ -111,4 +111,12 @@ public class GraphDBServiceTest {
 
         graphDBService.getVersionRepository().delete(version);
     }
+
+    @Test
+    void analyseSame() {
+        graphDBService.saveVersion(new VersionInformation(packages, "test"));
+        DiffExtractor diffExtractor = new DiffExtractor(packages, graphDBService.getVersion("test").getPackageInformations());
+
+        assertThat(diffExtractor.getChangelist()).isEmpty();
+    }
 }

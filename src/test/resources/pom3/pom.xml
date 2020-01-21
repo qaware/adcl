@@ -25,11 +25,10 @@
                         </property>
                         <property>
                             <name>spring.data.neo4j.username</name>
-                            <value>neo4j</value>
+                            <value/>
                         </property>
                         <property>
                             <name>spring.data.neo4j.password</name>
-                            <value>test</value>
                         </property>
                         <property>
                             <name>project.uri</name>
