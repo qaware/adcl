@@ -25,7 +25,7 @@ If tool is started as a plugin your pom.xml should look like this:
                         </property>
                         <property>
                             <name>spring.data.neo4j.username</name>
-                            <value>neo4j"</value>
+                            <value>neo4j</value>
                         </property>
                         <property>
                             <name>spring.data.neo4j.password</name>
@@ -79,7 +79,7 @@ You can also decide to use a mix of everything.
 
 ###Install plugin as a 3rd party JAR  
 ```shell script
-mvn install:install-file -Dfile=path/to/adcl-thin.jar -DgroupId=de.thbingen -DartifactId=adcl -Dversion=1.0-SNAPSHOT -Dpackaging=maven-plugin
+mvn install:install-file -Dfile="path/to/adcl-thin.jar" -DgroupId="de.thbingen" -DartifactId="adcl" -Dversion="1.0-SNAPSHOT" -Dpackaging="maven-plugin"
 ```
 ### Launch:  
 As a plugin with thin jar:  
