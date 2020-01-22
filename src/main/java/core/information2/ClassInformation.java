@@ -7,6 +7,9 @@ import util.CompareHelper;
 
 import java.util.Objects;
 
+/**
+ * A Class Information
+ */
 @NodeEntity
 public abstract class ClassInformation<P extends Information<?>> extends Information<P> {
     @Property
@@ -17,13 +20,18 @@ public abstract class ClassInformation<P extends Information<?>> extends Informa
         this.isService = isService;
     }
 
+    /**
+     * Whether the class is a service (annotated with @Service)
+     */
+    public boolean isService() {
+        return isService;
+    }
+
+    // Overrides
+
     @Override
     public @NotNull Type getType() {
         return Type.CLASS;
-    }
-
-    public boolean isService() {
-        return isService;
     }
 
     @Override

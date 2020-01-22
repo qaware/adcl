@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a versioned edge on the graph
+ */
 @RelationshipEntity
 @SuppressWarnings("java:S1452" /* Wildcards are needed */)
 public abstract class RelationshipInformation<T extends Information<?>> {
@@ -19,18 +22,23 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @StartNode
     @NotNull
     private final Information from;
+
     @EndNode
     @NotNull
     private final T to;
+
     @Properties(prefix = "versionInfo")
     private final Map<String, Boolean> versionInfoInternal = new HashMap<>();
+
     @Transient
     private final Map<VersionInformation, Boolean> versionInfoBacking = new HashMap<>();
+
     @Transient
     private final MapWithListeners<VersionInformation, Boolean> versionInfo = new MapWithListeners<>(versionInfoBacking,
             (k, v) -> versionInfoInternal.put(k.getName(), v),
             (k, v) -> versionInfoInternal.remove(k.getName())
     );
+
     @Id
     @GeneratedValue
     private Long id;
@@ -40,6 +48,9 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         this.to = to;
     }
 
+    /**
+     * Initialize versionInternal after database is loaded
+     */
     @PostLoad
     private void postLoad() {
         versionInfoInternal.forEach((v, c) -> versionInfoBacking.put(new VersionInformation(v, getOwner().getProject()), c));
@@ -55,25 +66,42 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         return to;
     }
 
+    /**
+     * Returns the owner of the relationship. The owner of a relation is the node (which is attached to the relation) whose existence determines the existence of the relation
+     */
     abstract Information<?> getOwner();
 
+    /**
+     * Whether the relation exists at given version
+     */
     public final boolean exists(@NotNull VersionInformation version) {
-        List<VersionInformation> versions = getOwner().getProject().versions;
+        List<VersionInformation> versions = getOwner().getProject().getVersions();
         if (versions.isEmpty()) return false;
         Pair<VersionInformation, Boolean> latestChange = getLatestChangeInPath(versions.get(0), version);
         return latestChange == null || latestChange.getValue();
     }
 
+    /**
+     * ensures that at a given version the relation exists, setting an existence marker if not currently
+     * ATTENTION: will potentially override child existences (TODO)
+     */
     public final void ensureStateAt(@NotNull VersionInformation version, boolean exists) {
         if (exists(version) != exists) {
             addVersionMarker(version, exists);
         }
     }
 
-    public final void addVersionMarker(VersionInformation version, boolean exists) {
+    /**
+     * add a new version marker into the version map, forcing the state
+     * ATTENTION: will potentially override child existences (TODO)
+     */
+    public final void addVersionMarker(@NotNull VersionInformation version, boolean exists) {
         versionInfo.put(version, exists);
     }
 
+    /**
+     * returns the latest change entry in the own versionInfo map which is in the specified version range
+     */
     @Nullable
     final Pair<VersionInformation, Boolean> getLatestChange(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {
         if (!fromVersionInclusive.isBefore(untilVersionInclusive))
@@ -88,6 +116,9 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         return null;
     }
 
+    /**
+     * returns the latest change entry which is relevant for this relationship, traversing from root to this
+     */
     @Nullable
     final Pair<VersionInformation, Boolean> getLatestChangeInPath(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {
         Pair<VersionInformation, Boolean> ownLatestChange = getLatestChange(fromVersionInclusive, untilVersionInclusive);
@@ -97,6 +128,8 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         else if (ownLatestChange == null) return parentLatestChange;
         return ownLatestChange.getKey().isBefore(parentLatestChange.getKey()) ? parentLatestChange : ownLatestChange;
     }
+
+    // Overrides
 
     @SuppressWarnings("java:S2159" /* wrong, types to and ro.to might be related */)
     @Override

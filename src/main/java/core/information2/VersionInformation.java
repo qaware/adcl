@@ -74,7 +74,7 @@ public class VersionInformation implements Comparable<VersionInformation> {
     public int compareTo(@NotNull VersionInformation o) {
         if (!Objects.equals(project, o.project))
             throw new UnsupportedOperationException("Comparing versions of different projects " + project.getName() + " and " + o.project.getName());
-        return Integer.compare(project.versions.indexOf(this), project.versions.indexOf(o));
+        return Integer.compare(project.getVersions().indexOf(this), project.getVersions().indexOf(o));
     }
 
     @Override
