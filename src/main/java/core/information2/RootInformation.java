@@ -46,6 +46,12 @@ public class RootInformation extends Information<RootInformation> {
     }
 
     @Override
+    @Nullable
+    public <T> T getParent(@NotNull Class<T> parentType) {
+        return null;
+    }
+
+    @Override
     public @NotNull String getPath() {
         return "";
     }
