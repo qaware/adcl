@@ -104,7 +104,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      */
     @Nullable
     final Pair<VersionInformation, Boolean> getLatestChange(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {
-        if (!fromVersionInclusive.isBefore(untilVersionInclusive))
+        if (fromVersionInclusive.isAfter(untilVersionInclusive))
             throw new IllegalStateException(String.format("Search range too small (startVersion >= endVersion). is: %s >= %s", fromVersionInclusive, untilVersionInclusive));
 
         Boolean changed;

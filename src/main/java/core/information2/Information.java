@@ -120,10 +120,25 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * Returns *all* Project Dependencies at a given version. If version is null dependencies at any time are returned.
+     *
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
      */
     @NotNull
     public final Set<ProjectInformation> getAllProjectDependencies(@Nullable VersionInformation at, boolean includeInternal) {
-        return getAllChildren(at).stream().flatMap(i -> i.getProjectDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+        return getAllChildren(at).stream().flatMap(i -> i.getProjectDependencies(at).stream()).distinct().filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns *all* Class Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
+     * If version is null dependencies at any time are returned.
+     *
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
+     */
+    public final Set<ProjectInformation> getAllProjectDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
+        return Stream.concat(
+                getAllProjectDependencies(at, includeInternal).stream(),
+                getAllPackageDependencies(at, includeInternal).stream().map(mi -> mi.getParent(ProjectInformation.class))
+        ).distinct().filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /**
@@ -146,10 +161,26 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * Returns *all* Package Dependencies at a given version. If version is null dependencies at any time are returned.
+     *
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
      */
     @NotNull
     public final Set<PackageInformation<?>> getAllPackageDependencies(@Nullable VersionInformation at, boolean includeInternal) {
-        return getAllChildren(at).stream().flatMap(i -> i.getPackageDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+        return getAllChildren(at).stream().flatMap(i -> i.getPackageDependencies(at).stream()).distinct().filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns *all* Package Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
+     * If version is null dependencies at any time are returned.
+     * Aggregation stops at the lowest found Package, so proj.packageA.packageB.ClassC aggregates to a dependency to proj.packageA.packageB
+     *
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
+     */
+    public final Set<PackageInformation<?>> getAllPackageDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
+        return Stream.concat(
+                getAllPackageDependencies(at, includeInternal).stream(),
+                getAllClassDependenciesAggregated(at, includeInternal).stream().map(mi -> (PackageInformation<?>) mi.getParent(PackageInformation.class))
+        ).distinct().filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /**
@@ -172,10 +203,26 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * Returns *all* Class Dependencies at a given version. If version is null dependencies at any time are returned.
+     *
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
      */
     @NotNull
     public final Set<ClassInformation<?>> getAllClassDependencies(@Nullable VersionInformation at, boolean includeInternal) {
-        return getAllChildren(at).stream().flatMap(i -> i.getClassDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+        return getAllChildren(at).stream().flatMap(i -> i.getClassDependencies(at).stream()).distinct().filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns *all* Class Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
+     * If version is null dependencies at any time are returned.
+     * Aggregation stops at the lowest found Class, so proj.ClassA$ClassC.foo() aggregates to a dependency to proj.ClassA$ClassC
+     *
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
+     */
+    public final Set<ClassInformation<?>> getAllClassDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
+        return Stream.concat(
+                getAllClassDependencies(at, includeInternal).stream(),
+                getAllMethodDependencies(at, includeInternal).stream().map(mi -> (ClassInformation<?>) mi.getParent(ClassInformation.class))
+        ).distinct().filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     /**
@@ -198,10 +245,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * Returns *all* Method Dependencies at a given version. If version is null dependencies at any time are returned.
+     * @param includeInternal whether dependencies that lead to another child node of this should be included
      */
     @NotNull
     public final Set<MethodInformation> getAllMethodDependencies(@Nullable VersionInformation at, boolean includeInternal) {
-        return getAllChildren(at).stream().flatMap(i -> i.getMethodDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
+        return getAllChildren(at).stream().flatMap(i -> i.getMethodDependencies(at).stream()).distinct().filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
     }
 
     /**
@@ -222,6 +270,16 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @NotNull
     public P getParent() {
         return Objects.requireNonNull(parent, "parent of " + getName() + " is null").getTo();
+    }
+
+    /**
+     * Returns the first parent of given type traveling up the path, returns null if none was found
+     */
+    @SuppressWarnings("unchecked" /* checked by Class#isInstance */)
+    @Nullable
+    public <T> T getParent(@NotNull Class<T> parentType) {
+        P directParent = getParent();
+        return parentType.isInstance(directParent) ? (T) directParent : directParent.getParent(parentType);
     }
 
     /**

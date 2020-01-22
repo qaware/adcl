@@ -105,7 +105,7 @@ public class DataGenerationUtil2 {
      */
     @NotNull
     @Contract(pure = true)
-    public static Ref<Information<ClassInformation<?>>, ClassInformation<?>> mi(String name) {
+    public static Ref<MethodInformation, ClassInformation<?>> mi(String name) {
         return new Ref<>(clazz -> new MethodInformation(clazz, name));
     }
 

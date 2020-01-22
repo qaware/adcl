@@ -64,6 +64,7 @@ public class DatamodelNodesTest {
         assertThat(dm.getProjects(null)).doesNotContainNull().hasSize(1);
         assertThat(dm.getType()).isEqualTo(Information.Type.ROOT);
         assertThat(dm.getParent()).isSameAs(dm);
+        assertThat(dm.getParent(RootInformation.class)).isNull();
         assertThat(dm.getPath()).isEmpty();
         assertThat(dm.exists(new VersionInformation("", dm.getProjects(null).iterator().next()))).isTrue();
         assertThatThrownBy(() -> dm.getProject()).isInstanceOf(UnsupportedOperationException.class);
@@ -124,6 +125,7 @@ public class DatamodelNodesTest {
         Information<?> cci = dm.findByPath("proj.ClassC$ClassCInner", null);
 
         assertThat(Arrays.asList(p, cc, ccinit, ccrca, cca, cci)).doesNotContainNull();
+
         assertThat(cc.getProject()).isEqualTo(p);
         assertThat(cc.getParent()).isEqualTo(p);
         assertThat(cc.getDirectChildren(null)).containsExactlyInAnyOrder(ccinit, ccrca, cca, cci);
@@ -132,6 +134,11 @@ public class DatamodelNodesTest {
         assertThat(cc.findAll(MethodInformation.class, null).stream().map(Information::getName))
                 .containsExactlyInAnyOrder("<init>()", "retrieveClassA()", "<init>(ClassC)", "getClassC()", "<init>(ClassC)", "retrieveClassA()");
         assertThat(cc.getAllChildren(null)).hasSize(8);
+        assertThat(cci.getParent(MethodInformation.class)).isNull();
+        assertThat((ClassInformation<?>) cci.getParent(ClassInformation.class)).isEqualTo(cc);
+        assertThat((PackageInformation<?>) cci.getParent(PackageInformation.class)).isNull();
+        assertThat(cci.getParent(ProjectInformation.class)).isEqualTo(p);
+        assertThat(cci.getParent(RootInformation.class)).isEqualTo(dm);
     }
 
     @Test
