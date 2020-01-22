@@ -68,6 +68,11 @@ public class RootInformation extends Information<RootInformation> {
     }
 
     @Override
+    public boolean hasParent(@NotNull Information<?> potentialParent) {
+        return equals(potentialParent);
+    }
+
+    @Override
     public @NotNull ProjectInformation getProject() {
         throw new UnsupportedOperationException();
     }

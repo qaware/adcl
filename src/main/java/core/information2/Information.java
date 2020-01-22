@@ -122,8 +122,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * Returns *all* Project Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
-    public final Set<ProjectInformation> getAllProjectDependencies(@Nullable VersionInformation at) {
-        return getAllChildren(at).stream().flatMap(i -> i.getProjectDependencies(at).stream()).collect(Collectors.toSet());
+    public final Set<ProjectInformation> getAllProjectDependencies(@Nullable VersionInformation at, boolean includeInternal) {
+        return getAllChildren(at).stream().flatMap(i -> i.getProjectDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
     }
 
     /**
@@ -148,8 +148,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * Returns *all* Package Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
-    public final Set<PackageInformation<?>> getAllPackageDependencies(@Nullable VersionInformation at) {
-        return getAllChildren(at).stream().flatMap(i -> i.getPackageDependencies(at).stream()).collect(Collectors.toSet());
+    public final Set<PackageInformation<?>> getAllPackageDependencies(@Nullable VersionInformation at, boolean includeInternal) {
+        return getAllChildren(at).stream().flatMap(i -> i.getPackageDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
     }
 
     /**
@@ -174,8 +174,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * Returns *all* Class Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
-    public final Set<ClassInformation<?>> getAllClassDependencies(@Nullable VersionInformation at) {
-        return getAllChildren(at).stream().flatMap(i -> i.getClassDependencies(at).stream()).collect(Collectors.toSet());
+    public final Set<ClassInformation<?>> getAllClassDependencies(@Nullable VersionInformation at, boolean includeInternal) {
+        return getAllChildren(at).stream().flatMap(i -> i.getClassDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
     }
 
     /**
@@ -200,8 +200,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * Returns *all* Method Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
-    public final Set<MethodInformation> getAllMethodDependencies(@Nullable VersionInformation at) {
-        return getAllChildren(at).stream().flatMap(i -> i.getMethodDependencies(at).stream()).collect(Collectors.toSet());
+    public final Set<MethodInformation> getAllMethodDependencies(@Nullable VersionInformation at, boolean includeInternal) {
+        return getAllChildren(at).stream().flatMap(i -> i.getMethodDependencies(at).stream()).filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
     }
 
     /**
@@ -222,6 +222,13 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @NotNull
     public P getParent() {
         return Objects.requireNonNull(parent, "parent of " + getName() + " is null").getTo();
+    }
+
+    /**
+     * Checks whether the information has {@code potentialParent} in its path, including itself
+     */
+    public boolean hasParent(@NotNull Information<?> potentialParent) {
+        return equals(potentialParent) || getParent().hasParent(potentialParent);
     }
 
     /**
@@ -333,7 +340,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Contract(pure = true)
     @Override
     public final int compareTo(@NotNull Information<?> o) {
-        return comparator.compare(this, o);
+        return o == this ? 0 : comparator.compare(this, o);
     }
 
     /**
