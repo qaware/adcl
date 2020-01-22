@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * The default neo4j node. Holds information about a structural element of java code.
  *
- * @param <P> the parent type (like for MethodInformation -> ClassInformation)
+ * @param <P> the parent type (i.e. MethodInformation's parent type is ClassInformation)
  */
 @SuppressWarnings({"unused", "java:S1452" /* Wildcards are needed */})
 @NodeEntity
