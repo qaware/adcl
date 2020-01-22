@@ -70,8 +70,7 @@ public class ApplicationTest {
 
         VersionInformation before = graphDBService.getVersion("test");
         VersionInformation after = graphDBService.getVersion("test2");
-        ChangelogInformation changelog = graphDBService.getChangeLogRepository().findAll().iterator().hasNext() ?
-                graphDBService.getChangeLogRepository().findAll().iterator().next() : null;
+        ChangelogInformation changelog = graphDBService.getChangeLogRepository().findAll().iterator().next();
 
         assertThat(before).isNotNull();
         assertThat(after).isNotNull();
