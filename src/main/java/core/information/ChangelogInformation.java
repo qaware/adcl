@@ -46,6 +46,12 @@ public class ChangelogInformation {
     }
 
     /**
+     * Should not be used is only for Spring Data
+     */
+    private ChangelogInformation() {
+    }
+
+    /**
      * Gets changelog.
      *
      * @return the changelog
