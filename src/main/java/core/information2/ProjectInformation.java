@@ -26,9 +26,10 @@ public class ProjectInformation extends Information<RootInformation> {
     @Relationship(type = "PomDependency")
     private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
 
-    public ProjectInformation(String name, boolean isInternal) {
-        super(name);
+    public ProjectInformation(@NotNull RootInformation root, @NotNull String name, boolean isInternal, @NotNull String initialVersion) {
+        super(root, name);
         this.isInternal = isInternal;
+        addVersion(initialVersion);
     }
 
     /**
@@ -37,6 +38,16 @@ public class ProjectInformation extends Information<RootInformation> {
     @PostLoad
     private void postLoad() {
         versions.forEach(v -> v.postLoad(this));
+    }
+
+    /**
+     * Add a new version for the project to the end of the version history
+     */
+    @NotNull
+    public VersionInformation addVersion(@NotNull String name) {
+        VersionInformation result = new VersionInformation(name, this);
+        versions.add(result);
+        return result;
     }
 
     /**
