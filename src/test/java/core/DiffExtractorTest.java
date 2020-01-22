@@ -1,6 +1,7 @@
 package core;
 
 import core.information.*;
+import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -10,15 +11,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DiffExtractorTest {
 
-    private static Collection<PackageInformation> packageOld;
-    private static Collection<PackageInformation> packageNew;
     private static VersionInformation before;
     private static VersionInformation after;
 
     @BeforeAll
     static void beforeAll() {
-        packageOld = new ArrayList<>();
-        packageNew = new ArrayList<>();
+        Config.load(Arrays.append(new String[0], "project.commit.current=test"));
+        Collection<PackageInformation> packageOld = new ArrayList<>();
+        Collection<PackageInformation> packageNew = new ArrayList<>();
 
         //create packages
         PackageInformation packageOldOne = new PackageInformation("packageone");

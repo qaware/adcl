@@ -34,7 +34,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GraphDBServiceTest {
     private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
 
-    private static Collection<PackageInformation> packages;
     private static VersionInformation version;
     private static GraphDatabaseService dbService;
 
@@ -54,7 +53,6 @@ public class GraphDBServiceTest {
 
         List<String> classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
         version = new DependencyExtractor().analyseClasses(classFiles);
-        packages = version.getPackageInformations();
     }
 
     @AfterAll
@@ -93,7 +91,7 @@ public class GraphDBServiceTest {
 
     @Test
     void saveVersionTest() {
-        graphDBService.saveVersion(new VersionInformation(packages, "test"));
+        graphDBService.saveVersion(new VersionInformation(version.getPackageInformations(), "test"));
         VersionInformation version = graphDBService.getVersionRepository().findVersionInformationByVersionName("test");
         assertThat(version).isNotNull();
 
@@ -101,7 +99,7 @@ public class GraphDBServiceTest {
                 .filter(packageInformation -> packageInformation.getPackageName().equals("packageA")).findFirst().orElse(null);
         assertThat(testPackage).isNotNull();
         assertThat(testPackage).isInstanceOf(PackageInformation.class);
-        assertThat(testPackage).isEqualTo(packages.stream()
+        assertThat(testPackage).isEqualTo(version.getPackageInformations().stream()
                 .filter(packageInformation -> packageInformation.getPackageName().equals("packageA"))
                 .findFirst().orElse(null));
 
@@ -116,7 +114,7 @@ public class GraphDBServiceTest {
 
     @Test
     void analyseSame() {
-        graphDBService.saveVersion(new VersionInformation(packages, "test"));
+        graphDBService.saveVersion(new VersionInformation(version.getPackageInformations(), "test"));
         DiffExtractor diffExtractor = new DiffExtractor(version, graphDBService.getVersion("test"));
 
         assertThat(diffExtractor.getChangelist()).isEmpty();
