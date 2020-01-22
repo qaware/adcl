@@ -5,25 +5,29 @@ import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
 
+
 /**
- * Node for Tree item
+ * Base Node for Tree item nodes
  */
-export class TreeItemNode {
-  children: TreeItemNode[];
-  item: string;
-  code: string;
+class BaseTreeItemNode {
+  name: string;
   label: string;
+  code: string;
+  path: string;
   filterType: FilterType;
 }
 
+/**
+ * Node for Tree item
+ */
+export class TreeItemNode extends BaseTreeItemNode {
+  children: TreeItemNode[];
+}
+
 /** Flat  item node with expandable and level information */
-export class TreeItemFlatNode {
-  item: string;
-  label: string;
+export class TreeItemFlatNode extends BaseTreeItemNode {
   level: number;
   expandable: boolean;
-  code: string;
-  filterType: FilterType;
 }
 
 /** Filter types */
@@ -146,6 +150,7 @@ export class DependencyTreeDatabase {
           if (packageInformation.find(e => e.code === code) === undefined) {
             const obj: { [k: string]: any } = {};
             obj.text = pn;
+            obj.path = code;
             obj.code = code;
             code = obj.code;
             obj.label = 'Package';
@@ -159,7 +164,8 @@ export class DependencyTreeDatabase {
     const classResult = this.neo4j.run(queryClassInformation, params).then(classInfo => {
       classInfo.forEach(cInfo => {
         const obj: { [k: string]: any } = {};
-        obj.text = cInfo[0].match( /[^.]*$/)[0];
+        obj.text = cInfo[0].match(/[^.]*$/)[0];
+        obj.path = cInfo[0];
         obj.code = root + '.' + cInfo[0];
         obj.service = cInfo[1];
         obj.package = cInfo[2];
@@ -174,6 +180,7 @@ export class DependencyTreeDatabase {
         const obj: { [k: string]: any } = {};
         obj.text = mInfo[0].match(/\..[^.]*\(.*\)/)[0].substr(1);
         obj.code = root + '.' + mInfo[1] + '.' + obj.text;
+        obj.path = mInfo[0];
         obj.className = mInfo[1];
         obj.label = 'Method';
         obj.filterType = FilterType.Method;
@@ -197,6 +204,7 @@ export class DependencyTreeDatabase {
         const status = (dcInfo[1] === 'ADDED') ? '.added' : '.deleted';
         const obj: { [k: string]: any } = {};
         obj.text = dcInfo[0];
+        obj.path = dcInfo[0];
         obj.code = root + '.' + dcInfo[2] + status + '.' + 0;
         obj.changeStatus = dcInfo[1];
         obj.usedByMethod = dcInfo[2];
@@ -226,8 +234,9 @@ export class DependencyTreeDatabase {
     )
       .map(o => {
         const node = new TreeItemNode();
-        node.item = o.text;
+        node.name = o.text;
         node.code = o.code;
+        node.path = o.path;
         node.label = o.label;
         node.filterType = o.filterType;
         const children = obj.filter(so => (so.code as string).startsWith(level + '.'));
@@ -342,12 +351,13 @@ export class DependencytreeComponent {
   /** Transformer to convert nested node to flat node. Record the nodes in maps for later use. */
   transformer = (node: TreeItemNode, level: number) => {
     const existingNode = this.nestedNodeMap.get(node);
-    const flatNode = existingNode && existingNode.item === node.item
+    const flatNode = existingNode && existingNode.name === node.name
       ? existingNode
       : new TreeItemFlatNode();
-    flatNode.item = node.item;
+    flatNode.name = node.name;
     flatNode.level = level;
     flatNode.code = node.code;
+    flatNode.path = node.path;
     flatNode.label = node.label;
     flatNode.filterType = node.filterType;
     flatNode.expandable = node.children && node.children.length > 0;
@@ -355,12 +365,15 @@ export class DependencytreeComponent {
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
   };
+
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
     this.db.loadChangelogFromDatabase(value);
   }
+
   /** Event-Handler triggered then input text in search field changes */
-  filterChanged(filterText: string) {
+  filterChanged(event: Event) {
+    const filterText = ((event.target) as HTMLInputElement).value;
     this.database.filter(filterText);
     if (filterText) {
       this.treeControl.expandAll();
@@ -368,13 +381,14 @@ export class DependencytreeComponent {
       this.treeControl.collapseAll();
     }
   }
+
   /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
   searchFilterSelected(selectedFilter: FilterType) {
-    if (this.input.nativeElement.value.match(/^[pcmd]:/ ) !== null) {
+    if (this.input.nativeElement.value.match(/^[pcmd]:/) !== null) {
       this.input.nativeElement.value = selectedFilter + this.input.nativeElement.value.substr(1);
     } else {
       this.input.nativeElement.value = selectedFilter + ':' + this.input.nativeElement.value;
     }
-    this.filterChanged(this.input.nativeElement.value);
+    this.input.nativeElement.dispatchEvent(new Event('input'));
   }
 }
