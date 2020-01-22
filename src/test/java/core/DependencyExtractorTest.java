@@ -3,6 +3,8 @@ package core;
 import core.information.ClassInformation;
 import core.information.MethodInformation;
 import core.information.PackageInformation;
+import core.information.VersionInformation;
+import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -91,12 +93,13 @@ class DependencyExtractorTest {
     void setUp() throws IOException {
         depEx = new DependencyExtractor();
         classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
+        Config.load(Arrays.append(new String[0], "project.commit.current=test"));
     }
 
     @Test
     void analyseClasses() {
-        Set<PackageInformation> analysedClasses = depEx.analyseClasses(classFiles);
+        VersionInformation analysedClasses = depEx.analyseClasses(classFiles, "test");
 
-        assertThat(analysedClasses).isEqualTo(cmpData());
+        assertThat(analysedClasses.getPackageInformations()).isEqualTo(cmpData());
     }
 }

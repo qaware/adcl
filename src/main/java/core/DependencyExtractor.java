@@ -2,6 +2,7 @@ package core;
 
 import core.information.MethodInformation;
 import core.information.PackageInformation;
+import core.information.VersionInformation;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -37,9 +38,9 @@ public class DependencyExtractor {
      * Analyse classes collection.
      *
      * @param classFiles all list of class files that should be analysed for dependencies.
-     * @return the collection
+     * @return the current VersionInformation
      */
-    public Set<PackageInformation> analyseClasses(List<String> classFiles) {
+    public VersionInformation analyseClasses(List<String> classFiles, String currentName) {
         classFiles.forEach(classFilename -> {
             try {
                 createClassInformation(classFilename);
@@ -47,11 +48,13 @@ public class DependencyExtractor {
                 LOGGER.error(e.getMessage());
             }
         });
-        return dependencyPool.retrievePackageInformation();
+
+        return new VersionInformation(dependencyPool.retrievePackageInformation(), currentName);
     }
 
     /**
      * Gets CtClass from the ClassPool, if the Class is not contained in the ClassPool it gets created and added to the ClassPool.
+     *
      * @param classFile path to the classfile
      * @return the corresponding CTClass
      * @throws IOException then the class file on the given is not found

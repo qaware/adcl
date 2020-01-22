@@ -6,6 +6,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import util.Utils;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,7 @@ public class ClassInformation implements Comparable<ClassInformation> {
     }
 
     /**
-     * Should not be used is for Spring Data
+     * Should not be used is only for Spring Data
      */
     public ClassInformation() {
         methodInformations = new TreeSet<>();
