@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ApplicationMojoTest extends AbstractMojoTestCase {
-    public void testMojoGoal() throws Exception {
+    public void testMojo() throws Exception {
         Exception e = runMojo(lookupMojo("start", Paths.get("src", "test", "resources", "pom2", "pom.xml")));
         assertNotNull(e);
         assertNotNull(e.getCause());

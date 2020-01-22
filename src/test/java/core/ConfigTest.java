@@ -2,7 +2,6 @@ package core;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -21,12 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(OutputCaptureExtension.class)
 public class ConfigTest {
-    private static Properties defaultProps;
-
-    @BeforeAll
-    static void beforeAll() {
-        defaultProps = System.getProperties();
-    }
 
     @Test
     void testGetExistent() {
@@ -121,20 +114,24 @@ public class ConfigTest {
 
     @Test
     void testInputProperties() {
-        System.setProperty("adcl.a", "1");
-        System.setProperty("adcl.b", "");
-        System.setProperty("adcl.d", "3");
-        System.setProperty("adcl.e", "a b");
-        System.getProperties().put("adcl.x", new Object());
-        System.getProperties().put(new Object(), "x");
-        Config.load(new String[0]);
+        Properties propertiesBackup = new Properties(System.getProperties());
 
-        assertThat(Config.get("a", 0)).isEqualTo(1);
-        assertThat(Config.get("b", false)).isTrue();
-        assertThat(Config.get("d", 0)).isEqualTo(3);
-        assertThat(Config.get("e", null)).isEqualTo("a b");
+        try {
+            System.setProperty("adcl.a", "1");
+            System.setProperty("adcl.b", "");
+            System.setProperty("adcl.d", "3");
+            System.setProperty("adcl.e", "a b");
+            System.getProperties().put("adcl.x", new Object());
+            System.getProperties().put(new Object(), "x");
+            Config.load(new String[0]);
 
-        System.setProperties(defaultProps);
+            assertThat(Config.get("a", 0)).isEqualTo(1);
+            assertThat(Config.get("b", false)).isTrue();
+            assertThat(Config.get("d", 0)).isEqualTo(3);
+            assertThat(Config.get("e", null)).isEqualTo("a b");
+        } finally {
+            System.setProperties(propertiesBackup);
+        }
     }
 
     @Test
