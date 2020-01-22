@@ -23,6 +23,9 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+/**
+ * Application is a SpringBootApplication and the main Class for ADCL, which configures itself and handles everything from configuration loading to database accessing.
+ */
 @SpringBootApplication
 @EnableNeo4jRepositories("database.repositories")
 @SpringBootConfiguration
@@ -45,9 +48,6 @@ public class Application {
 
         Collection<PackageInformation> packages = extractor.analyseClasses(alg.getList().stream()
                 .map(File::getAbsolutePath).collect(Collectors.toList()));
-
-        //Writing Analyse to a File
-        DependencyListWriter.writeListToFile(packages, Config.get("report.destination", "report"), "report");
 
         //Starting Database Service
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
@@ -91,6 +91,11 @@ public class Application {
         ctx.close();
     }
 
+    /**
+     * Configures data access to a Neo4j database
+     *
+     * @return Configuration for Spring Data Neo4j
+     */
     @Bean
     public Configuration configuration() {
         Neo4jProperties properties = new Neo4jProperties();
