@@ -51,7 +51,7 @@ public class VersionInformation implements Comparable<VersionInformation> {
     }
 
     public boolean isBefore(@NotNull VersionInformation o) {
-        return compareTo(o) > 0;
+        return compareTo(o) < 0;
     }
 
     public boolean isAfter(@NotNull VersionInformation o) {
@@ -62,12 +62,12 @@ public class VersionInformation implements Comparable<VersionInformation> {
     public boolean equals(Object o) {
         if (!(o instanceof VersionInformation)) return false;
         VersionInformation vi = (VersionInformation) o;
-        return name.equals(vi.name) && Objects.equals(project, vi.project);
+        return name.equals(vi.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, project);
+        return Objects.hash(name);
     }
 
     @Override

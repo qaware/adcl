@@ -221,8 +221,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     @NotNull
     public P getParent() {
-        if (parent != null) return parent.getTo();
-        else throw new IllegalStateException(getPath() + " has no parent!");
+        return Objects.requireNonNull(parent, "parent of " + getName() + " is null").getTo();
     }
 
     /**
@@ -290,7 +289,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public Information<?> findByPath(@NotNull String path, @Nullable VersionInformation at) {
         if (!path.startsWith(name)) return null;
         path = path.substring(name.length());
-        if (path.startsWith(".")) path = path.substring(1);
+        if (path.startsWith(".") || path.startsWith("$")) path = path.substring(1);
         if (path.isEmpty()) return this;
         String finalPath = path;
         return getDirectChildren(at).stream().map(i -> i.findByPath(finalPath, at)).filter(Objects::nonNull).findAny().orElse(null);

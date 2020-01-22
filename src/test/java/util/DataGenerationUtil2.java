@@ -12,15 +12,25 @@ public class DataGenerationUtil2 {
     private DataGenerationUtil2() {
     }
 
+    @SafeVarargs
+    @NotNull
+    public static RootInformation root(Ref<?, RootInformation>... projects) {
+        RootInformation res = new RootInformation();
+        Stream.of(projects).forEach(f -> f.apply(res));
+        return res;
+    }
+
     /**
      * create a version point
      */
     @NotNull
     @SafeVarargs
-    public static ProjectInformation project(String name, boolean internal, Ref<?, ProjectInformation>... packages) {
-        ProjectInformation res = new ProjectInformation(name, internal);
-        Stream.of(packages).forEach(f -> f.apply(res));
-        return res;
+    public static Ref<ProjectInformation, RootInformation> project(String name, boolean internal, String initialVersion, Ref<?, ProjectInformation>... packages) {
+        return new Ref<>(root -> {
+            ProjectInformation res = new ProjectInformation(root, name, internal, initialVersion);
+            Stream.of(packages).forEach(f -> f.apply(res));
+            return res;
+        });
     }
 
     /**

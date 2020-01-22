@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.Property;
 import util.CompareHelper;
-import util.Utils;
 
 import java.util.Objects;
 import java.util.Set;
@@ -17,8 +16,8 @@ public class RootInformation extends Information<RootInformation> {
     @Property
     private final int modelVersion = 2;
 
-    public RootInformation(@NotNull RootInformation parent) {
-        super(parent, "");
+    public RootInformation() {
+        super("");
     }
 
     public int getModelVersion() {
@@ -30,7 +29,7 @@ public class RootInformation extends Information<RootInformation> {
      */
     @NotNull
     public final Set<ProjectInformation> getProjects(@Nullable VersionInformation at) {
-        return Utils.cast(getDirectChildren(at), ProjectInformation.class);
+        return find(ProjectInformation.class, at);
     }
 
     // Overrides
