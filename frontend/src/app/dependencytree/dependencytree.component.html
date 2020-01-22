@@ -1,14 +1,24 @@
 <mat-form-field>
-  <mat-label>Changelog</mat-label>
-  <mat-select (selectionChange)="changeDependencyTree($event.value)">
-    <mat-option *ngFor="let id of database.changelogIds" [value]="id">
-      {{id}}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
+    <mat-label>Changelog</mat-label>
+        <mat-select (selectionChange)="changeDependencyTree($event.value)">
+          <mat-option *ngFor="let id of database.changelogIds" [value]="id">
+            {{id}}
+          </mat-option>
+        </mat-select>
+  </mat-form-field>
+
 <mat-form-field>
-  <input matInput placeholder="Search" (input)="filterChanged($event.target.value)">
+  <input #searchField matInput placeholder="Search" (input)="filterChanged($event.target.value) ">
 </mat-form-field>
+
+  <button mat-button [matMenuTriggerFor]="searchFilterMenu">Add Search Scope</button>
+  <mat-menu #searchFilterMenu="matMenu">
+    <button mat-menu-item (click)="searchFilterSelected(FilterType.Package)">Package scope</button>
+    <button mat-menu-item (click)="searchFilterSelected(FilterType.Class)">Class scope</button>
+    <button mat-menu-item (click)="searchFilterSelected(FilterType.Method)">Method scope</button>
+    <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
+  </mat-menu>
+
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
   <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding >
     <button mat-icon-button disabled></button>
