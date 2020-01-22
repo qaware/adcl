@@ -269,6 +269,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     /**
      * Returns all direct children which are fitting to the given type at given version
      */
+    @NotNull
     public <T extends Information<?>> Set<T> find(@NotNull Class<T> clazz, @Nullable VersionInformation at) {
         return Utils.cast(getDirectChildren(at), clazz);
     }
@@ -277,8 +278,22 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * Returns *all* children which are fitting to the given type
      * e.g. findAll(MethodInformation.class, null) returns all methods in the class/package/project at any time
      */
+    @NotNull
     public <T extends Information<?>> Set<T> findAll(@NotNull Class<T> clazz, @Nullable VersionInformation at) {
         return Utils.cast(getAllChildren(at), clazz);
+    }
+
+    /**
+     * Tries to find an information by its sub-path. If you want to match a whole path use {@code getRoot().findByPath(path, at)}
+     */
+    @Nullable
+    public Information<?> findByPath(@NotNull String path, @Nullable VersionInformation at) {
+        if (!path.startsWith(name)) return null;
+        path = path.substring(name.length());
+        if (path.startsWith(".")) path = path.substring(1);
+        if (path.isEmpty()) return this;
+        String finalPath = path;
+        return getDirectChildren(at).stream().map(i -> i.findByPath(finalPath, at)).filter(Objects::nonNull).findAny().orElse(null);
     }
 
     ////////// DEFAULT //////////

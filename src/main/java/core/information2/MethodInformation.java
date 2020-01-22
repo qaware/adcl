@@ -3,6 +3,9 @@ package core.information2;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.annotation.NodeEntity;
 
+/**
+ * An information about a method
+ */
 @NodeEntity
 public class MethodInformation extends Information<ClassInformation<?>> {
     public MethodInformation(@NotNull ClassInformation<?> parent, @NotNull String name) {
@@ -14,6 +17,9 @@ public class MethodInformation extends Information<ClassInformation<?>> {
         return Type.METHOD;
     }
 
+    /**
+     * Whether this method is a constructor
+     */
     public boolean isConstructor() {
         return getName().startsWith("<");
     }

@@ -2,6 +2,7 @@ package core.information2;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.PostLoad;
 import org.neo4j.ogm.annotation.Properties;
 import org.neo4j.ogm.annotation.RelationshipEntity;
@@ -12,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * A {@link DependencyInformation} which also stores remote version names for each version
+ */
 @RelationshipEntity("PomDependency")
 public class PomDependencyInformation extends DependencyInformation<ProjectInformation> {
     @Properties(prefix = "remoteVersions")
@@ -30,16 +34,32 @@ public class PomDependencyInformation extends DependencyInformation<ProjectInfor
         super(from, to);
     }
 
+    /**
+     * Initialize remoteVersionMap after database initialization
+     */
     @PostLoad
     private void postLoad() {
         remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, getFrom().getProject()), new VersionInformation(r, getTo().getProject())));
     }
 
+    /**
+     * Adds a remote version marker at given version
+     */
     public void addVersionMarker(@NotNull VersionInformation version, @NotNull VersionInformation remoteVersion) {
         if (!remoteVersion.getProject().equals(getTo().getProject()))
             throw new IllegalArgumentException("Project of remoteVersion (" + remoteVersion.getProject().getName() + ") does not fit to dependency project (" + getTo().getProject().toString() + ")");
         remoteVersionMap.put(version, remoteVersion);
     }
+
+    /**
+     * Retrieves a remote version marker at given version
+     */
+    @Nullable
+    public VersionInformation getVersionAt(@NotNull VersionInformation at) {
+        return remoteVersionMap.get(at);
+    }
+
+    // overrides
 
     @SuppressWarnings("java:S2159" /* wrong, types might be related */)
     @Contract(value = "null -> false", pure = true)

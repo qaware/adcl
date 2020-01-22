@@ -12,12 +12,17 @@ import util.CompareHelper;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A Information about a project with Root as parent
+ */
 @NodeEntity
 public class ProjectInformation extends Information<RootInformation> {
     @Convert(VersionInformation.Converter.class)
-    public final List<VersionInformation> versions = new ArrayList<>();
+    private final List<VersionInformation> versions = new ArrayList<>();
+
     @Property("internal")
     private final boolean isInternal;
+
     @Relationship(type = "PomDependency")
     private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
 
@@ -26,6 +31,9 @@ public class ProjectInformation extends Information<RootInformation> {
         this.isInternal = isInternal;
     }
 
+    /**
+     * Initialize version informations correctly after being loaded from database
+     */
     @PostLoad
     private void postLoad() {
         versions.forEach(v -> v.postLoad(this));
@@ -35,8 +43,9 @@ public class ProjectInformation extends Information<RootInformation> {
      * Returns all *own* Pom Dependencies at a given version. If version is null dependencies at any time are returned.
      */
     @NotNull
-    public final Set<ProjectInformation> getPomDependencies(@Nullable VersionInformation at) {
-        return pomDependencies.stream().filter(d -> at == null || d.exists(at)).map(RelationshipInformation::getTo).collect(Collectors.toSet());
+    public final Set<VersionInformation> getPomDependencies(@Nullable VersionInformation at) {
+        //noinspection ConstantConditions TODO work on PomDependencyInformation so verionInfo and remoteVersionMap are in sync
+        return pomDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.getVersionAt(at)).collect(Collectors.toSet());
     }
 
     /**
@@ -50,6 +59,9 @@ public class ProjectInformation extends Information<RootInformation> {
         pomDependencies.add(dep);
     }
 
+    /**
+     * Whether a Project is an internal project (a project analysed by adcl)
+     */
     public boolean isInternal() {
         return isInternal;
     }
@@ -58,9 +70,14 @@ public class ProjectInformation extends Information<RootInformation> {
         return versions;
     }
 
+    /**
+     * Returns the latest version information in the project
+     */
     public VersionInformation getLatestVersion() {
         return versions.get(versions.size() - 1);
     }
+
+    // Overrides
 
     @Override
     public @NotNull Type getType() {
