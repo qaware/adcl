@@ -1,9 +1,7 @@
 package core;
 
-import core.information.ChangelogDependencyInformation;
-import core.information.ClassInformation;
-import core.information.MethodInformation;
-import core.information.PackageInformation;
+import core.information.*;
+import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -13,13 +11,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DiffExtractorTest {
 
-    private static Collection<PackageInformation> packageOld;
-    private static Collection<PackageInformation> packageNew;
+    private static VersionInformation before;
+    private static VersionInformation after;
 
     @BeforeAll
     static void beforeAll() {
-        packageOld = new ArrayList<>();
-        packageNew = new ArrayList<>();
+        Config.load(Arrays.append(new String[0], "project.commit.current=test"));
+        Collection<PackageInformation> packageOld = new ArrayList<>();
+        Collection<PackageInformation> packageNew = new ArrayList<>();
 
         //create packages
         PackageInformation packageOldOne = new PackageInformation("packageone");
@@ -82,12 +81,14 @@ class DiffExtractorTest {
         dsetFour.add(depedencyFour);
         classCopyOneMethodCopyOne.setMethodDependencies(dsetFour);
 
+        before = new VersionInformation(packageOld, "before");
+        after = new VersionInformation(packageNew, "after", before);
     }
 
     @Test
     void getChanged() {
-        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageNew);
-        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelist());
+        DiffExtractor diffExtractor = new DiffExtractor(before, after);
+        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelogInformation().getChangelog());
         Collections.sort(change);
 
         assertThat(change).isNotEmpty();
@@ -101,19 +102,19 @@ class DiffExtractorTest {
 
     @Test
     void analyseSame() {
-        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageOld);
+        DiffExtractor diffExtractor = new DiffExtractor(before, before);
 
-        assertThat(diffExtractor.getChangelist()).isEmpty();
+        assertThat(diffExtractor.getChangelogInformation().getChangelog()).isEmpty();
     }
 
 
     @Test
     void reverseChangelog() {
-        DiffExtractor diffExtractor = new DiffExtractor(packageOld, packageNew);
-        DiffExtractor reverseExtractor = new DiffExtractor(packageNew, packageOld);
+        DiffExtractor diffExtractor = new DiffExtractor(before, after);
+        DiffExtractor reverseExtractor = new DiffExtractor(after, before);
 
-        ArrayList<PackageInformation> changelog = new ArrayList<>(diffExtractor.getChangelist());
-        ArrayList<PackageInformation> reverseChangelog = new ArrayList<>(reverseExtractor.getChangelist());
+        ArrayList<PackageInformation> changelog = new ArrayList<>(diffExtractor.getChangelogInformation().getChangelog());
+        ArrayList<PackageInformation> reverseChangelog = new ArrayList<>(reverseExtractor.getChangelogInformation().getChangelog());
 
         assertThat(changelog).isNotEmpty();
         assertThat(changelog.get(0).getPackageName()).isEqualTo("packageone");
