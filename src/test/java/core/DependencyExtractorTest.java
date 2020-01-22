@@ -98,7 +98,7 @@ class DependencyExtractorTest {
 
     @Test
     void analyseClasses() {
-        VersionInformation analysedClasses = depEx.analyseClasses(classFiles);
+        VersionInformation analysedClasses = depEx.analyseClasses(classFiles, "test");
 
         assertThat(analysedClasses.getPackageInformations()).isEqualTo(cmpData());
     }

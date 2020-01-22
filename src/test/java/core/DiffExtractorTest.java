@@ -88,7 +88,7 @@ class DiffExtractorTest {
     @Test
     void getChanged() {
         DiffExtractor diffExtractor = new DiffExtractor(before, after);
-        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelist());
+        ArrayList<PackageInformation> change = new ArrayList<>(diffExtractor.getChangelogInformation().getChangelog());
         Collections.sort(change);
 
         assertThat(change).isNotEmpty();
@@ -104,7 +104,7 @@ class DiffExtractorTest {
     void analyseSame() {
         DiffExtractor diffExtractor = new DiffExtractor(before, before);
 
-        assertThat(diffExtractor.getChangelist()).isEmpty();
+        assertThat(diffExtractor.getChangelogInformation().getChangelog()).isEmpty();
     }
 
 
@@ -113,8 +113,8 @@ class DiffExtractorTest {
         DiffExtractor diffExtractor = new DiffExtractor(before, after);
         DiffExtractor reverseExtractor = new DiffExtractor(after, before);
 
-        ArrayList<PackageInformation> changelog = new ArrayList<>(diffExtractor.getChangelist());
-        ArrayList<PackageInformation> reverseChangelog = new ArrayList<>(reverseExtractor.getChangelist());
+        ArrayList<PackageInformation> changelog = new ArrayList<>(diffExtractor.getChangelogInformation().getChangelog());
+        ArrayList<PackageInformation> reverseChangelog = new ArrayList<>(reverseExtractor.getChangelogInformation().getChangelog());
 
         assertThat(changelog).isNotEmpty();
         assertThat(changelog.get(0).getPackageName()).isEqualTo("packageone");

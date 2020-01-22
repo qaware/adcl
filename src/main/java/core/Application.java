@@ -1,9 +1,10 @@
 package core;
 
-import core.information.ChangelogInformation;
 import core.information.VersionInformation;
 import database.services.GraphDBService;
 import org.neo4j.ogm.config.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @ComponentScan(basePackages = "database.*")
 public class Application {
     private static final String COMMIT_NA = "COMMIT_NA";
+    private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) throws IOException {
         //Loading config
@@ -42,13 +44,22 @@ public class Application {
         DependencyExtractor extractor = new DependencyExtractor();
 
         //Instantiating current VersionInformation
+        String currentName = COMMIT_NA;
+        if (Config.valuePresent("project.commit.current")) {
+            currentName = Config.get("project.commit.current", COMMIT_NA);
+        } else if (Config.valuePresent("project.commit")) {
+            LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
+            currentName = Config.get("project.commit", COMMIT_NA);
+        }
+
+        if (currentName.equals(COMMIT_NA))
+            throw new NullPointerException("Commit name is missing, you have to specify it in project.commit.current");
         VersionInformation currentVersion = extractor.analyseClasses(alg.getList().stream()
-                .map(File::getAbsolutePath).collect(Collectors.toList()));
+                .map(File::getAbsolutePath).collect(Collectors.toList()), currentName);
 
         //Starting Database Service
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
         GraphDBService graphDBService = ctx.getBean(GraphDBService.class);
-
 
 
         //Getting previous Commit
@@ -66,7 +77,7 @@ public class Application {
             DiffExtractor diffExtractor = new DiffExtractor(previousVersion, currentVersion);
 
             //Save the Analysis in the Database
-            graphDBService.saveChangelog(new ChangelogInformation(diffExtractor.getChangelist(), previousVersion, currentVersion));
+            graphDBService.saveChangelog(diffExtractor.getChangelogInformation());
         }
 
         //Save the Version in the Database

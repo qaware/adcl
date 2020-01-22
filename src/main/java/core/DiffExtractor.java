@@ -2,7 +2,10 @@ package core;
 
 import core.information.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 
 /**
@@ -11,6 +14,7 @@ import java.util.*;
  */
 public class DiffExtractor {
     private final DependencyPool changelistDependencyPool = new DependencyPool();
+    private final ChangelogInformation changelogInformation;
 
     /**
      * Instantiates a new DiffExtractor.
@@ -22,6 +26,7 @@ public class DiffExtractor {
         Set<PackageInformation> before = new TreeSet<>(old.getPackageInformations());
         Set<PackageInformation> after = new TreeSet<>(analysed.getPackageInformations());
         diff(before, after);
+        changelogInformation = new ChangelogInformation(changelistDependencyPool.retrievePackageInformation(), old, analysed);
     }
 
     /**
@@ -227,12 +232,12 @@ public class DiffExtractor {
     }
 
     /**
-     * Gets the changelist.
+     * Gets the ChangelogInformation.
      *
-     * @return the changelist in form of a collection
+     * @return the changelist in form of a Changelog with the versions, it compares.
      */
-    public Collection<PackageInformation> getChangelist() {
-        return changelistDependencyPool.retrievePackageInformation();
+    public ChangelogInformation getChangelogInformation() {
+        return changelogInformation;
     }
 
     /**

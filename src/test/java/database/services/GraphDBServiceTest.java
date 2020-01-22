@@ -52,7 +52,7 @@ public class GraphDBServiceTest {
                 .newGraphDatabase();
 
         List<String> classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
-        version = new DependencyExtractor().analyseClasses(classFiles);
+        version = new DependencyExtractor().analyseClasses(classFiles, "test");
     }
 
     @AfterAll
@@ -65,7 +65,8 @@ public class GraphDBServiceTest {
 
     @Test
     void saveChangelogTest() {
-        Collection<PackageInformation> changes = new DiffExtractor(version, new VersionInformation(new ArrayList<>(), "Empty")).getChangelist();
+        Collection<PackageInformation> changes = new DiffExtractor(version, new VersionInformation(new ArrayList<>(), "Empty"))
+                .getChangelogInformation().getChangelog();
         ChangelogInformation changelogInformation = new ChangelogInformation(changes, null, null);
         graphDBService.saveChangelog(changelogInformation);
 
@@ -91,7 +92,7 @@ public class GraphDBServiceTest {
 
     @Test
     void saveVersionTest() {
-        graphDBService.saveVersion(new VersionInformation(version.getPackageInformations(), "test"));
+        graphDBService.saveVersion(version);
         VersionInformation version = graphDBService.getVersionRepository().findVersionInformationByVersionName("test");
         assertThat(version).isNotNull();
 
@@ -114,9 +115,16 @@ public class GraphDBServiceTest {
 
     @Test
     void analyseSame() {
-        graphDBService.saveVersion(new VersionInformation(version.getPackageInformations(), "test"));
-        DiffExtractor diffExtractor = new DiffExtractor(version, graphDBService.getVersion("test"));
+        VersionInformation eproVersion = null;
+        try {
+            eproVersion = new DependencyExtractor().analyseClasses(Files.walk(Paths.get("src", "test", "resources", "testclassfiles3", "epro1"))
+                    .filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList()), "epro");
+        } catch (IOException ignored) {
+        }
+        assert eproVersion != null;
+        graphDBService.saveVersion(eproVersion);
+        DiffExtractor diffExtractor = new DiffExtractor(eproVersion, graphDBService.getVersion("epro"));
 
-        assertThat(diffExtractor.getChangelist()).isEmpty();
+        assertThat(diffExtractor.getChangelogInformation().getChangelog()).isEmpty();
     }
 }
