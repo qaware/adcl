@@ -77,7 +77,7 @@ project.commit.current=versionRef2
 or you can launch it by giving ADCL the informations directly via the commandline.  
 You can also decide to use a mix of everything.  
 
-###Install plugin as a 3rd party JAR  
+### Install plugin as a 3rd party JAR  
 ```shell script
 mvn install:install-file -Dfile="path/to/adcl-thin.jar" -DgroupId="de.thbingen" -DartifactId="adcl" -Dversion="1.0-SNAPSHOT" -Dpackaging="maven-plugin"
 ```
