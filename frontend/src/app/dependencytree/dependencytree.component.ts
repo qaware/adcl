@@ -123,16 +123,16 @@ export class DependencyTreeDatabase {
     const queryMethodInformation = 'MATCH (b:VersionInformation{versionName: {before}})-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
       '(a:VersionInformation{versionName: {after}}) WITH n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) ' +
       'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
-      'WITH c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) return m.name, c.className;';
+      'WITH c, p MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) return m.name, c.className, p.packageName;';
 
     // Query fetching the dependency information regarding methods related to the changelog
     const queryDependencyInformationMethod = 'MATCH (b:VersionInformation{versionName: {before}})' +
       '-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
       '(a:VersionInformation{versionName: {after}}) WITH n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) ' +
       'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
-      'WITH c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) ' +
-      'WITH m MATCH (dm:ChangelogDependencyInformation)<-[r:USES]-(m:MethodInformation)' +
-      'return dm.name, dm.changeStatus, m.name';
+      'WITH p, c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) ' +
+      'WITH p, m MATCH (dm:ChangelogDependencyInformation)<-[r:USES]-(m:MethodInformation)' +
+      'return dm.name, dm.changeStatus, m.name, p.packageName;';
 
 
     const packageInformation: any[] = [{text: '', code: 'root'}];
@@ -166,7 +166,7 @@ export class DependencyTreeDatabase {
         const obj: { [k: string]: any } = {};
         obj.text = cInfo[0].match(/[^.]*$/)[0];
         obj.path = cInfo[0];
-        obj.code = root + '.' + cInfo[0];
+        obj.code = root + '.' + cInfo[2] + '.' + obj.text;
         obj.service = cInfo[1];
         obj.package = cInfo[2];
         obj.label = 'Class';
@@ -179,7 +179,8 @@ export class DependencyTreeDatabase {
       methodInfo.forEach(mInfo => {
         const obj: { [k: string]: any } = {};
         obj.text = mInfo[0].match(/\..[^.]*\(.*\)/)[0].substr(1);
-        obj.code = root + '.' + mInfo[1] + '.' + obj.text;
+        const midPath = (mInfo[1] as string).startsWith(mInfo[2]) ? mInfo[1] : mInfo[2] + '.' + mInfo[1];
+        obj.code = root + '.' + midPath + '.' + obj.text;
         obj.path = mInfo[0];
         obj.className = mInfo[1];
         obj.label = 'Method';
@@ -205,7 +206,8 @@ export class DependencyTreeDatabase {
         const obj: { [k: string]: any } = {};
         obj.text = dcInfo[0];
         obj.path = dcInfo[0];
-        obj.code = root + '.' + dcInfo[2] + status + '.' + 0;
+        const midPath = (dcInfo[2] as string).startsWith(dcInfo[3]) ? dcInfo[2] : dcInfo[3] + '.' + dcInfo[2];
+        obj.code = root + '.' + midPath + status + '.' + 0;
         obj.changeStatus = dcInfo[1];
         obj.usedByMethod = dcInfo[2];
         obj.label = (status === '.added') ? '🔒 Dependency' : '🔓 Dependency';
@@ -361,6 +363,7 @@ export class DependencytreeComponent {
     flatNode.label = node.label;
     flatNode.filterType = node.filterType;
     flatNode.expandable = node.children && node.children.length > 0;
+
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
