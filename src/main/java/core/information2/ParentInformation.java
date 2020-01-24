@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
  * Represents an edge on the graph describing the structural hierarchy of the java project
  */
 @RelationshipEntity("Parent")
-public class ParentInformation<T extends Information<?>> extends RelationshipInformation<T> {
+public final class ParentInformation<T extends Information<?>> extends RelationshipInformation<T> {
     ParentInformation(@NotNull Information<T> from, @NotNull T to) {
         super(from, to);
     }
