@@ -52,7 +52,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      * Initialize versionInternal after database is loaded
      */
     @PostLoad
-    private void postLoad() {
+    void postLoad() {
         versionInfoInternal.forEach((v, c) -> versionInfoBacking.put(new VersionInformation(v, getOwner().getProject()), c));
     }
 

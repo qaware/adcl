@@ -17,7 +17,7 @@ import java.util.Objects;
  * A {@link DependencyInformation} which also stores remote version names for each version
  */
 @RelationshipEntity("PomDependency")
-public class PomDependencyInformation extends DependencyInformation<ProjectInformation> {
+public final class PomDependencyInformation extends RelationshipInformation<ProjectInformation> {
     @Properties(prefix = "remoteVersions")
     private final Map<String, String> remoteVersionMapInternal = new HashMap<>();
 
@@ -37,9 +37,16 @@ public class PomDependencyInformation extends DependencyInformation<ProjectInfor
     /**
      * Initialize remoteVersionMap after database initialization
      */
+    @Override
     @PostLoad
-    private void postLoad() {
+    void postLoad() {
+        super.postLoad();
         remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, getFrom().getProject()), new VersionInformation(r, getTo().getProject())));
+    }
+
+    @Override
+    Information<?> getOwner() {
+        return getFrom();
     }
 
     /**
