@@ -63,4 +63,8 @@ public class DatamodelCompareTest {
         assertThat(v1.isBefore(v2)).isTrue();
         assertThat(v2.isAfter(v1)).isTrue();
     }
+
+    //TODO (deep)compare two trees
+    //TODO compare different information classes a) of same type b) different type
+    //TODO for each node type for each property in node for test equal and not equal elements
 }
