@@ -4,7 +4,6 @@ import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.context.annotation.Lazy;
 
 import java.util.Collection;
 import java.util.Set;
@@ -22,11 +21,9 @@ public class ChangelogInformation {
     @Relationship(type = "CHANGELOG")
     private Set<PackageInformation> changelog;
 
-    @Lazy
     @Relationship(type = "BEFORE")
     private VersionInformation before;
 
-    @Lazy
     @Relationship(type = "AFTER")
     private VersionInformation after;
 
