@@ -20,8 +20,7 @@ public class ApplicationMojoTest extends AbstractMojoTestCase {
     public void testMojo() throws Exception {
         Exception e = runMojo(lookupMojo("start", Paths.get("src", "test", "resources", "pom2", "pom.xml")));
         assertNotNull(e);
-        assertNotNull(e.getCause());
-        assertEquals(e.getCause().getMessage(), "project.uri is not properly defined in config.properties");
+        assertEquals(e.getMessage(), "Application terminated with exit code 1");
     }
 
     public Mojo lookupMojo(String goal, Path configPath) throws Exception {

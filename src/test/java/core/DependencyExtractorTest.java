@@ -4,26 +4,18 @@ import core.information.ClassInformation;
 import core.information.MethodInformation;
 import core.information.PackageInformation;
 import core.information.VersionInformation;
-import org.bouncycastle.util.Arrays;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
 
 class DependencyExtractorTest {
     private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
-
-    private DependencyExtractor depEx;
-    private List<String> classFiles;
 
     @SuppressWarnings({"unused", "UnusedAssignment"})
     private static Set<PackageInformation> cmpData() {
@@ -89,16 +81,10 @@ class DependencyExtractorTest {
         return result;
     }
 
-    @BeforeEach
-    void setUp() throws IOException {
-        depEx = new DependencyExtractor();
-        classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
-        Config.load(Arrays.append(new String[0], "project.commit.current=test"));
-    }
-
     @Test
-    void analyseClasses() {
-        VersionInformation analysedClasses = depEx.analyseClasses(classFiles, "test");
+    void analyseClasses() throws IOException {
+        DependencyExtractor depEx = new DependencyExtractor();
+        VersionInformation analysedClasses = depEx.analyseClasses(TESTCLASS_FOLDER, "test");
 
         assertThat(analysedClasses.getPackageInformations()).isEqualTo(cmpData());
     }

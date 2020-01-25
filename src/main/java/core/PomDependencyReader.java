@@ -7,8 +7,10 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Makes a list with all dependencies from the pom.xml
@@ -26,31 +28,18 @@ public class PomDependencyReader {
 
     /**
      * Reads all dependencies from pom.xml file
-     * @return returns an arraylist with dependencies
+     *
+     * @return returns a set with dependencies
      */
     public Set<Dependency> readDependency() {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         try {
             Model model = reader.read(new FileReader(path));
-            Set<Dependency> dependencies = new HashSet<Dependency>();
-            dependencies.addAll(model.getDependencies());
-            return dependencies;
+            return new HashSet<>(model.getDependencies());
         }
         catch(XmlPullParserException | IOException ex) {
-            LOGGER.info(ex.getMessage());
+            LOGGER.error(ex.getMessage(), ex);
         }
         return null;
-    }
-
-    /**
-     * Prints an arraylist out
-     */
-    public void printListDependency(){
-        try {
-            readDependency().forEach(dependency -> LOGGER.info(dependency.toString()));
-        }
-        catch(Exception ex){
-            LOGGER.info(ex.getMessage());
-        }
     }
 }

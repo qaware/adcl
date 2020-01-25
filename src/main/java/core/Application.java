@@ -8,54 +8,49 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.neo4j.Neo4jProperties;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 /**
  * Application is a SpringBootApplication and the main Class for ADCL, which configures itself and handles everything from configuration loading to database accessing.
  */
 @SpringBootApplication
-@EnableNeo4jRepositories("database.repositories")
 @SpringBootConfiguration
 @ComponentScan(basePackages = "database.*")
+@EnableNeo4jRepositories("database.repositories")
+@EntityScan("core.information")
 public class Application {
-    private static final String COMMIT_NA = "COMMIT_NA";
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
-    public static void main(String[] args) throws IOException {
+    private static ApplicationConfig appConfig;
+
+    public static void main(String[] args) {
+        System.exit(launch(args));
+    }
+
+    public static int launch(String[] args) {
         //Loading config
         Config.load(args);
 
-        //Analysing current version
-        Path scanLocation = Config.getPath("project.uri", null);
-        if (scanLocation == null) throw new IOException("project.uri is not properly defined in config.properties");
-
-        ClassCollector alg = new ClassCollector(scanLocation.toString());
-        alg.generateFileList();
-        DependencyExtractor extractor = new DependencyExtractor();
-
-        //Instantiating current VersionInformation
-        String currentName = COMMIT_NA;
-        if (Config.valuePresent("project.commit.current")) {
-            currentName = Config.get("project.commit.current", COMMIT_NA);
-        } else if (Config.valuePresent("project.commit")) {
-            LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
-            currentName = Config.get("project.commit", COMMIT_NA);
+        try {
+            appConfig = new ApplicationConfig();
+        } catch (ApplicationConfig.ConfigurationException configurationException) {
+            return 1;
         }
 
-        if (currentName.equals(COMMIT_NA))
-            throw new NullPointerException("Commit name is missing, you have to specify it in project.commit.current");
-        VersionInformation currentVersion = extractor.analyseClasses(alg.getList().stream()
-                .map(File::getAbsolutePath).collect(Collectors.toList()), currentName);
+        VersionInformation currentVersion;
+        try {
+            currentVersion = new DependencyExtractor().analyseClasses(appConfig.scanLocation, appConfig.currentVersionName);
+        } catch (IOException e) {
+            LOGGER.error("Could not analyse current class structure", e);
+            return 1;
+        }
 
         //Starting Database Service
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
@@ -64,13 +59,16 @@ public class Application {
 
         //Getting previous Commit
         VersionInformation previousVersion;
-        String previousCommitName = Config.get("project.commit.previous", COMMIT_NA);
+        if (appConfig.previousVersionName == null) {
+            previousVersion = graphDBService.getVersionRepository().findVersionInformationByVersionName(graphDBService.getVersionRepository().findLatestVersion());
+        } else {
+            previousVersion = graphDBService.getVersion(appConfig.previousVersionName);
+            if (previousVersion == null) {
+                LOGGER.error("Version {} does not exist in the database. Not creating diff", appConfig.previousVersionName);
+            }
+        }
 
-        if (!previousCommitName.equals(COMMIT_NA)) {
-            previousVersion = graphDBService.getVersion(previousCommitName);
-            if (previousVersion == null)
-                throw new NoSuchElementException("Commit " + previousCommitName + " does not exist in the database");
-
+        if (previousVersion != null) {
             currentVersion.setPreviousVersion(previousVersion);
 
             //Analyse differences between current and previous Commit
@@ -84,6 +82,7 @@ public class Application {
         graphDBService.saveVersion(currentVersion);
 
         ctx.close();
+        return 0;
     }
 
     /**
@@ -91,13 +90,9 @@ public class Application {
      *
      * @return Configuration for Spring Data Neo4j
      */
+    @Profile("!test")
     @Bean
     public Configuration configuration() {
-        Neo4jProperties properties = new Neo4jProperties();
-        properties.setUri(Config.get("spring.data.neo4j.uri", "bolt://127.0.0.1:7687"));
-        properties.setUsername(Config.get("spring.data.neo4j.username", "neo4j"));
-        properties.setPassword(Config.get("spring.data.neo4j.password", "neo4j"));
-        return properties.createConfiguration();
+        return appConfig.neo4jConfig;
     }
-
 }
