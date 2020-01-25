@@ -38,6 +38,13 @@ export enum FilterType {
   Dependency = 'd'
 }
 
+/** Display options */
+export enum DisplayOption {
+  Standard,
+  CompactMiddlePackages,
+  FlattenPackages
+}
+
 /**
  * Dependency database, it can build a tree structured Json object.
  * Each node in Json object represents a changelog item.
@@ -47,6 +54,8 @@ export class DependencyTreeDatabase {
   dataChange = new BehaviorSubject<TreeItemNode[]>([]);
   treeData: any[];
   changelogIds: any[];
+  root = 'root';
+  selectedDisplayOption: DisplayOption;
 
   constructor(private neo4j: AngularNeo4jService) {
     this.initialize();
@@ -61,9 +70,8 @@ export class DependencyTreeDatabase {
     // Build the tree nodes from Json object. The result is a list of `changelog notes` with nested
     this.connectToDatabase();
     this.loadChangelogIds();
-    const data = this.buildDependencyTree(this.treeData, 'root');
-    // Notify the change.
-    this.dataChange.next(data);
+    // TODO load saved options here
+    this.selectedDisplayOption = DisplayOption.Standard;
   }
 
   /**
@@ -135,22 +143,21 @@ export class DependencyTreeDatabase {
       'return dm.name, dm.changeStatus, m.name, p.packageName;';
 
 
-    const packageInformation: any[] = [{text: '', code: 'root'}];
+    const packageInformation: any[] = [{text: '', code: this.root}];
     const classInformation: any[] = [];
     const methodInformation: any[] = [];
     const dependencyInformationMethod: any[] = [];
-    const root = 'root';
     // executing the queries and saving the data in appropriate way for display in tree view
     const packageResult = this.neo4j.run(queryPackageInformation, params).then(packageInfo => {
       packageInfo.forEach(pInfo => {
-        let code = root;
+        let code = this.root;
         const splitPackageName = (pInfo[0] as string).toString().split('.');
         splitPackageName.forEach((pn) => {
           code = code + '.' + pn;
           if (packageInformation.find(e => e.code === code) === undefined) {
             const obj: { [k: string]: any } = {};
             obj.text = pn;
-            obj.path = code;
+            obj.path = code.substr(this.root.length + 1);
             obj.code = code;
             code = obj.code;
             obj.label = 'Package';
@@ -166,7 +173,7 @@ export class DependencyTreeDatabase {
         const obj: { [k: string]: any } = {};
         obj.text = cInfo[0].match(/[^.]*$/)[0];
         obj.path = cInfo[0];
-        obj.code = root + '.' + cInfo[2] + '.' + obj.text;
+        obj.code = this.root + '.' + cInfo[2] + '.' + obj.text;
         obj.service = cInfo[1];
         obj.package = cInfo[2];
         obj.label = 'Class';
@@ -180,7 +187,7 @@ export class DependencyTreeDatabase {
         const obj: { [k: string]: any } = {};
         obj.text = mInfo[0].match(/\..[^.]*\(.*\)/)[0].substr(1);
         const midPath = (mInfo[1] as string).startsWith(mInfo[2]) ? mInfo[1] : mInfo[2] + '.' + mInfo[1];
-        obj.code = root + '.' + midPath + '.' + obj.text;
+        obj.code = this.root + '.' + midPath + '.' + obj.text;
         obj.path = mInfo[0];
         obj.className = mInfo[1];
         obj.label = 'Method';
@@ -207,10 +214,10 @@ export class DependencyTreeDatabase {
         obj.text = dcInfo[0];
         obj.path = dcInfo[0];
         const midPath = (dcInfo[2] as string).startsWith(dcInfo[3]) ? dcInfo[2] : dcInfo[3] + '.' + dcInfo[2];
-        obj.code = root + '.' + midPath + status + '.' + 0;
+        obj.code = this.root + '.' + midPath + status + '.' + 0;
         obj.changeStatus = dcInfo[1];
         obj.usedByMethod = dcInfo[2];
-        obj.label = (status === '.added') ? '🔒 Dependency' : '🔓 Dependency';
+        obj.label = (status === '.added') ? '+ Dependency' : '- Dependency';
         obj.filterType = FilterType.Dependency;
         dependencyInformationMethod.push(obj);
       });
@@ -218,8 +225,7 @@ export class DependencyTreeDatabase {
     // wait for all query results before building the tree
     forkJoin(packageResult, classResult, methodResult, dependencyMethodResult).subscribe(_ => {
       this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyInformationMethod];
-      console.log(this.treeData);
-      const data = this.buildDependencyTree(this.treeData, 'root');
+      const data = this.buildDependencyTree(this.treeData, this.root, this.selectedDisplayOption);
       this.dataChange.next(data);
     });
   }
@@ -229,7 +235,7 @@ export class DependencyTreeDatabase {
    * The return value is the list of `TreeItemNode`.
    */
 
-  buildDependencyTree(obj: any[], level: string): TreeItemNode[] {
+  buildDependencyTree(obj: any[], level: string, displayOption: DisplayOption): TreeItemNode[] {
     return obj.filter(o =>
       (o.code as string).startsWith(level + '.')
       && (o.code.replace(/\(.*\)/g, '').match(/\./g) || []).length === (level.replace(/\(.*\)/g, '').match(/\./g) || []).length + 1
@@ -243,7 +249,14 @@ export class DependencyTreeDatabase {
         node.filterType = o.filterType;
         const children = obj.filter(so => (so.code as string).startsWith(level + '.'));
         if (children && children.length > 0) {
-          node.children = this.buildDependencyTree(children, o.code);
+          node.children = this.buildDependencyTree(children, o.code, displayOption);
+          // compact middle packages
+          if (displayOption === DisplayOption.CompactMiddlePackages && node.filterType === FilterType.Package
+            && node.children.length === 1 && node.children[0].filterType === FilterType.Package) {
+            node.name = node.name + '.' + node.children[0].name;
+            node.path = node.children[0].path;
+            node.children = node.children[0].children;
+          }
         }
         return node;
       });
@@ -271,7 +284,7 @@ export class DependencyTreeDatabase {
     }
 
     // Built the filtered tree
-    const data = this.buildDependencyTree(filteredTreeData, 'root');
+    const data = this.buildDependencyTree(filteredTreeData, this.root, this.selectedDisplayOption);
     // Notify the change.
     this.dataChange.next(data);
   }
@@ -348,7 +361,13 @@ export class DependencytreeComponent {
 
   hasChild = (_: number, nodeData: TreeItemFlatNode) => nodeData.expandable;
 
-  get FilterType() { return FilterType; }
+  get FilterType() {
+    return FilterType;
+  }
+
+  get DisplayOption() {
+    return DisplayOption;
+  }
 
   /** Transformer to convert nested node to flat node. Record the nodes in maps for later use. */
   transformer = (node: TreeItemNode, level: number) => {
@@ -383,6 +402,16 @@ export class DependencytreeComponent {
     } else {
       this.treeControl.collapseAll();
     }
+  }
+
+
+  /** Event-Handler triggered then displayOption is selected */
+  changeDisplayOption(displayOption: DisplayOption) {
+    // Built tree with selected display option
+    const data = this.database.buildDependencyTree(this.database.treeData, this.database.root, displayOption);
+    this.database.selectedDisplayOption = displayOption;
+    this.database.dataChange.next(data);
+
   }
 
   /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
