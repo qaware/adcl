@@ -94,7 +94,7 @@ export class DependencyTreeDatabase {
    */
   loadChangelogIds() {
     const queryChangelogId = 'MATCH (b:VersionInformation)-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-(a:VersionInformation) ' +
-      'RETURN b.versionName +\'-\'+ a.versionName;';
+      'RETURN b.versionName +\'&\'+ a.versionName;';
     this.neo4j.run(queryChangelogId).then(changelogInformationIds => {
       this.changelogIds = changelogInformationIds;
     });
@@ -106,7 +106,7 @@ export class DependencyTreeDatabase {
    */
   loadChangelogFromDatabase(value) {
     // split the identifier for use in queries
-    const split = (value as string).toString().split('-', 2);
+    const split = (value as string).toString().split('&', 2);
     const params = {before: split[0], after: split[1]};
 
     // Query fetching the package information related to the changelog
