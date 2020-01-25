@@ -79,7 +79,7 @@ You can also decide to use a mix of everything.
 
 ### Install plugin as a 3rd party JAR  
 ```shell script
-mvn install:install-file -Dfile="path/to/adcl-thin.jar" -DgroupId="de.thbingen" -DartifactId="adcl" -Dversion="1.0-SNAPSHOT" -Dpackaging="maven-plugin"
+jar xf adcl.jar META-INF/maven/de.thbingen/adcl/pom.xml; mvn install:install-file -Dfile="adcl.jar" -DpomFile="META-INF\maven\de.thbingen\adcl\pom.xml";
 ```
 ### Launch:  
 As a plugin with thin jar:  
