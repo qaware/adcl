@@ -54,28 +54,13 @@ public class DependencyExtractor {
     }
 
     /**
-     * Gets CtClass from the ClassPool, if the Class is not contained in the ClassPool it gets created and added to the ClassPool.
-     *
-     * @param classFile path to the classfile
-     * @return the corresponding CTClass
-     * @throws IOException then the class file on the given is not found
-     */
-    private CtClass getOrCreateCtClass(Path classFile) throws IOException {
-        CtClass ctClass = classPool.getOrNull(classFile.toString());
-        if (ctClass == null) {
-            ctClass = classPool.makeClass(Files.newInputStream(classFile));
-        }
-        return ctClass;
-    }
-
-    /**
      * Creates ClassInformation for a Class.
      *
-     * @param className Canonical name of the class
+     * @param classPath Path to class file
      * @throws IOException if class not contained in ClassPool and could not be loaded through the given path.
      */
-    private void createClassInformation(Path className) throws IOException {
-        CtClass ctClass = getOrCreateCtClass(className);
+    private void createClassInformation(Path classPath) throws IOException {
+        CtClass ctClass = classPool.makeClassIfNew(Files.newInputStream(classPath));
         boolean isService = ctClass.hasAnnotation("org.springframework.stereotype.Service");
         dependencyPool.getOrCreateClassInformation(ctClass.getName(), isService, true);
 
