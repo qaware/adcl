@@ -23,8 +23,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,8 +49,7 @@ public class GraphDBServiceTest {
                 .setConfig(bolt.listen_address, "localhost:7687")
                 .newGraphDatabase();
 
-        List<String> classFiles = Files.walk(TESTCLASS_FOLDER).filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList());
-        version = new DependencyExtractor().analyseClasses(classFiles, "test");
+        version = new DependencyExtractor().analyseClasses(TESTCLASS_FOLDER, "test");
     }
 
     @AfterAll
@@ -117,8 +114,7 @@ public class GraphDBServiceTest {
     void analyseSame() {
         VersionInformation eproVersion = null;
         try {
-            eproVersion = new DependencyExtractor().analyseClasses(Files.walk(Paths.get("src", "test", "resources", "testclassfiles3", "epro1"))
-                    .filter(p -> !Files.isDirectory(p)).map(Path::toString).collect(Collectors.toList()), "epro");
+            eproVersion = new DependencyExtractor().analyseClasses(Paths.get("src", "test", "resources", "testclassfiles3", "epro1"), "epro");
         } catch (IOException ignored) {
         }
         assert eproVersion != null;

@@ -6,7 +6,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -26,9 +25,8 @@ public class ApplicationMojo extends AbstractMojo {
             if (properties != null) {
                 properties.forEach((key, value) -> System.setProperty("adcl." + key.toString(), value.toString()));
             }
-            Application.main(new String[0]);
-        } catch (IOException e) {
-            throw new MojoExecutionException("Error while executing ADCL maven goal 'start'", e);
+            int exitCode = Application.launch(new String[0]);
+            if (exitCode != 0) throw new MojoExecutionException("Application terminated with exit code " + exitCode);
         } finally {
             System.setProperties(propertiesBackup);
         }

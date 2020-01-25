@@ -4,13 +4,16 @@ package core;
 import org.apache.maven.model.Dependency;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class PomDependencyReaderTest {
     private static PomDependencyReader reader;
+
     @BeforeAll
     static void setup() {
         reader = new PomDependencyReader("src/test/resources/pom/pom.xml");
@@ -36,8 +39,6 @@ public class PomDependencyReaderTest {
         ).map(Object::toString).collect(Collectors.toSet());
 
         assertThat(list).containsExactlyInAnyOrderElementsOf(newList);
-
-        reader.printListDependency();
     }
 
     private Dependency dependency(String artifact, String group, String version) {
