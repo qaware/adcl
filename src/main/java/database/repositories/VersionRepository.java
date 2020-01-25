@@ -17,6 +17,6 @@ public interface VersionRepository extends Neo4jRepository<VersionInformation, L
      */
     VersionInformation findVersionInformationByVersionName(String versionName);
 
-    @Query("match (n:VersionInformation) where not (n)<-[:FOLLOWED]-() return n")
-    VersionInformation findLatestVersion();
+    @Query("match (n:VersionInformation) where not (n)<-[:FOLLOWED]-() return n.versionName")
+    String findLatestVersion();
 }

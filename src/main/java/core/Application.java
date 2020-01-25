@@ -60,7 +60,7 @@ public class Application {
         //Getting previous Commit
         VersionInformation previousVersion;
         if (appConfig.previousVersionName == null) {
-            previousVersion = graphDBService.getVersionRepository().findLatestVersion();
+            previousVersion = graphDBService.getVersionRepository().findVersionInformationByVersionName(graphDBService.getVersionRepository().findLatestVersion());
         } else {
             previousVersion = graphDBService.getVersion(appConfig.previousVersionName);
             if (previousVersion == null) {
