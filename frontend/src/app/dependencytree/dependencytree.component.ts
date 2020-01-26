@@ -5,7 +5,6 @@ import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
 
-
 /**
  * Base Node for Tree item nodes
  */
@@ -70,7 +69,6 @@ export class DependencyTreeDatabase {
     // Build the tree nodes from Json object. The result is a list of `changelog notes` with nested
     this.connectToDatabase();
     this.loadChangelogIds();
-    // TODO load saved options here
     this.selectedDisplayOption = DisplayOption.Standard;
   }
 
@@ -236,11 +234,12 @@ export class DependencyTreeDatabase {
    */
 
   buildDependencyTree(obj: any[], level: string, displayOption: DisplayOption): TreeItemNode[] {
-    return obj.filter(o =>
+    const treeItemNodes: TreeItemNode[] = [];
+    obj.filter(o =>
       (o.code as string).startsWith(level + '.')
       && (o.code.replace(/\(.*\)/g, '').match(/\./g) || []).length === (level.replace(/\(.*\)/g, '').match(/\./g) || []).length + 1
     )
-      .map(o => {
+      .forEach(o => {
         const node = new TreeItemNode();
         node.name = o.text;
         node.code = o.code;
@@ -257,9 +256,26 @@ export class DependencyTreeDatabase {
             node.path = node.children[0].path;
             node.children = node.children[0].children;
           }
+          // flatten packages
+          if (displayOption === DisplayOption.FlattenPackages && node.filterType === FilterType.Package) {
+            const subpackages = node.children.filter(n => n.filterType === FilterType.Package);
+            node.children = node.children.filter(n => !(n.filterType === FilterType.Package));
+            subpackages.forEach(sp => {
+              const spNode: TreeItemNode = {...node};
+              spNode.children = sp.children;
+              spNode.path = sp.path;
+              spNode.name = spNode.name + '.' + sp.name;
+              treeItemNodes.push(spNode);
+            });
+            // skip adding empty package
+            if (node.children.length < 1) {
+              return;
+            }
+          }
         }
-        return node;
+        treeItemNodes.push(node);
       });
+    return treeItemNodes;
   }
 
   public filter(filterText: string) {
@@ -313,8 +329,6 @@ export class DependencyTreeDatabase {
     }
   }
 }
-
-
 
 /**
  * @title Dependency tree
