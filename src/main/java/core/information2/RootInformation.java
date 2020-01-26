@@ -62,6 +62,11 @@ public class RootInformation extends Information<RootInformation> {
     }
 
     @Override
+    public void setExists(@NotNull VersionInformation at, boolean exists) {
+        if (!exists) throw new UnsupportedOperationException("Root always exists");
+    }
+
+    @Override
     @SuppressWarnings("java:S1206" /* final super.equals uses hashCode */)
     public int hashCode() {
         return Objects.hash(super.hashCode(), modelVersion);

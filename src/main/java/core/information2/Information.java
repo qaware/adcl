@@ -108,6 +108,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return parent.exists(version);
     }
 
+    public void setExists(@NotNull VersionInformation at, boolean exists) {
+        assert parent != null;
+        parent.setExists(at, exists);
+    }
+
     ////////// DEPS //////////
 
     /**
@@ -147,7 +152,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final void addProjectDependency(@NotNull ProjectInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
         DependencyInformation<ProjectInformation> dep = new DependencyInformation<>(this, to);
-        dep.ensureStateAt(at, true);
+        dep.setExists(at, true);
         projectDependencies.add(dep);
     }
 
@@ -189,7 +194,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final void addPackageDependency(@NotNull PackageInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
         DependencyInformation<PackageInformation<?>> dep = new DependencyInformation<>(this, to);
-        dep.ensureStateAt(at, true);
+        dep.setExists(at, true);
         packageDependencies.add(dep);
     }
 
@@ -231,7 +236,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final void addClassDependency(@NotNull ClassInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
         DependencyInformation<ClassInformation<?>> dep = new DependencyInformation<>(this, to);
-        dep.ensureStateAt(at, true);
+        dep.setExists(at, true);
         classDependencies.add(dep);
     }
 
@@ -258,7 +263,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final void addMethodDependency(@NotNull MethodInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
         DependencyInformation<MethodInformation> dep = new DependencyInformation<>(this, to);
-        dep.ensureStateAt(at, true);
+        dep.setExists(at, true);
         methodDependencies.add(dep);
     }
 
@@ -269,7 +274,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     @NotNull
     public P getParent() {
-        return Objects.requireNonNull(parent, "parent of " + getName() + " is null").getTo();
+        assert parent != null;
+        return parent.getTo();
     }
 
     /**
@@ -360,11 +366,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
             int i = Utils.minIndexOf(subPath, ".$");
             result = i == -1 ? createChild(creationType, subPath) : createChild(typeOfNextSegment(subPath, creationType), subPath.substring(0, i)).findOrCreate(subPath.substring(i + 1), version, creationType);
         }
-        if (result.parent != null && version != null) result.parent.ensureStateAt(version, true);
+        if (version != null) result.setExists(version, true);
         return result;
     }
 
-    public Type typeOfNextSegment(@NotNull String subPath, @NotNull Type lastSegmentType) {
+    private Type typeOfNextSegment(@NotNull String subPath, @NotNull Type lastSegmentType) {
         String[] segments = subPath.split("\\.");
 
         if (lastSegmentType.isSuper(getType())) throw new IllegalArgumentException();

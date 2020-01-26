@@ -67,9 +67,5 @@ public class DatamodelVersioningTest {
         assertThat(v2.next()).isNull();
     }
 
-    @Test
-    void versioningTest() {
-        VersionInformation v2 = proj.addVersion("v2");
-        //proj.find()
-    }
+    //TODO all
 }

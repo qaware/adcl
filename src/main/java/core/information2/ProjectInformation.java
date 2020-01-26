@@ -65,7 +65,7 @@ public class ProjectInformation extends Information<RootInformation> {
     public final void addPomDependency(@NotNull VersionInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
         PomDependencyInformation dep = new PomDependencyInformation(this, to.getProject());
-        dep.ensureStateAt(at, true);
+        dep.setExists(at, true);
         dep.addVersionMarker(at, to);
         pomDependencies.add(dep);
     }

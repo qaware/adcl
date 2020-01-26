@@ -57,12 +57,12 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     @NotNull
-    public Information<?> getFrom() {
+    public final Information<?> getFrom() {
         return from;
     }
 
     @NotNull
-    public T getTo() {
+    public final T getTo() {
         return to;
     }
 
@@ -83,20 +83,28 @@ public abstract class RelationshipInformation<T extends Information<?>> {
 
     /**
      * ensures that at a given version the relation exists, setting an existence marker if not currently
-     * ATTENTION: will potentially override child existences (TODO)
+     * default implementation will override child existences
      */
-    public final void ensureStateAt(@NotNull VersionInformation version, boolean exists) {
-        if (exists(version) != exists) {
-            addVersionMarker(version, exists);
+    public void setExists(@NotNull VersionInformation version, boolean aim) {
+        boolean curr = exists(version);
+        if (aim != curr) {
+            VersionInformation previous = version.previous();
+            if (previous != null && exists(previous) == aim) {
+                // just modify existence so previous is restored
+                if (versionInfo.containsKey(version)) {
+                    versionInfo.remove(version);
+                } else {
+                    getOwner().setExists(version, aim);
+                }
+            } else {
+                versionInfo.put(version, aim);
+            }
         }
     }
 
-    /**
-     * add a new version marker into the version map, forcing the state
-     * ATTENTION: will potentially override child existences (TODO)
-     */
-    public final void addVersionMarker(@NotNull VersionInformation version, boolean exists) {
-        versionInfo.put(version, exists);
+    void setExistsNoInheritanceCheck(@NotNull VersionInformation version, boolean aim) {
+        boolean curr = exists(version);
+        if (aim != curr) versionInfo.put(version, aim);
     }
 
     /**
