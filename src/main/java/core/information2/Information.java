@@ -363,7 +363,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
             return i.findOrCreate(nextSub, version, creationType);
         }).filter(Objects::nonNull).findAny().orElse(null);
         if (result == null) {
-            int i = Utils.minIndexOf(subPath, ".$");
+            int paramsStart = subPath.indexOf('(');
+            int i = Utils.minIndexOf((paramsStart != -1) ? subPath.substring(0, paramsStart) : subPath, ".$");
             result = i == -1 ? createChild(creationType, subPath) : createChild(typeOfNextSegment(subPath, creationType), subPath.substring(0, i)).findOrCreate(subPath.substring(i + 1), version, creationType);
         }
         if (version != null) result.setExists(version, true);
@@ -371,6 +372,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     private Type typeOfNextSegment(@NotNull String subPath, @NotNull Type lastSegmentType) {
+        int paramsStart = subPath.indexOf('(');
+        if (paramsStart != -1) subPath = subPath.substring(0, paramsStart);
         String[] segments = subPath.split("\\.");
 
         if (lastSegmentType.isSuper(getType())) throw new IllegalArgumentException();
@@ -392,7 +395,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     public Information<?> createChild(Type childType, String name) {
         if (getType() == Type.ROOT)
-            throw new UnsupportedOperationException("createChild not implemented for ROOT type");
+            return new ProjectInformation((RootInformation) this, name, false, "<PLACEHOLDER>"); //TODO
         if (getType() == Type.PROJECT && childType == Type.PACKAGE)
             return new RootPackageInformation((ProjectInformation) this, name);
         if (getType() == Type.PROJECT && childType == Type.CLASS)
