@@ -13,7 +13,7 @@ import java.util.Objects;
 @NodeEntity
 public abstract class ClassInformation<P extends Information<?>> extends Information<P> {
     @Property
-    private final boolean isService;
+    private boolean isService;
 
     ClassInformation(P parent, String name, boolean isService) {
         super(parent, name);
@@ -25,6 +25,10 @@ public abstract class ClassInformation<P extends Information<?>> extends Informa
      */
     public boolean isService() {
         return isService;
+    }
+
+    public void setIsService(boolean isService) {
+        this.isService = isService;
     }
 
     // Overrides

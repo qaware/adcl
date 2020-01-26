@@ -1,91 +1,86 @@
 package core;
 
-import core.information.ClassInformation;
-import core.information.MethodInformation;
-import core.information.PackageInformation;
-import core.information.VersionInformation;
+import core.information2.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static util.DataGenerationUtil.*;
+import static util.DataGenerationUtil2.*;
 
 class DependencyExtractorTest {
     private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
 
-    @SuppressWarnings({"unused", "UnusedAssignment"})
-    private static Set<PackageInformation> cmpData() {
-        PackageInformation pa, pb, pd;
-        ClassInformation ca, cabase, cb, cc, cca, cci, ce;
-        MethodInformation caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
+    Ref<ProjectInformation, RootInformation> proj;
+    Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
+    Ref<ClassInformation<PackageInformation<?>>, PackageInformation<?>> ca, cabase, cb;
+    Ref<ClassInformation<ProjectInformation>, ProjectInformation> cc, ce;
+    Ref<ClassInformation<ClassInformation<?>>, ClassInformation<?>> cca, cci;
+    Ref<MethodInformation, ClassInformation<?>> caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
+    private RootInformation dm;
 
-        Set<PackageInformation> result = version(
-                pa = pi("packageA",
-                        ca = ci("packageA.ClassA", false, true,
-                                caC = mi("packageA.ClassA.<init>()"),
-                                caMa = mi("packageA.ClassA.methodA()"),
-                                caMb = mi("packageA.ClassA.methodB(packageB.ClassB)"),
-                                caE = mi("packageA.ClassA.empty()")
+    @BeforeEach
+    void generateDataModel() {
+        dm = root(
+                proj = project("proj", true, "v1.0.0",
+                        pa = pir("packageA",
+                                ca = cio("ClassA", false,
+                                        caC = mi("<init>()"),
+                                        caMa = mi("methodA()"),
+                                        caMb = mi("methodB(packageB.ClassB)"),
+                                        caE = mi("empty()")
+                                ),
+                                cabase = cio("ClassABase", false,
+                                        cabaseE = mi("empty()")
+                                )
                         ),
-                        cabase = ci("packageA.ClassABase", false, true,
-                                cabaseE = mi("packageA.ClassABase.empty()")
-                        )
-                ),
-                pb = pi("packageB",
-                        cb = ci("packageB.ClassB", true, true,
-                                cbC = mi("packageB.ClassB.<init>()"),
-                                cbCC = mi("packageB.ClassB.<clinit>()"),
-                                cbGia1 = mi("packageB.ClassB.getInstanceA()"),
-                                cbM = mi("packageB.ClassB.method(java.util.function.Predicate)"),
-                                cbL = mi("packageB.ClassB.lambda$getInstanceA$0(java.lang.String)"),
-                                cbGia2 = mi("packageB.ClassB.getInstanceA(java.lang.String,int,packageA.ClassA[])")
-                        )
-                ),
-                pd = pi("default",
-                        cc = ci("ClassC", false, true,
-                                ccC = mi("ClassC.<init>()"),
-                                ccRca = mi("ClassC.retrieveClassA()")
+                        pb = pir("packageB",
+                                cb = cio("ClassB", true,
+                                        cbC = mi("<init>()"),
+                                        cbCC = mi("<clinit>()"),
+                                        cbGia1 = mi("getInstanceA()"),
+                                        cbM = mi("method(java.util.function.Predicate)"),
+                                        cbL = mi("lambda$getInstanceA$0(java.lang.String)"),
+                                        cbGia2 = mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
+                                ),
+                                pis("emptyPackage")
                         ),
-                        cca = ci("ClassC$1", false, true,
-                                ccaC = mi("ClassC$1.<init>(ClassC)"),
-                                ccaGcc = mi("ClassC$1.getClassC()")
+                        cc = cir("ClassC", false,
+                                ccC = mi("<init>()"),
+                                ccRca = mi("retrieveClassA()"),
+                                cca = cii("1", false,
+                                        ccaC = mi("<init>(ClassC)"),
+                                        ccaGcc = mi("getClassC()")
+                                ),
+                                cci = cii("ClassCInner", false,
+                                        cciC = mi("<init>(ClassC)"),
+                                        cciRca = mi("retrieveClassA()")
+                                )
                         ),
-                        cci = ci("ClassC$ClassCInner", false, true,
-                                cciC = mi("ClassC$ClassCInner.<init>(ClassC)"),
-                                cciRca = mi("ClassC$ClassCInner.retrieveClassA()")
-                        ),
-                        ce = ci("ExternalClass", false, false,
-                                ceEm = mi("ExternalClass.extMethod()")
+                        ce = cir("ExternalClass", false,
+                                ceEm = mi("extMethod()")
                         )
                 )
         );
 
-        p(caMa, pb, cb, cbC);
-        p(caMb, pb, cb);
-        //TODO analyse LDC OpCodes
-        //p(cbC, ca);
-        p(cbCC, pa, ca, cabase, caC);
-        p(cbGia1, pa, ca, cabase);
-        p(ccC, pd, cca, ccaC);
-        p(ccaC, pd, cc);
-        p(ccRca, pa, pb, ca, cbGia1, cb);
-        p(ccaGcc, pd, cc, ccC);
-        p(cciC, pd, cc);
-        p(cciRca, pd, pa, ce, ca, ceEm);
-        p(cbGia2, pa, pb, ca, cb, cbM);
-
-        return result;
+        p(cbM, proj);
+        p(cbGia1, pa);
+        p(caMb, cb);
+        p(ccC, cca, ccaC);
+        p(caMa, cbC);
+        p(cbCC, caC);
     }
 
     @Test
     void analyseClasses() throws IOException {
-        DependencyExtractor depEx = new DependencyExtractor();
-        VersionInformation analysedClasses = depEx.analyseClasses(TESTCLASS_FOLDER, "test");
+        RootInformation root = new RootInformation();
+        ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
 
-        assertThat(analysedClasses.getPackageInformations()).isEqualTo(cmpData());
+        new DependencyExtractor(TESTCLASS_FOLDER, proj, proj.getLatestVersion()).analyseClasses();
+
+        assertThat(root.deepEquals(dm)).isTrue();
     }
 }

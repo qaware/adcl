@@ -10,6 +10,8 @@ import org.neo4j.ogm.annotation.NodeEntity;
 public class MethodInformation extends Information<ClassInformation<?>> {
     public MethodInformation(@NotNull ClassInformation<?> parent, @NotNull String name) {
         super(parent, name);
+        if (name.indexOf('(') == -1)
+            throw new IllegalArgumentException("Method name is missing parameters. Is: " + name);
     }
 
     @Override

@@ -8,6 +8,7 @@ import static util.DataGenerationUtil2.*;
 
 public class DatamodelVersioningTest {
     private RootInformation dm;
+    private ProjectInformation proj;
 
     @BeforeEach
     void generateDataModel() {
@@ -53,16 +54,22 @@ public class DatamodelVersioningTest {
                         )
                 )
         );
+        proj = dm.getProjects(null).iterator().next();
     }
 
     @Test
     void versionTraversalTest() {
-        ProjectInformation p = dm.getProjects(null).iterator().next();
-        VersionInformation v1 = p.getLatestVersion();
-        VersionInformation v2 = p.addVersion("2.0.0");
+        VersionInformation v1 = proj.getLatestVersion();
+        VersionInformation v2 = proj.addVersion("2.0.0");
         assertThat(v1.previous()).isNull();
         assertThat(v1.next()).isEqualTo(v2);
         assertThat(v2.previous()).isEqualTo(v1);
         assertThat(v2.next()).isNull();
+    }
+
+    @Test
+    void versioningTest() {
+        VersionInformation v2 = proj.addVersion("v2");
+        //proj.find()
     }
 }

@@ -347,17 +347,73 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return Utils.cast(getAllChildren(at), clazz);
     }
 
+    @NotNull
+    public Information<?> findOrCreate(@NotNull String subPath, @Nullable VersionInformation version, Type creationType) {
+        Information<?> result = getDirectChildren(null).stream().map(i -> {
+            if (!subPath.startsWith(i.name)) return null;
+            String nextSub = subPath.substring(i.name.length());
+            if (nextSub.startsWith(".") || nextSub.startsWith("$")) nextSub = nextSub.substring(1);
+            if (nextSub.isEmpty()) return i;
+            return i.findOrCreate(nextSub, version, creationType);
+        }).filter(Objects::nonNull).findAny().orElse(null);
+        if (result == null) {
+            int i = Utils.minIndexOf(subPath, ".$");
+            result = i == -1 ? createChild(creationType, subPath) : createChild(typeOfNextSegment(subPath, creationType), subPath.substring(0, i)).findOrCreate(subPath.substring(i + 1), version, creationType);
+        }
+        if (result.parent != null && version != null) result.parent.ensureStateAt(version, true);
+        return result;
+    }
+
+    public Type typeOfNextSegment(@NotNull String subPath, @NotNull Type lastSegmentType) {
+        String[] segments = subPath.split("\\.");
+
+        if (lastSegmentType.isSuper(getType())) throw new IllegalArgumentException();
+
+        if (segments.length == 1) return lastSegmentType;
+
+        if (getType() == Type.ROOT) return Type.PROJECT;
+        if (getType() == Type.PROJECT) {
+            if (segments.length == 2 && lastSegmentType == Type.METHOD) return Type.CLASS;
+            return Type.PACKAGE;
+        }
+        if (getType() == Type.PACKAGE) {
+            if (segments.length == 2 && lastSegmentType == Type.METHOD) return Type.CLASS;
+            return Type.PACKAGE;
+        }
+        if (getType() == Type.CLASS) return Type.CLASS; // as method would be last segment
+        throw new IllegalArgumentException();
+    }
+
+    public Information<?> createChild(Type childType, String name) {
+        if (getType() == Type.ROOT)
+            throw new UnsupportedOperationException("createChild not implemented for ROOT type");
+        if (getType() == Type.PROJECT && childType == Type.PACKAGE)
+            return new RootPackageInformation((ProjectInformation) this, name);
+        if (getType() == Type.PROJECT && childType == Type.CLASS)
+            return new RootClassInformation((ProjectInformation) this, name, false);
+        if (getType() == Type.PACKAGE && childType == Type.PACKAGE)
+            return new SubPackageInformation((PackageInformation<?>) this, name);
+        if (getType() == Type.PACKAGE && childType == Type.CLASS)
+            return new OuterClassInformation((PackageInformation<?>) this, name, false);
+        if (getType() == Type.CLASS && childType == Type.CLASS)
+            return new InnerClassInformation((ClassInformation<?>) this, name, false);
+        if (getType() == Type.CLASS && childType == Type.METHOD)
+            return new MethodInformation((ClassInformation<?>) this, name);
+        throw new UnsupportedOperationException("There is no child of type " + childType + " for parent " + getType());
+    }
+
     /**
      * Tries to find an information by its sub-path. If you want to match a whole path use {@code getRoot().findByPath(path, at)}
      */
     @Nullable
-    public Information<?> findByPath(@NotNull String path, @Nullable VersionInformation at) {
-        if (!path.startsWith(name)) return null;
-        path = path.substring(name.length());
-        if (path.startsWith(".") || path.startsWith("$")) path = path.substring(1);
-        if (path.isEmpty()) return this;
-        String finalPath = path;
-        return getDirectChildren(at).stream().map(i -> i.findByPath(finalPath, at)).filter(Objects::nonNull).findAny().orElse(null);
+    public Information<?> find(@NotNull final String subPath, @Nullable VersionInformation at) {
+        return getDirectChildren(at).stream().map(i -> {
+            if (!subPath.startsWith(i.name)) return null;
+            String nextSub = subPath.substring(i.name.length());
+            if (nextSub.startsWith(".") || nextSub.startsWith("$")) nextSub = nextSub.substring(1);
+            if (nextSub.isEmpty()) return i;
+            return i.find(nextSub, at);
+        }).filter(Objects::nonNull).findAny().orElse(null);
     }
 
     ////////// DEFAULT //////////
@@ -429,7 +485,15 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     /**
      * The types the java structure has (root for internal purposes)
      */
-    enum Type {
-        ROOT, PROJECT, PACKAGE, CLASS, METHOD
+    public enum Type {
+        ROOT, PROJECT, PACKAGE, CLASS, METHOD;
+
+        public boolean isSuper(@NotNull Type type) {
+            return ordinal() < type.ordinal();
+        }
+
+        public boolean isSub(@NotNull Type type) {
+            return ordinal() > type.ordinal();
+        }
     }
 }

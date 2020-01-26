@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Iterator;
+
 @Service
 public class Neo4jService {
     private final RootRepository repo;
@@ -27,11 +29,12 @@ public class Neo4jService {
 
     @Transactional(readOnly = true)
     public void loadRoot() {
-        root = repo.findAll().iterator().next();
+        Iterator<RootInformation> it = repo.findAll().iterator();
+        root = it.hasNext() ? it.next() : new RootInformation();
     }
 
     @Transactional
-    public void saveRoot(RootInformation root) {
+    public void saveRoot() {
         repo.save(root);
     }
 

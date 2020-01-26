@@ -1,19 +1,18 @@
 package core;
 
-import core.information.ClassInformation;
-import core.information.MethodInformation;
+import core.information2.*;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.expr.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * The CtMethodBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
@@ -21,16 +20,14 @@ import java.util.TreeSet;
 public class CtMethodBodyAnalyzer extends ExprEditor {
     private static final Logger logger = LoggerFactory.getLogger(CtMethodBodyAnalyzer.class);
     private static final Set<String> PRIMITIVES = new HashSet<>(Arrays.asList("boolean", "byte", "short", "char", "int", "long", "float", "double"));
+    private final MethodInformation method;
+    private final VersionInformation version;
+    private final RootInformation root;
 
-    private final Set<MethodInformation> methodDependencies = new TreeSet<>();
-    private final Set<ClassInformation> classDependencies = new TreeSet<>();
-    private DependencyPool dependencyPool;
-
-    /**
-     * Instantiates a new CtMethodBodyAnalyzer.
-     */
-    CtMethodBodyAnalyzer(DependencyPool dependencyPool) {
-        this.dependencyPool = dependencyPool;
+    public CtMethodBodyAnalyzer(@NotNull MethodInformation method, @NotNull VersionInformation version) {
+        this.method = method;
+        this.version = version;
+        this.root = method.getRoot();
     }
 
     /**
@@ -113,6 +110,8 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
                     sb.append(signature, pos + 1, sPos);
                     pos = sPos;
                     break;
+                default:
+                    break; //TODO or throw?!
             }
             pos++;
             if (array) {
@@ -132,7 +131,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
             addDependency(c.getType().getName());
         } catch (NotFoundException e) {
             //TODO needs to be analyzed
-            logger.warn("Could not process class cast in " + c.where().getLongName() + " as the casted type is not initialized yet");
+            logger.warn("Could not process class cast in {} as the casted type is not initialized yet", c.where().getLongName());
         }
     }
 
@@ -142,7 +141,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
             addDependency(a.getComponentType().getName());
         } catch (NotFoundException e) {
             //TODO needs to be analyzed
-            logger.warn("Could not process newarr in " + a.where().getLongName() + " as the casted type is not initialized yet");
+            logger.warn("Could not process newarr in {} as the casted type is not initialized yet", a.where().getLongName());
         }
     }
 
@@ -157,7 +156,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
             addDependency(i.getType().getName());
         } catch (NotFoundException e) {
             //TODO needs to be analyzed
-            logger.warn("Could not process instanceof in " + i.where().getLongName() + " as the casted type is not initialized yet");
+            logger.warn("Could not process instanceof in {} as the casted type is not initialized yet", i.where().getLongName());
         }
     }
 
@@ -173,24 +172,6 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         } catch (ClassNotFoundException e) {
             return false;
         }
-    }
-
-    /**
-     * Gets the referenced classes extracted by the analysis.
-     *
-     * @return the referenced classes
-     */
-    public Set<ClassInformation> getClassDependencies() {
-        return classDependencies;
-    }
-
-    /**
-     * Gets referenced methods extracted by the analysis.
-     *
-     * @return the referenced methods
-     */
-    public Set<MethodInformation> getMethodDependencies() {
-        return methodDependencies;
     }
 
     /**
@@ -210,7 +191,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
             addDependency(type.getName());
         } catch (NotFoundException e) {
             //TODO needs to be analyzed
-            logger.warn("Could not process catch type in " + h.where().getLongName() + " as the casted type is not initialized yet");
+            logger.warn("Could not process catch type in {} as the casted type is not initialized yet", h.where().getLongName());
         }
     }
 
@@ -233,8 +214,8 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      * @return whether a new method dependency got added
      */
     private boolean addDependency(String toClass, String toMethod) {
-        if (!addDependency(toClass)) return false;
-        methodDependencies.add(dependencyPool.getOrCreateMethodInformation(toClass + '.' + toMethod, false));
+        if (isJRE(toClass)) return false;
+        method.addMethodDependency((MethodInformation) root.findOrCreate(/* TODO missing project key */"external." + toClass + '.' + toMethod, null, Information.Type.METHOD), version);
         return true;
     }
 
@@ -247,7 +228,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      */
     private boolean addDependency(String toClass) {
         if (isJRE(toClass)) return false;
-        classDependencies.add(dependencyPool.getOrCreateClassInformation(toClass, false));
+        method.addClassDependency((ClassInformation<?>) root.findOrCreate(/* TODO missing project key */"external." + toClass, null, Information.Type.CLASS), version);
         return true;
     }
 }
