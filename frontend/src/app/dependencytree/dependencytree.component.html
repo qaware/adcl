@@ -33,8 +33,8 @@
     <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
       <strong
         [ngClass]="{
-          'labelGreen': node.label.startsWith('+'),
-          'labelRed': node.label.startsWith('-')
+          'labelRed': node.label.startsWith('+'),
+          'labelGreen': node.label.startsWith('-')
          }"
       >{{node.label}}: &nbsp; </strong> {{node.name}}
     </div>
