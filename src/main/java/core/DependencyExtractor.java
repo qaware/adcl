@@ -35,6 +35,8 @@ public class DependencyExtractor {
      * Analyse classes collection.
      */
     public void analyseClasses() throws IOException {
+        project.getDirectChildren(version).forEach(c -> c.setExists(version, false));
+
         try (Stream<Path> classes = Files.walk(scanLocation)) {
             classes.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".class")).forEach(p -> {
                 try {
