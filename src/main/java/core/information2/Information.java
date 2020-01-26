@@ -358,13 +358,17 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         Information<?> result = getDirectChildren(null).stream().map(i -> {
             if (!subPath.startsWith(i.name)) return null;
             String nextSub = subPath.substring(i.name.length());
-            if (nextSub.startsWith(".") || nextSub.startsWith("$")) nextSub = nextSub.substring(1);
             if (nextSub.isEmpty()) return i;
-            return i.findOrCreate(nextSub, version, creationType);
+            if (nextSub.startsWith(".")) {
+                nextSub = nextSub.substring(1);
+                return i.findOrCreate(nextSub, version, creationType);
+            } else {
+                return null;
+            }
         }).filter(Objects::nonNull).findAny().orElse(null);
         if (result == null) {
             int paramsStart = subPath.indexOf('(');
-            int i = Utils.minIndexOf((paramsStart != -1) ? subPath.substring(0, paramsStart) : subPath, ".$");
+            int i = ((paramsStart != -1) ? subPath.substring(0, paramsStart) : subPath).indexOf('.');
             result = i == -1 ? createChild(creationType, subPath) : createChild(typeOfNextSegment(subPath, creationType), subPath.substring(0, i)).findOrCreate(subPath.substring(i + 1), version, creationType);
         }
         if (version != null) result.setExists(version, true);
@@ -389,12 +393,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
             if (segments.length == 2 && lastSegmentType == Type.METHOD) return Type.CLASS;
             return Type.PACKAGE;
         }
-        if (getType() == Type.CLASS) return Type.CLASS; // as method would be last segment
         throw new IllegalArgumentException();
     }
 
     public Information<?> createChild(Type childType, String name) {
-        if (getType() == Type.ROOT)
+        if (getType() == Type.ROOT && childType == Type.PROJECT)
             return new ProjectInformation((RootInformation) this, name, false, "<PLACEHOLDER>"); //TODO
         if (getType() == Type.PROJECT && childType == Type.PACKAGE)
             return new RootPackageInformation((ProjectInformation) this, name);
@@ -404,8 +407,6 @@ public abstract class Information<P extends Information<?>> implements Comparabl
             return new SubPackageInformation((PackageInformation<?>) this, name);
         if (getType() == Type.PACKAGE && childType == Type.CLASS)
             return new OuterClassInformation((PackageInformation<?>) this, name, false);
-        if (getType() == Type.CLASS && childType == Type.CLASS)
-            return new InnerClassInformation((ClassInformation<?>) this, name, false);
         if (getType() == Type.CLASS && childType == Type.METHOD)
             return new MethodInformation((ClassInformation<?>) this, name);
         throw new UnsupportedOperationException("There is no child of type " + childType + " for parent " + getType());

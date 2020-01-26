@@ -7,52 +7,63 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil2.*;
 
 public class DatamodelCompareTest {
+    Ref<ProjectInformation, RootInformation> proj;
+    Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
+    Ref<ClassInformation<PackageInformation<?>>, PackageInformation<?>> ca, cabase, cb;
+    Ref<ClassInformation<ProjectInformation>, ProjectInformation> cc, ce, cca, cci;
+    Ref<MethodInformation, ClassInformation<?>> caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
     private RootInformation dm;
 
     @BeforeEach
     void generateDataModel() {
         dm = root(
-                project("proj", true, "v1.0.0",
-                        pir("packageA",
-                                cio("ClassA", false,
-                                        mi("<init>()"),
-                                        mi("methodA()"),
-                                        mi("methodB(packageB.ClassB)"),
-                                        mi("empty()")
+                proj = project("proj", true, "v1.0.0",
+                        pa = pir("packageA",
+                                ca = cio("ClassA", false,
+                                        caC = mi("<init>()"),
+                                        caMa = mi("methodA()"),
+                                        caMb = mi("methodB(packageB.ClassB)"),
+                                        caE = mi("empty()")
                                 ),
-                                cio("ClassABase", false,
-                                        mi("empty()")
+                                cabase = cio("ClassABase", false,
+                                        cabaseE = mi("empty()")
                                 )
                         ),
-                        pir("packageB",
-                                cio("ClassB", true,
-                                        mi("<init>()"),
-                                        mi("<clinit>()"),
-                                        mi("getInstanceA()"),
-                                        mi("method(java.util.function.Predicate)"),
-                                        mi("lambda$getInstanceA$0(java.lang.String)"),
-                                        mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
+                        pb = pir("packageB",
+                                cb = cio("ClassB", true,
+                                        cbC = mi("<init>()"),
+                                        cbCC = mi("<clinit>()"),
+                                        cbGia1 = mi("getInstanceA()"),
+                                        cbM = mi("method(java.util.function.Predicate)"),
+                                        cbL = mi("lambda$getInstanceA$0(java.lang.String)"),
+                                        cbGia2 = mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
                                 ),
                                 pis("emptyPackage")
                         ),
-                        cir("ClassC", false,
-                                mi("<init>()"),
-                                mi("retrieveClassA()"),
-                                cii("1", false,
-                                        mi("<init>(ClassC)"),
-                                        mi("getClassC()")
-                                ),
-                                cii("ClassCInner", false,
-                                        mi("<init>(ClassC)"),
-                                        mi("retrieveClassA()")
-                                )
+                        cc = cir("ClassC", false,
+                                ccC = mi("<init>()"),
+                                ccRca = mi("retrieveClassA()")
                         ),
-
-                        cir("ExternalClass", false,
-                                mi("extMethod()")
+                        cca = cir("ClassC$1", false,
+                                ccaC = mi("<init>(ClassC)"),
+                                ccaGcc = mi("getClassC()")
+                        ),
+                        cci = cir("ClassC$ClassCInner", false,
+                                cciC = mi("<init>(ClassC)"),
+                                cciRca = mi("retrieveClassA()")
+                        ),
+                        ce = cir("ExternalClass", false,
+                                ceEm = mi("extMethod()")
                         )
                 )
         );
+
+        p(cbM, proj);
+        p(cbGia1, pa);
+        p(caMb, cb);
+        p(ccC, cca, ccaC);
+        p(caMa, cbC);
+        p(cbCC, caC);
     }
 
     @Test

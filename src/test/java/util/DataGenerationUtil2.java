@@ -79,19 +79,6 @@ public class DataGenerationUtil2 {
      */
     @NotNull
     @SafeVarargs
-    public static Ref<ClassInformation<ClassInformation<?>>, ClassInformation<?>> cii(String name, boolean service, Ref<?, ClassInformation<?>>... methods) {
-        return new Ref<>(clazz -> {
-            ClassInformation<ClassInformation<?>> res = new InnerClassInformation(clazz, name, service);
-            Stream.of(methods).forEach(f -> f.apply(res));
-            return res;
-        });
-    }
-
-    /**
-     * ClassInforamtion: create a ClassInformation
-     */
-    @NotNull
-    @SafeVarargs
     public static Ref<ClassInformation<ProjectInformation>, ProjectInformation> cir(String name, boolean service, Ref<?, ClassInformation<?>>... methods) {
         return new Ref<>(proj -> {
             ClassInformation<ProjectInformation> res = new RootClassInformation(proj, name, service);

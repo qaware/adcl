@@ -17,8 +17,7 @@ class DependencyExtractorTest {
     Ref<ProjectInformation, RootInformation> proj;
     Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
     Ref<ClassInformation<PackageInformation<?>>, PackageInformation<?>> ca, cabase, cb;
-    Ref<ClassInformation<ProjectInformation>, ProjectInformation> cc, ce;
-    Ref<ClassInformation<ClassInformation<?>>, ClassInformation<?>> cca, cci;
+    Ref<ClassInformation<ProjectInformation>, ProjectInformation> cc, ce, cca, cci;
     Ref<MethodInformation, ClassInformation<?>> caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
     private RootInformation dm;
 
@@ -50,15 +49,15 @@ class DependencyExtractorTest {
                         ),
                         cc = cir("ClassC", false,
                                 ccC = mi("<init>()"),
-                                ccRca = mi("retrieveClassA()"),
-                                cca = cii("1", false,
-                                        ccaC = mi("<init>(ClassC)"),
-                                        ccaGcc = mi("getClassC()")
-                                ),
-                                cci = cii("ClassCInner", false,
-                                        cciC = mi("<init>(ClassC)"),
-                                        cciRca = mi("retrieveClassA()")
-                                )
+                                ccRca = mi("retrieveClassA()")
+                        ),
+                        cca = cir("ClassC$1", false,
+                                ccaC = mi("<init>(ClassC)"),
+                                ccaGcc = mi("getClassC()")
+                        ),
+                        cci = cir("ClassC$ClassCInner", false,
+                                cciC = mi("<init>(ClassC)"),
+                                cciRca = mi("retrieveClassA()")
                         ),
                         ce = cir("ExternalClass", false,
                                 ceEm = mi("extMethod()")
