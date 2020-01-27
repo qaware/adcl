@@ -2,9 +2,12 @@ package core;
 
 
 import org.apache.maven.model.Dependency;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,12 +19,12 @@ public class PomDependencyReaderTest {
 
     @BeforeAll
     static void setup() {
-        reader = new PomDependencyReader("src/test/resources/pom/pom.xml");
+        reader = new PomDependencyReader(Paths.get("src", "test", "resources", "pom", "pom.xml"));
     }
 
     @Test
-    void test() {
-        Set<String> list = reader.readDependency().stream().map(Object::toString).collect(Collectors.toSet());
+    void test() throws IOException, XmlPullParserException {
+        Set<String> list = reader.readDependencies().stream().map(Object::toString).collect(Collectors.toSet());
         Set<String> newList = Stream.of(
                 dependency("javassist", "org.javassist", "3.26.0-GA"),
                 dependency("neo4j-ogm-bolt-driver", "org.neo4j", "3.2.2"),
