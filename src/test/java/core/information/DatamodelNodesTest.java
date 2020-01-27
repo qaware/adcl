@@ -139,14 +139,13 @@ public class DatamodelNodesTest {
 
         assertThat(cc.getProject()).isEqualTo(p);
         assertThat(cc.getParent()).isEqualTo(p);
-        assertThat(cc.getDirectChildren(null)).containsExactlyInAnyOrder(ccinit, ccrca, cca, cci);
+        assertThat(cc.getDirectChildren(null)).containsExactlyInAnyOrder(ccinit, ccrca);
         assertThat(cc.getRoot()).isEqualTo(dm);
         assertThat(cc.find(MethodInformation.class, null)).containsExactlyInAnyOrder(ccinit, ccrca);
         assertThat(cc.findAll(MethodInformation.class, null).stream().map(Information::getName))
-                .containsExactlyInAnyOrder("<init>()", "retrieveClassA()", "<init>(ClassC)", "getClassC()", "<init>(ClassC)", "retrieveClassA()");
-        assertThat(cc.getAllChildren(null)).hasSize(8);
+                .containsExactlyInAnyOrder("<init>()", "retrieveClassA()");
+        assertThat(cc.getAllChildren(null)).hasSize(2);
         assertThat(cci.getParent(MethodInformation.class)).isNull();
-        assertThat((ClassInformation<?>) cci.getParent(ClassInformation.class)).isEqualTo(cc);
         assertThat((PackageInformation<?>) cci.getParent(PackageInformation.class)).isNull();
         assertThat(cci.getParent(ProjectInformation.class)).isEqualTo(p);
         assertThat(cci.getParent(RootInformation.class)).isEqualTo(dm);
