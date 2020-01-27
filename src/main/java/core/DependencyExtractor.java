@@ -24,7 +24,7 @@ public class DependencyExtractor {
     private final ProjectInformation project;
     private final VersionInformation version;
 
-    private ClassPool classPool = new ClassPool(true);
+    private final ClassPool classPool = new ClassPool(true);
 
     public DependencyExtractor(Path scanLocation, ProjectInformation project, VersionInformation version) {
         this.scanLocation = scanLocation;

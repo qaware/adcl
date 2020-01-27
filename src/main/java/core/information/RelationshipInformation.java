@@ -43,7 +43,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @GeneratedValue
     private Long id;
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "java:S2637", "ConstantConditions"} /* neo4jInit */)
     RelationshipInformation() {
         this.from = null;
         this.to = null;

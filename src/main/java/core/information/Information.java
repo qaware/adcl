@@ -34,20 +34,21 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     private final CompareHelper<Information<?>> comparator = new CompareHelper<>();
 
     @Relationship(type = "Parent", direction = Relationship.INCOMING)
-    @NotNull Set<ParentInformation<?>> directChildren = new HashSet<>();
+    @NotNull
+    final Set<ParentInformation<?>> directChildren = new HashSet<>();
 
     @Relationship(type = "Dependency")
     @NotNull
-    private Set<DependencyInformation<ProjectInformation>> projectDependencies = new HashSet<>();
+    private final Set<DependencyInformation<ProjectInformation>> projectDependencies = new HashSet<>();
     @Relationship(type = "Dependency")
     @NotNull
-    private Set<DependencyInformation<PackageInformation<?>>> packageDependencies = new HashSet<>();
+    private final Set<DependencyInformation<PackageInformation<?>>> packageDependencies = new HashSet<>();
     @Relationship(type = "Dependency")
     @NotNull
-    private Set<DependencyInformation<ClassInformation<?>>> classDependencies = new HashSet<>();
+    private final Set<DependencyInformation<ClassInformation<?>>> classDependencies = new HashSet<>();
     @Relationship(type = "Dependency")
     @NotNull
-    private Set<DependencyInformation<MethodInformation>> methodDependencies = new HashSet<>();
+    private final Set<DependencyInformation<MethodInformation>> methodDependencies = new HashSet<>();
     @Transient
     private final CompareHelper<Information<?>> deepComparator = new CompareHelper<>();
     @Id

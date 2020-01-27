@@ -22,7 +22,8 @@ public class ApplicationConfig {
     public final String previousVersionName = getPreviousVersionName();
     @NotNull
     public final Configuration neo4jConfig = getNeo4jConfig();
-    private Model localPom = getLocalPom();
+    @NotNull
+    private final Model localPom = getLocalPom();
     /**
      * An existing directory with .class-Files in it
      */
@@ -33,22 +34,11 @@ public class ApplicationConfig {
     @NotNull
     public final String currentVersionName = getCurrentVersionName();
 
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", ApplicationConfig.class.getSimpleName() + "[", "]")
-                .add("previousVersionName='" + previousVersionName + "'")
-                .add("neo4jConfig=" + neo4jConfig)
-                .add("localPom=" + localPom)
-                .add("scanLocation=" + scanLocation)
-                .add("projectName='" + projectName + "'")
-                .add("currentVersionName='" + currentVersionName + "'")
-                .toString();
-    }
-
     @SuppressWarnings("java:S1130" /* wrong, ConfigurationException can be thrown in field initialization */)
     ApplicationConfig() throws ConfigurationException {
     }
 
+    @NotNull
     private Model getLocalPom() throws ConfigurationException {
         try {
             MavenXpp3Reader reader = new MavenXpp3Reader();
@@ -120,6 +110,18 @@ public class ApplicationConfig {
         properties.setUsername(username);
         properties.setPassword(password);
         return properties.createConfiguration();
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ApplicationConfig.class.getSimpleName() + "[", "]")
+                .add("previousVersionName='" + previousVersionName + "'")
+                .add("neo4jConfig=" + neo4jConfig)
+                .add("localPom=" + localPom)
+                .add("scanLocation=" + scanLocation)
+                .add("projectName='" + projectName + "'")
+                .add("currentVersionName='" + currentVersionName + "'")
+                .toString();
     }
 
     static class ConfigurationException extends Exception {

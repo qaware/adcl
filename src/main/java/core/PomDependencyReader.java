@@ -5,6 +5,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.shared.invoker.*;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.jetbrains.annotations.NotNull;
 import util.Utils;
 
 import java.io.IOException;
@@ -22,14 +23,15 @@ import java.util.regex.Pattern;
  * Makes a list with all dependencies from the pom.xml
  */
 public class PomDependencyReader {
-    private Path pomPath;
+    @NotNull
+    private final Path pomPath;
 
     /**
      * Init PomDependencyReader
      *
      * @param pomPath Path describes where the pom.xml file is
      */
-    public PomDependencyReader(Path pomPath) {
+    public PomDependencyReader(@NotNull Path pomPath) {
         this.pomPath = pomPath;
     }
 
