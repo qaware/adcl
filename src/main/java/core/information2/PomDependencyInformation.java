@@ -44,9 +44,18 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
         remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, getFrom().getProject()), new VersionInformation(r, getTo().getProject())));
     }
 
+    @NotNull
+    @Contract(pure = true)
     @Override
     Information<?> getOwner() {
         return getFrom();
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    @Override
+    Information<?> getAim() {
+        return getTo();
     }
 
     /**

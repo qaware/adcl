@@ -69,7 +69,11 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     /**
      * Returns the owner of the relationship. The owner of a relation is the node (which is attached to the relation) whose existence determines the existence of the relation
      */
+    @NotNull
     abstract Information<?> getOwner();
+
+    @NotNull
+    abstract Information<?> getAim();
 
     /**
      * Whether the relation exists at given version

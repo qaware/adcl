@@ -67,12 +67,17 @@ class DependencyExtractorTest {
                 )
         );
 
-        p(cbM, proj);
-        p(cbGia1, pa);
+        p(cciRca, ca, ceEm);
+        p(cciC, cc);
+        p(cbCC, cabase, caC);
+        p(cbGia1, cabase, ca);
+        p(cbGia2, ca, cbM);
         p(caMb, cb);
-        p(ccC, cca, ccaC);
-        p(caMa, cbC);
-        p(cbCC, caC);
+        p(caMa, cb, cbC);
+        p(ccC, ccaC);
+        p(ccRca, ca, cbGia1);
+        p(ccaC, cc);
+        p(ccaGcc, cc, ccC);
     }
 
     @Test

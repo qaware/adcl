@@ -20,6 +20,13 @@ public final class ParentInformation<T extends Information<?>> extends Relations
         return getTo();
     }
 
+    @NotNull
+    @Contract(pure = true)
+    @Override
+    Information<?> getAim() {
+        return getFrom();
+    }
+
     @Override
     public void setExists(@NotNull VersionInformation version, boolean aim) {
         if (aim) {

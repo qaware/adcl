@@ -8,6 +8,7 @@ import util.CompareHelper;
 import util.DeepComparable;
 import util.Utils;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -431,9 +432,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @NotNull
     @Override
     public final String toString() {
-        return (getClass().getSimpleName() + " " + getName() + " {\n"
-                + getDirectChildren(null).stream().map(Object::toString).collect(Collectors.joining(",\n"))
-        ).replace("\n", "\n    ") + "\n}";
+        StringBuilder sb = new StringBuilder(getType().toString() + " " + getName());
+        Stream.of(projectDependencies, packageDependencies, classDependencies, methodDependencies)
+                .flatMap(Collection::stream).map(d -> d.getAim().getPath()).sorted().forEach(d -> sb.append("\n  => ").append(d));
+        directChildren.stream().map(ParentInformation::getAim).sorted().forEach(c -> sb.append("\n  ").append(c.toString().replace("\n", "\n  ")));
+        return sb.toString();
     }
 
     @Override
