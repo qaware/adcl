@@ -9,6 +9,11 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
  */
 @RelationshipEntity("Parent")
 public final class ParentInformation<T extends Information<?>> extends RelationshipInformation<T> {
+    @SuppressWarnings("unused")
+    private ParentInformation() {
+        super();
+    }
+
     ParentInformation(@NotNull Information<T> from, @NotNull T to) {
         super(from, to);
     }

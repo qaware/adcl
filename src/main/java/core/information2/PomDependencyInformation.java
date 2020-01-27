@@ -30,6 +30,11 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
             (k, v) -> remoteVersionMapInternal.remove(k.getName())
     );
 
+    @SuppressWarnings("unused")
+    private PomDependencyInformation() {
+        super();
+    }
+
     PomDependencyInformation(@NotNull Information<?> from, @NotNull ProjectInformation to) {
         super(from, to);
     }

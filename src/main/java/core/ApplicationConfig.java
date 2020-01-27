@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.StringJoiner;
 
 public class ApplicationConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfig.class);
@@ -31,6 +32,18 @@ public class ApplicationConfig {
     public final String projectName = getProjectName();
     @NotNull
     public final String currentVersionName = getCurrentVersionName();
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ApplicationConfig.class.getSimpleName() + "[", "]")
+                .add("previousVersionName='" + previousVersionName + "'")
+                .add("neo4jConfig=" + neo4jConfig)
+                .add("localPom=" + localPom)
+                .add("scanLocation=" + scanLocation)
+                .add("projectName='" + projectName + "'")
+                .add("currentVersionName='" + currentVersionName + "'")
+                .toString();
+    }
 
     @SuppressWarnings("java:S1130" /* wrong, ConfigurationException can be thrown in field initialization */)
     ApplicationConfig() throws ConfigurationException {

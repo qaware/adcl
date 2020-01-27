@@ -8,6 +8,11 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class MethodInformation extends Information<ClassInformation<?>> {
+    @SuppressWarnings("unused")
+    private MethodInformation() {
+        super();
+    }
+
     public MethodInformation(@NotNull ClassInformation<?> parent, @NotNull String name) {
         super(parent, name);
         if (name.indexOf('(') == -1)

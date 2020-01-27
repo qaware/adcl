@@ -8,7 +8,11 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public abstract class PackageInformation<P extends Information<?>> extends Information<P> {
-    PackageInformation(P parent, @NotNull String name) {
+    PackageInformation() {
+        super();
+    }
+
+    PackageInformation(@NotNull P parent, @NotNull String name) {
         super(parent, name);
     }
 

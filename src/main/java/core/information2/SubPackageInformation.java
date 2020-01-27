@@ -8,6 +8,11 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class SubPackageInformation extends PackageInformation<PackageInformation<?>> {
+    @SuppressWarnings("unused")
+    private SubPackageInformation() {
+        super();
+    }
+
     public SubPackageInformation(PackageInformation<?> parent, @NotNull String name) {
         super(parent, name);
     }

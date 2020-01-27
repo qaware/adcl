@@ -15,6 +15,12 @@ public class VersionInformation implements Comparable<VersionInformation> {
 
     private ProjectInformation project;
 
+    @SuppressWarnings("unused")
+    private VersionInformation() {
+        this.name = "<neo4jInit>";
+        this.project = null;
+    }
+
     VersionInformation(@NotNull String name, @NotNull ProjectInformation project) {
         this.name = name;
         this.project = project;

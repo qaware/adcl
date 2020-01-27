@@ -36,10 +36,14 @@ public class DependencyExtractor {
      * Analyse classes collection.
      */
     public void runAnalysis() throws IOException, MavenInvocationException {
+        LOGGER.info("Updating indices...");
         project.updateIndices(scanLocation);
+        LOGGER.info("Updated");
         project.getDirectChildren(version).forEach(c -> c.setExists(version, false));
 
+        LOGGER.info("Analysing project classes...");
         analyseClasses();
+        LOGGER.info("Done");
     }
 
     private void analyseClasses() throws IOException {

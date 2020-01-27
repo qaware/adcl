@@ -43,6 +43,12 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @GeneratedValue
     private Long id;
 
+    @SuppressWarnings("unused")
+    RelationshipInformation() {
+        this.from = null;
+        this.to = null;
+    }
+
     RelationshipInformation(@NotNull Information<?> from, @NotNull T to) {
         this.from = from;
         this.to = to;

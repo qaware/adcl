@@ -55,6 +55,10 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Nullable
     private Long id;
 
+    Information() {
+        this("<neo4jInit>");
+    }
+
     /**
      * Creates a new Information instance
      *

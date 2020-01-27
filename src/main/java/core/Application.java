@@ -24,8 +24,8 @@ import java.io.IOException;
  */
 @SpringBootApplication
 @SpringBootConfiguration
-@EnableNeo4jRepositories("database.repositories")
-@EntityScan("core.information")
+@EnableNeo4jRepositories(basePackageClasses = {Neo4jService.RootRepository.class}, considerNestedRepositories = true)
+@EntityScan("core.information2")
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
@@ -44,11 +44,13 @@ public class Application {
         } catch (ApplicationConfig.ConfigurationException configurationException) {
             return 1;
         }
+        LOGGER.info("ADCL args: {}", appConfig);
 
-        //Starting Database Service
+        LOGGER.info("Launching Spring");
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
+        LOGGER.info("Connecting to database");
         Neo4jService neo4jService = ctx.getBean(Neo4jService.class);
-
+        LOGGER.info("Querying project data");
         RootInformation root = neo4jService.getRoot();
         ProjectInformation project = (ProjectInformation) root.find(appConfig.projectName, null);
         VersionInformation currentVersion;
@@ -60,6 +62,7 @@ public class Application {
             currentVersion = project.addVersion(appConfig.projectName);
         }
 
+        LOGGER.info("Analysing new dependencies");
         try {
             new DependencyExtractor(appConfig.scanLocation, project, currentVersion).runAnalysis();
         } catch (IOException | MavenInvocationException e) {
@@ -67,7 +70,7 @@ public class Application {
             return 1;
         }
 
-        //Save the Version in the Database
+        LOGGER.info("Saving collected data");
         neo4jService.saveRoot();
 
         ctx.close();

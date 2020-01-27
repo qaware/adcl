@@ -37,6 +37,12 @@ public class ProjectInformation extends Information<RootInformation> {
     @Properties
     private final Map<String, String> externalIndices = new HashMap<>();
 
+    @SuppressWarnings("unused")
+    private ProjectInformation() {
+        super();
+        isInternal = false;
+    }
+
     public ProjectInformation(@NotNull RootInformation root, @NotNull String name, boolean isInternal, @NotNull String initialVersion) {
         super(root, name);
         this.isInternal = isInternal;

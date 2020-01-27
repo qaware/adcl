@@ -39,6 +39,6 @@ public class Neo4jService {
     }
 
     @Repository
-    interface RootRepository extends Neo4jRepository<RootInformation, Long> {
+    public interface RootRepository extends Neo4jRepository<RootInformation, Long> {
     }
 }

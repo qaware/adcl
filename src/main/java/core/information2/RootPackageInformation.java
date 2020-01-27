@@ -8,6 +8,11 @@ import org.neo4j.ogm.annotation.NodeEntity;
  */
 @NodeEntity
 public class RootPackageInformation extends PackageInformation<ProjectInformation> {
+    @SuppressWarnings("unused")
+    private RootPackageInformation() {
+        super();
+    }
+
     public RootPackageInformation(ProjectInformation parent, @NotNull String name) {
         super(parent, name);
     }
