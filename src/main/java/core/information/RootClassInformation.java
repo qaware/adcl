@@ -1,4 +1,4 @@
-package core.information2;
+package core.information;
 
 /**
  * A Class Information with a Project Information as parent

@@ -1,4 +1,4 @@
-package core.information2;
+package core.information;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;

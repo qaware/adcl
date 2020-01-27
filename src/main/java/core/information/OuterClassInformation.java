@@ -1,4 +1,4 @@
-package core.information2;
+package core.information;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 

@@ -1,10 +1,10 @@
-package core.information2;
+package core.information;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static util.DataGenerationUtil2.*;
+import static util.DataGenerationUtil.*;
 
 public class DatamodelCompareTest {
     Ref<ProjectInformation, RootInformation> proj;

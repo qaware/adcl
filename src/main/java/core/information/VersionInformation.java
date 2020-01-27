@@ -1,4 +1,4 @@
-package core.information2;
+package core.information;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

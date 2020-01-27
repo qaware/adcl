@@ -1,9 +1,9 @@
 package core;
 
-import core.information2.Neo4jService;
-import core.information2.ProjectInformation;
-import core.information2.RootInformation;
-import core.information2.VersionInformation;
+import core.information.Neo4jService;
+import core.information.ProjectInformation;
+import core.information.RootInformation;
+import core.information.VersionInformation;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.neo4j.ogm.config.Configuration;
 import org.slf4j.Logger;
@@ -24,8 +24,8 @@ import java.io.IOException;
  */
 @SpringBootApplication
 @SpringBootConfiguration
-@EnableNeo4jRepositories(basePackageClasses = {Neo4jService.RootRepository.class}, considerNestedRepositories = true)
-@EntityScan("core.information2")
+@EnableNeo4jRepositories(basePackageClasses = Neo4jService.RootRepository.class, considerNestedRepositories = true)
+@EntityScan(basePackageClasses = RootInformation.class)
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 

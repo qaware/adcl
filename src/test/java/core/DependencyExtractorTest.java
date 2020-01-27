@@ -1,6 +1,6 @@
 package core;
 
-import core.information2.*;
+import core.information.*;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static util.DataGenerationUtil2.*;
+import static util.DataGenerationUtil.*;
 
 class DependencyExtractorTest {
     private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");

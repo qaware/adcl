@@ -1,6 +1,6 @@
 package util;
 
-import core.information2.*;
+import core.information.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -8,8 +8,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 @SuppressWarnings({"unused", "java:S1452" /* Wildcards are needed */})
-public class DataGenerationUtil2 {
-    private DataGenerationUtil2() {
+public class DataGenerationUtil {
+    private DataGenerationUtil() {
     }
 
     @SafeVarargs

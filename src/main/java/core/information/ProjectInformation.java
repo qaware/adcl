@@ -1,4 +1,4 @@
-package core.information2;
+package core.information;
 
 import core.IndexBuilder;
 import core.PomDependencyReader;

@@ -1,6 +1,6 @@
 package core;
 
-import core.information2.*;
+import core.information.*;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;

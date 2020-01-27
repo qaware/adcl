@@ -1,6 +1,6 @@
 package core;
 
-import core.information2.*;
+import core.information.*;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
