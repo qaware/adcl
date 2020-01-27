@@ -49,6 +49,7 @@ public class PomDependencyReader {
         Files.deleteIfExists(outputPath);
 
         InvocationRequest request = new DefaultInvocationRequest();
+        request.setBatchMode(true);
         request.setPomFile(pomPath.toFile());
         request.setGoals(Collections.singletonList("dependency:list"));
         Properties properties = new Properties();

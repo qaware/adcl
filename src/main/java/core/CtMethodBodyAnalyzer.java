@@ -113,7 +113,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
                     pos = sPos;
                     break;
                 default:
-                    break; //TODO or throw?!
+                    throw new IllegalStateException("Invalid character " + signature.charAt(pos) + " in method signature");
             }
             pos++;
             if (array) {
