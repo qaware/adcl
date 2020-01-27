@@ -5,6 +5,7 @@ import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +35,14 @@ public class DependencyExtractor {
     /**
      * Analyse classes collection.
      */
-    public void analyseClasses() throws IOException {
+    public void runAnalysis() throws IOException, MavenInvocationException {
+        project.updateIndices(scanLocation);
         project.getDirectChildren(version).forEach(c -> c.setExists(version, false));
 
+        analyseClasses();
+    }
+
+    private void analyseClasses() throws IOException {
         try (Stream<Path> classes = Files.walk(scanLocation)) {
             classes.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".class")).forEach(p -> {
                 try {

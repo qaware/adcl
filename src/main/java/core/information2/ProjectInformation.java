@@ -1,14 +1,20 @@
 package core.information2;
 
+import core.IndexBuilder;
+import core.PomDependencyReader;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.PostLoad;
-import org.neo4j.ogm.annotation.Property;
-import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.Properties;
+import org.neo4j.ogm.annotation.*;
 import org.neo4j.ogm.annotation.typeconversion.Convert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.CompareHelper;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,6 +23,8 @@ import java.util.stream.Collectors;
  */
 @NodeEntity
 public class ProjectInformation extends Information<RootInformation> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectInformation.class);
+
     @Convert(VersionInformation.Converter.class)
     private final List<VersionInformation> versions = new ArrayList<>();
 
@@ -25,6 +33,9 @@ public class ProjectInformation extends Information<RootInformation> {
 
     @Relationship(type = "PomDependency")
     private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
+
+    @Properties
+    private final Map<String, String> externalIndices = new HashMap<>();
 
     public ProjectInformation(@NotNull RootInformation root, @NotNull String name, boolean isInternal, @NotNull String initialVersion) {
         super(root, name);
@@ -86,6 +97,23 @@ public class ProjectInformation extends Information<RootInformation> {
      */
     public VersionInformation getLatestVersion() {
         return versions.get(versions.size() - 1);
+    }
+
+    @Nullable
+    public String resolveProjectByClassName(@NotNull String className) {
+        return externalIndices.getOrDefault(className, "null");
+    }
+
+    public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException {
+        externalIndices.clear();
+        IndexBuilder.index(pathToOwnFiles, getName(), externalIndices);
+        new PomDependencyReader(Paths.get("pom.xml")).readAllCompilationRelevantDependencies().forEach(d -> {
+            try {
+                IndexBuilder.index(d, externalIndices);
+            } catch (IOException e) {
+                LOGGER.error("Could not index dependency {}", d, e);
+            }
+        });
     }
 
     // Overrides

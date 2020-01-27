@@ -1,6 +1,7 @@
 package core;
 
 import core.information2.*;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +45,7 @@ class DependencyExtractorTest {
                                         cbM = mi("method(java.util.function.Predicate)"),
                                         cbL = mi("lambda$getInstanceA$0(java.lang.String)"),
                                         cbGia2 = mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
-                                ),
-                                pis("emptyPackage")
+                                )
                         ),
                         cc = cir("ClassC", false,
                                 ccC = mi("<init>()"),
@@ -58,7 +58,9 @@ class DependencyExtractorTest {
                         cci = cir("ClassC$ClassCInner", false,
                                 cciC = mi("<init>(ClassC)"),
                                 cciRca = mi("retrieveClassA()")
-                        ),
+                        )
+                ),
+                project("null", false, "<unknown>",
                         ce = cir("ExternalClass", false,
                                 ceEm = mi("extMethod()")
                         )
@@ -74,12 +76,12 @@ class DependencyExtractorTest {
     }
 
     @Test
-    void analyseClasses() throws IOException {
+    void analyseClasses() throws IOException, MavenInvocationException {
         RootInformation root = new RootInformation();
         ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
 
-        new DependencyExtractor(TESTCLASS_FOLDER, proj, proj.getLatestVersion()).analyseClasses();
+        new DependencyExtractor(TESTCLASS_FOLDER, proj, proj.getLatestVersion()).runAnalysis();
 
-        assertThat(root.deepEquals(dm)).isTrue();
+        assertThat(root.deepEquals(dm)).overridingErrorMessage("Not deep equal!\nExpected:\n%s\n\nActual:\n%s", dm, root).isTrue();
     }
 }

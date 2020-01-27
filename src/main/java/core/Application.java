@@ -4,6 +4,7 @@ import core.information2.Neo4jService;
 import core.information2.ProjectInformation;
 import core.information2.RootInformation;
 import core.information2.VersionInformation;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.neo4j.ogm.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +61,8 @@ public class Application {
         }
 
         try {
-            new DependencyExtractor(appConfig.scanLocation, project, currentVersion).analyseClasses();
-        } catch (IOException e) {
+            new DependencyExtractor(appConfig.scanLocation, project, currentVersion).runAnalysis();
+        } catch (IOException | MavenInvocationException e) {
             LOGGER.error("Could not analyse current class structure", e);
             return 1;
         }

@@ -23,11 +23,13 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     private final MethodInformation method;
     private final VersionInformation version;
     private final RootInformation root;
+    private final ProjectInformation project;
 
     public CtMethodBodyAnalyzer(@NotNull MethodInformation method, @NotNull VersionInformation version) {
         this.method = method;
         this.version = version;
         this.root = method.getRoot();
+        this.project = method.getProject();
     }
 
     /**
@@ -215,7 +217,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      */
     private boolean addDependency(String toClass, String toMethod) {
         if (isJRE(toClass)) return false;
-        method.addMethodDependency((MethodInformation) root.findOrCreate(/* TODO missing project key */"external." + toClass + '.' + toMethod, null, Information.Type.METHOD), version);
+        method.addMethodDependency((MethodInformation) root.findOrCreate(project.resolveProjectByClassName(toClass) + '.' + toClass + '.' + toMethod, null, Information.Type.METHOD), version);
         return true;
     }
 
@@ -228,7 +230,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
      */
     private boolean addDependency(String toClass) {
         if (isJRE(toClass)) return false;
-        method.addClassDependency((ClassInformation<?>) root.findOrCreate(/* TODO missing project key */"external." + toClass, null, Information.Type.CLASS), version);
+        method.addClassDependency((ClassInformation<?>) root.findOrCreate(project.resolveProjectByClassName(toClass) + '.' + toClass, null, Information.Type.CLASS), version);
         return true;
     }
 }

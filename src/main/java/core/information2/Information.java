@@ -398,7 +398,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     public Information<?> createChild(Type childType, String name) {
         if (getType() == Type.ROOT && childType == Type.PROJECT)
-            return new ProjectInformation((RootInformation) this, name, false, "<PLACEHOLDER>"); //TODO
+            return new ProjectInformation((RootInformation) this, "null", false, "<unknown>");
         if (getType() == Type.PROJECT && childType == Type.PACKAGE)
             return new RootPackageInformation((ProjectInformation) this, name);
         if (getType() == Type.PROJECT && childType == Type.CLASS)
