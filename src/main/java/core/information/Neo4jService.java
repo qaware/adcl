@@ -12,7 +12,7 @@ import java.util.Iterator;
 public class Neo4jService {
     private final RootRepository repo;
 
-    @SuppressWarnings("NotNullFieldNotInitialized" /* gets initialized in constructor */)
+    @SuppressWarnings({"NotNullFieldNotInitialized", "NullableProblems"} /* gets initialized in constructor */)
     @NotNull
     private RootInformation root;
 

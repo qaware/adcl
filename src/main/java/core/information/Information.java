@@ -30,6 +30,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Property
     @NotNull
     private final String name;
+
+    @Property
+    @NotNull
+    private final String path;
+
     @Transient
     private final CompareHelper<Information<?>> comparator = new CompareHelper<>();
 
@@ -67,6 +72,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     Information(@NotNull P parent, @NotNull String name) {
         this.name = name;
+        this.path = parent.getPath() + '.' + name;
         this.parent = new ParentInformation<>(this, parent);
         parent.directChildren.add(this.parent);
         initializeComparators();
@@ -80,6 +86,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     Information(@NotNull String name) {
         this.name = name;
+        this.path = "";
         this.parent = null;
         initializeComparators();
     }
@@ -100,9 +107,10 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * Gets the absolute path of the node
      * e.g. for MethodInformation "projectA.packageA.packageB.Class1.InnerClass.foo(java.lang.String, int)
      */
+    @Contract(pure = true)
     @NotNull
     public String getPath() {
-        return getParent().getPath() + '.' + getName();
+        return path;
     }
 
     /**

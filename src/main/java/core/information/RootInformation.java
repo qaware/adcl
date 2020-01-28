@@ -52,11 +52,6 @@ public class RootInformation extends Information<RootInformation> {
     }
 
     @Override
-    public @NotNull String getPath() {
-        return "";
-    }
-
-    @Override
     public boolean exists(@NotNull VersionInformation version) {
         return true;
     }

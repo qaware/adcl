@@ -9,10 +9,14 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.configuration.BoltConnector;
 import org.neo4j.ogm.config.Configuration;
+import org.neo4j.ogm.session.Session;
+import org.neo4j.ogm.session.SessionFactory;
+import org.neo4j.ogm.transaction.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
@@ -23,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
@@ -39,6 +44,9 @@ public class Neo4jServiceTest {
     @Autowired
     Neo4jService neo4jService;
     private RootInformation dm;
+
+    @Autowired
+    ApplicationContext ctx;
 
     @BeforeAll
     static void setUpDatabase() {
@@ -115,11 +123,18 @@ public class Neo4jServiceTest {
     @Test
     public void test() {
         neo4jService.overrideRoot(dm);
+        RootInformation r = neo4jService.getRoot();
+        assertThat(r).isSameAs(dm);
 
-        RootInformation loaded = neo4jService.getRoot();
-
-        assertThat(loaded).isNotSameAs(dm);
-        assertThat(loaded).isEqualTo(dm);
+        SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
+        Session session = sessionFactory.openSession();
+        try (Transaction ignored = session.beginTransaction()) {
+            Collection<Information> all = session.loadAll(Information.class);
+            RootInformation loaded = session.loadAll(RootInformation.class).iterator().next();
+            assertThat(loaded).isNotSameAs(dm);
+            assertThat(loaded).isEqualTo(dm);
+            assertThat(loaded.deepEquals(dm)).isTrue();
+        }
     }
 
     @TestConfiguration
