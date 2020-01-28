@@ -1,24 +1,26 @@
 package core.information;
 
 import org.jetbrains.annotations.NotNull;
+import org.neo4j.ogm.session.Session;
+import org.neo4j.ogm.session.SessionFactory;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Iterator;
-
 @Service
 public class Neo4jService {
-    private final RootRepository repo;
+    private final InformationRepository infoRepo;
+    private final SessionFactory sessionFactory;
 
-    @SuppressWarnings({"NotNullFieldNotInitialized", "NullableProblems"} /* gets initialized in constructor */)
+    @SuppressWarnings("NotNullFieldNotInitialized" /* gets initialized in constructor */)
     @NotNull
     private RootInformation root;
 
     @SuppressWarnings("java:S2637" /* gets initialized in constructor */)
-    public Neo4jService(RootRepository repo) {
-        this.repo = repo;
+    public Neo4jService(InformationRepository infoRepo, SessionFactory sessionFactory) {
+        this.infoRepo = infoRepo;
+        this.sessionFactory = sessionFactory;
         loadRoot();
     }
 
@@ -29,23 +31,32 @@ public class Neo4jService {
 
     @Transactional(readOnly = true)
     public void loadRoot() {
-        Iterator<RootInformation> it = repo.findAll().iterator();
-        root = it.hasNext() ? it.next() : new RootInformation();
+        RootInformation result = null;
+        for (Information<?> i : infoRepo.findAll()) {
+            if (i instanceof RootInformation) {
+                result = (RootInformation) i;
+                break;
+            }
+        }
+        if (result == null) result = new RootInformation();
+        root = result;
     }
 
     @Transactional
     public void saveRoot() {
-        repo.save(root);
+        infoRepo.save(root);
     }
 
     @Transactional
     public void overrideRoot(@NotNull RootInformation newRoot) {
-        newRoot.id = root.id;
+        Session s = sessionFactory.openSession();
+        s.purgeDatabase();
         root = newRoot;
         saveRoot();
     }
 
     @Repository
-    public interface RootRepository extends Neo4jRepository<RootInformation, Long> {
+    public interface InformationRepository extends Neo4jRepository<Information<?>, Long> {
+
     }
 }

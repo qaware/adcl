@@ -24,7 +24,7 @@ import java.io.IOException;
  */
 @SpringBootApplication
 @SpringBootConfiguration
-@EnableNeo4jRepositories(basePackageClasses = Neo4jService.RootRepository.class, considerNestedRepositories = true)
+@EnableNeo4jRepositories(basePackageClasses = Neo4jService.InformationRepository.class, considerNestedRepositories = true)
 @EntityScan(basePackageClasses = RootInformation.class)
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
@@ -48,9 +48,8 @@ public class Application {
 
         LOGGER.info("Launching Spring");
         ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
-        LOGGER.info("Connecting to database");
-        Neo4jService neo4jService = ctx.getBean(Neo4jService.class);
         LOGGER.info("Querying project data");
+        Neo4jService neo4jService = ctx.getBean(Neo4jService.class);
         RootInformation root = neo4jService.getRoot();
         ProjectInformation project = (ProjectInformation) root.find(appConfig.projectName, null);
         VersionInformation currentVersion;

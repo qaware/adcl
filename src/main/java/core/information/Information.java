@@ -42,18 +42,18 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @NotNull
     final Set<ParentInformation<?>> directChildren = new HashSet<>();
 
-    @Relationship(type = "Dependency")
+    @Relationship(type = "ProjectDependency")
     @NotNull
-    private final Set<DependencyInformation<ProjectInformation>> projectDependencies = new HashSet<>();
-    @Relationship(type = "Dependency")
+    private final Set<ProjectDependency> projectDependencies = new HashSet<>();
+    @Relationship(type = "PackageDependency")
     @NotNull
-    private final Set<DependencyInformation<PackageInformation<?>>> packageDependencies = new HashSet<>();
-    @Relationship(type = "Dependency")
+    private final Set<PackageDependency> packageDependencies = new HashSet<>();
+    @Relationship(type = "ClassDependency")
     @NotNull
-    private final Set<DependencyInformation<ClassInformation<?>>> classDependencies = new HashSet<>();
-    @Relationship(type = "Dependency")
+    private final Set<ClassDependency> classDependencies = new HashSet<>();
+    @Relationship(type = "MethodDependency")
     @NotNull
-    private final Set<DependencyInformation<MethodInformation>> methodDependencies = new HashSet<>();
+    private final Set<MethodDependency> methodDependencies = new HashSet<>();
     @Transient
     private final CompareHelper<Information<?>> deepComparator = new CompareHelper<>();
     @Id
@@ -164,7 +164,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     public final void addProjectDependency(@NotNull ProjectInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
-        DependencyInformation<ProjectInformation> dep = new DependencyInformation<>(this, to);
+        ProjectDependency dep = new ProjectDependency(this, to);
         dep.setExists(at, true);
         projectDependencies.add(dep);
     }
@@ -206,7 +206,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     public final void addPackageDependency(@NotNull PackageInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
-        DependencyInformation<PackageInformation<?>> dep = new DependencyInformation<>(this, to);
+        PackageDependency dep = new PackageDependency(this, to);
         dep.setExists(at, true);
         packageDependencies.add(dep);
     }
@@ -248,7 +248,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     public final void addClassDependency(@NotNull ClassInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
-        DependencyInformation<ClassInformation<?>> dep = new DependencyInformation<>(this, to);
+        ClassDependency dep = new ClassDependency(this, to);
         dep.setExists(at, true);
         classDependencies.add(dep);
     }
@@ -275,7 +275,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     public final void addMethodDependency(@NotNull MethodInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
-        DependencyInformation<MethodInformation> dep = new DependencyInformation<>(this, to);
+        MethodDependency dep = new MethodDependency(this, to);
         dep.setExists(at, true);
         methodDependencies.add(dep);
     }

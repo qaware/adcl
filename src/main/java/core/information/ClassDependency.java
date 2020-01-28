@@ -7,14 +7,14 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 /**
  * Represents an edge on the graph describing a dependency from one structural component to another
  */
-@RelationshipEntity("Dependency")
-public final class DependencyInformation<T extends Information<?>> extends RelationshipInformation<T> {
+@RelationshipEntity("ClassDependency")
+public final class ClassDependency extends RelationshipInformation<ClassInformation<?>> {
     @SuppressWarnings("unused")
-    private DependencyInformation() {
+    private ClassDependency() {
         super();
     }
 
-    DependencyInformation(@NotNull Information<?> from, @NotNull T to) {
+    ClassDependency(@NotNull Information<?> from, @NotNull ClassInformation<?> to) {
         super(from, to);
     }
 

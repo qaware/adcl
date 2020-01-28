@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A {@link DependencyInformation} which also stores remote version names for each version
+ * A {@link ProjectDependency} which also stores remote version names for each version
  */
 @RelationshipEntity("PomDependency")
 public final class PomDependencyInformation extends RelationshipInformation<ProjectInformation> {

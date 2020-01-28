@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
@@ -50,19 +49,22 @@ public class Neo4jServiceTest {
 
     @BeforeAll
     static void setUpDatabase() {
-        BoltConnector bolt = new BoltConnector("0");
+        try {
+            BoltConnector bolt = new BoltConnector("0");
+            dbService = new GraphDatabaseFactory()
+                    .newEmbeddedDatabaseBuilder(new File("neo4j"))
+                    .setConfig(bolt.type, "BOLT")
+                    .setConfig(bolt.enabled, "true")
+                    .setConfig(bolt.listen_address, "localhost:7687")
+                    .newGraphDatabase();
+        } catch (Exception ignored) {
 
-        dbService = new GraphDatabaseFactory()
-                .newEmbeddedDatabaseBuilder(new File("neo4j"))
-                .setConfig(bolt.type, "BOLT")
-                .setConfig(bolt.enabled, "true")
-                .setConfig(bolt.listen_address, "localhost:7687")
-                .newGraphDatabase();
+        }
     }
 
     @AfterAll
     static void cleanup() throws IOException {
-        dbService.shutdown();
+        if (dbService != null) dbService.shutdown();
         FileSystemUtils.deleteRecursively(new File("neo4j"));
         FileSystemUtils.deleteRecursively(new File("certificates"));
         Files.deleteIfExists(Paths.get("store_lock"));
@@ -127,10 +129,10 @@ public class Neo4jServiceTest {
         assertThat(r).isSameAs(dm);
 
         SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
-        Session session = sessionFactory.openSession();
-        try (Transaction ignored = session.beginTransaction()) {
-            Collection<Information> all = session.loadAll(Information.class);
-            RootInformation loaded = session.loadAll(RootInformation.class).iterator().next();
+        Session newSession = sessionFactory.openSession();
+        try (Transaction ignored = newSession.beginTransaction()) {
+            newSession.loadAll(Information.class);
+            RootInformation loaded = newSession.loadAll(RootInformation.class).iterator().next();
             assertThat(loaded).isNotSameAs(dm);
             assertThat(loaded).isEqualTo(dm);
             assertThat(loaded.deepEquals(dm)).isTrue();
@@ -145,7 +147,7 @@ public class Neo4jServiceTest {
             Neo4jProperties properties = new Neo4jProperties();
             properties.setUri("bolt://127.0.0.1:7687");
             properties.setUsername("neo4j");
-            properties.setPassword("neo4j");
+            properties.setPassword("test");
             return properties.createConfiguration();
         }
     }
