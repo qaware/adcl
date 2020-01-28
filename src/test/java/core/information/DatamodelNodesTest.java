@@ -149,6 +149,15 @@ public class DatamodelNodesTest {
         assertThat((PackageInformation<?>) cci.getParent(PackageInformation.class)).isNull();
         assertThat(cci.getParent(ProjectInformation.class)).isEqualTo(p);
         assertThat(cci.getParent(RootInformation.class)).isEqualTo(dm);
+        assertThat(caC.getStored().hasParent(pa.getStored())).isTrue();
+        assertThat(cci.toString()).isEqualTo("CLASS ClassC$ClassCInner\n" +
+                "  METHOD <init>(ClassC)\n" +
+                "  METHOD retrieveClassA()");
+        Information<?> created = new RootInformation().findOrCreate("a.b.c.d()", null, Information.Type.METHOD);
+        assertThat(created.getType()).isEqualTo(Information.Type.METHOD);
+        assertThat(created.getPath()).isEqualTo("a.b.c.d()");
+        assertThat(dm.findOrCreate("proj.ClassC", null, Information.Type.CLASS)).isSameAs(cc);
+        assertThat(created.getRoot().findOrCreate("a.bb.x", null, Information.Type.CLASS).getPath()).isEqualTo("a.bb.x");
     }
 
     @Test
