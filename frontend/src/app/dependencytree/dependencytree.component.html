@@ -19,13 +19,14 @@
   <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
 </mat-menu>
 
-<button mat-button [matMenuTriggerFor]="displayOptions">Change View Mode</button>
-<mat-menu #displayOptions="matMenu">
-  <button mat-menu-item (click)="changeDisplayOption(DisplayOption.Standard)">Standard</button>
-  <button mat-menu-item (click)="changeDisplayOption(DisplayOption.CompactMiddlePackages)">Compact Middle Packages
-  </button>
-  <button mat-menu-item (click)="changeDisplayOption(DisplayOption.FlattenPackages)">Flatten Packages</button>
-</mat-menu>
+<mat-form-field>
+  <mat-label>Change View Mode</mat-label>
+  <mat-select value="{{db.selectedDisplayOption}}" (selectionChange)="changeDisplayOption($event.value)">
+    <mat-option value="{{DisplayOption.Standard}}">{{DisplayOption.Standard}}</mat-option>
+    <mat-option value="{{DisplayOption.CompactMiddlePackages}}">{{DisplayOption.CompactMiddlePackages}}</mat-option>
+    <mat-option value="{{DisplayOption.FlattenPackages}}">{{DisplayOption.FlattenPackages}}</mat-option>
+  </mat-select>
+</mat-form-field>
 
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
   <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
@@ -51,4 +52,3 @@
     </div>
   </mat-tree-node>
 </mat-tree>
-

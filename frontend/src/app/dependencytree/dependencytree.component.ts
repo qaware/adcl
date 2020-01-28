@@ -39,9 +39,9 @@ export enum FilterType {
 
 /** Display options */
 export enum DisplayOption {
-  Standard,
-  CompactMiddlePackages,
-  FlattenPackages
+  Standard = 'Normal',
+  CompactMiddlePackages = 'Compact Middle Packages',
+  FlattenPackages = 'Flat Packages'
 }
 
 /**
@@ -69,7 +69,7 @@ export class DependencyTreeDatabase {
     // Build the tree nodes from Json object. The result is a list of `changelog notes` with nested
     this.connectToDatabase();
     this.loadChangelogIds();
-    this.selectedDisplayOption = DisplayOption.Standard;
+    this.selectedDisplayOption = DisplayOption.CompactMiddlePackages;
   }
 
   /**
