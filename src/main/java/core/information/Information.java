@@ -53,8 +53,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     private final CompareHelper<Information<?>> deepComparator = new CompareHelper<>();
     @Id
     @GeneratedValue
-    @Nullable
-    private Long id;
+    @Nullable Long id;
 
     Information() {
         this("<neo4jInit>");
@@ -404,7 +403,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     public Information<?> createChild(Type childType, String name) {
         if (getType() == Type.ROOT && childType == Type.PROJECT)
-            return new ProjectInformation((RootInformation) this, "null", false, "<unknown>");
+            return new ProjectInformation((RootInformation) this, name, false, "<unknown>");
         if (getType() == Type.PROJECT && childType == Type.PACKAGE)
             return new RootPackageInformation((ProjectInformation) this, name);
         if (getType() == Type.PROJECT && childType == Type.CLASS)

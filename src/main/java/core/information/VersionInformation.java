@@ -15,12 +15,6 @@ public class VersionInformation implements Comparable<VersionInformation> {
 
     private ProjectInformation project;
 
-    @SuppressWarnings("unused")
-    private VersionInformation() {
-        this.name = "<neo4jInit>";
-        this.project = null;
-    }
-
     VersionInformation(@NotNull String name, @NotNull ProjectInformation project) {
         this.name = name;
         this.project = project;
@@ -78,9 +72,14 @@ public class VersionInformation implements Comparable<VersionInformation> {
 
     @Override
     public int compareTo(@NotNull VersionInformation o) {
-        if (!Objects.equals(project.getName(), o.project.getName()))
+        if (o == this) return 0;
+        if (project == null || o.project == null)
+            return -1; //Objects while being loaded from database are different to each other
+        if (Objects.equals(project.getName(), o.project.getName())) {
+            return Integer.compare(project.getVersions().indexOf(this), project.getVersions().indexOf(o));
+        } else {
             throw new UnsupportedOperationException("Comparing versions of different projects " + project.getName() + " and " + o.project.getName());
-        return Integer.compare(project.getVersions().indexOf(this), project.getVersions().indexOf(o));
+        }
     }
 
     @Override
