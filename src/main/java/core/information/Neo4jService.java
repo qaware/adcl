@@ -38,6 +38,13 @@ public class Neo4jService {
         repo.save(root);
     }
 
+    @Transactional
+    public void overrideRoot(@NotNull RootInformation newRoot) {
+        newRoot.id = root.id;
+        root = newRoot;
+        saveRoot();
+    }
+
     @Repository
     public interface RootRepository extends Neo4jRepository<RootInformation, Long> {
     }
