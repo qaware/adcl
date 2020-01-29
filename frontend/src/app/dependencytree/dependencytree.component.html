@@ -1,29 +1,43 @@
 <mat-form-field>
-    <mat-label>Changelog</mat-label>
-        <mat-select (selectionChange)="changeDependencyTree($event.value)">
-          <mat-option *ngFor="let id of database.changelogIds" [value]="id">
-            {{id}}
-          </mat-option>
-        </mat-select>
-  </mat-form-field>
+  <mat-label>Changelog</mat-label>
+  <mat-select (selectionChange)="changeDependencyTree($event.value)">
+    <mat-option *ngFor="let id of database.changelogIds" [value]="id">
+      {{id}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
 
 <mat-form-field>
   <input #searchField matInput placeholder="Search" (input)="filterChanged($event) ">
 </mat-form-field>
 
-  <button mat-button [matMenuTriggerFor]="searchFilterMenu">Add Search Scope</button>
-  <mat-menu #searchFilterMenu="matMenu">
-    <button mat-menu-item (click)="searchFilterSelected(FilterType.Package)">Package scope</button>
-    <button mat-menu-item (click)="searchFilterSelected(FilterType.Class)">Class scope</button>
-    <button mat-menu-item (click)="searchFilterSelected(FilterType.Method)">Method scope</button>
-    <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
-  </mat-menu>
+<button mat-button [matMenuTriggerFor]="searchFilterMenu">Add Search Scope</button>
+<mat-menu #searchFilterMenu="matMenu">
+  <button mat-menu-item (click)="searchFilterSelected(FilterType.Package)">Package scope</button>
+  <button mat-menu-item (click)="searchFilterSelected(FilterType.Class)">Class scope</button>
+  <button mat-menu-item (click)="searchFilterSelected(FilterType.Method)">Method scope</button>
+  <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
+</mat-menu>
+
+<mat-form-field>
+  <mat-label>Change View Mode</mat-label>
+  <mat-select value="{{db.selectedDisplayOption}}" (selectionChange)="changeDisplayOption($event.value)">
+    <mat-option value="{{DisplayOption.Standard}}">{{DisplayOption.Standard}}</mat-option>
+    <mat-option value="{{DisplayOption.CompactMiddlePackages}}">{{DisplayOption.CompactMiddlePackages}}</mat-option>
+    <mat-option value="{{DisplayOption.FlattenPackages}}">{{DisplayOption.FlattenPackages}}</mat-option>
+  </mat-select>
+</mat-form-field>
 
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
   <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
     <button mat-icon-button disabled></button>
     <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
-      <strong>{{node.label}}: &nbsp; </strong> {{node.name}}
+      <strong
+        [ngClass]="{
+          'labelRed': node.label.startsWith('+'),
+          'labelGreen': node.label.startsWith('-')
+         }"
+      >{{node.label}}: &nbsp; </strong> {{node.name}}
     </div>
   </mat-tree-node>
   <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
@@ -38,4 +52,3 @@
     </div>
   </mat-tree-node>
 </mat-tree>
-
