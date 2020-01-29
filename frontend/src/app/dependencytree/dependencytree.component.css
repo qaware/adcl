@@ -1,6 +1,14 @@
 .nodeItem {
-  max-width: 40%;
+  max-width: 50%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.labelGreen {
+  color: green;
+}
+
+.labelRed {
+  color: darkred;
 }
