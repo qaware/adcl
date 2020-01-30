@@ -31,12 +31,12 @@ If tool is started as a plugin your pom.xml should look like this:
                             <name>spring.data.neo4j.password</name>
                             <value>test</value>
                         </property>
-                        <!-- Folder where .class files of the project are located  -->
+                        <!-- (Optional) Folder where .class files of the project are located  -->
                         <property>
                             <name>project.uri</name>
                             <value>path/to/project/classes</value>
                         </property>
-                        <!-- Name to store new analysed data -->
+                        <!-- (Optional) Name to store new analysed data -->
                         <property>
                             <name>project.commit.current</name>
                             <value>test2</value>
@@ -67,11 +67,11 @@ If you want to start ADCL as a jar it needs either a file which looks like this:
 spring.data.neo4j.uri=bolt://localhost:7687
 spring.data.neo4j.username=neo4j
 spring.data.neo4j.password=neo4j
-# Folder where .class files of the project are located  
+# (Optional) Folder where .class files of the project are located  
 project.uri=path/to/project/classes
-# Name for last data to create a changelog against
+# (Optional) Name for last data to create a changelog against
 project.commit.previous=versionRef1
-# Name to store new analysed data  
+# (Optional) Name to store new analysed data  
 project.commit.current=versionRef2
 ```
 or you can launch it by giving ADCL the informations directly via the commandline.  

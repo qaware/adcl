@@ -39,9 +39,9 @@ export enum FilterType {
 
 /** Display options */
 export enum DisplayOption {
-  Standard,
-  CompactMiddlePackages,
-  FlattenPackages
+  Standard = 'Normal',
+  CompactMiddlePackages = 'Compact Middle Packages',
+  FlattenPackages = 'Flat Packages'
 }
 
 /**
@@ -70,7 +70,7 @@ export class DependencyTreeDatabase {
     this.treeData = [];
     this.connectToDatabase();
     this.loadProjectName();
-    this.selectedDisplayOption = DisplayOption.Standard;
+    this.selectedDisplayOption = DisplayOption.CompactMiddlePackages;
   }
 
   /**
