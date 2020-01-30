@@ -5,6 +5,7 @@ import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.ogm.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import util.Utils;
 
 import java.io.IOException;
 
@@ -47,7 +49,15 @@ public class Application {
         LOGGER.info("ADCL args: {}", appConfig);
 
         LOGGER.info("Launching Spring");
-        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
+        ConfigurableApplicationContext ctx;
+        try {
+            ctx = SpringApplication.run(Application.class);
+        } catch (Exception e) {
+            if (Utils.hasCause(e, AuthenticationException.class)) {
+                LOGGER.error("Could not authenticate to neo4j");
+            } else throw e;
+            return 1;
+        }
         LOGGER.info("Querying project data");
         Neo4jService neo4jService = ctx.getBean(Neo4jService.class);
         RootInformation root = neo4jService.getRoot();

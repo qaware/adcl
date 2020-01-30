@@ -37,4 +37,10 @@ public class Utils {
             return null;
         }
     }
+
+    public static boolean hasCause(Throwable thr, @NotNull Class<? extends Throwable> cause) {
+        if (cause.isInstance(thr)) return true;
+        else if (thr.getCause() != null) return hasCause(thr.getCause(), cause);
+        else return false;
+    }
 }
