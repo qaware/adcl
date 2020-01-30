@@ -22,7 +22,7 @@ public class ApplicationConfig {
     public final String previousVersionName = getPreviousVersionName();
     @NotNull
     public final Configuration neo4jConfig = getNeo4jConfig();
-    @NotNull
+    @Nullable
     private final Model localPom = getLocalPom();
     /**
      * An existing directory with .class-Files in it
@@ -38,13 +38,17 @@ public class ApplicationConfig {
     ApplicationConfig() throws ConfigurationException {
     }
 
-    @NotNull
+    @Nullable
     private Model getLocalPom() throws ConfigurationException {
         try {
             MavenXpp3Reader reader = new MavenXpp3Reader();
             return reader.read(Files.newBufferedReader(Paths.get("pom.xml")));
         } catch (IOException | XmlPullParserException e) {
-            throw new ConfigurationException("Could not open project pom.xml! Working directory has to be root of project to be analyzed", e);
+            if (Config.get("nomaven", false)) {
+                return null;
+            } else {
+                throw new ConfigurationException("Could not open project pom.xml! Working directory has to be root of project to be analyzed. If your are not using maven, skip this error with nomaven flag.", e);
+            }
         }
     }
 
@@ -54,6 +58,7 @@ public class ApplicationConfig {
         if (result == null) {
             String raw = Config.get("project.uri", null);
             if (raw == null) {
+                if (localPom == null) throw new ConfigurationException("Option project.uri not specified");
                 String output = localPom.getBuild().getOutputDirectory();
                 if (output == null) output = "target/classes"; // as stated in jdoc of Build#getOutputDirectory()
                 return Paths.get(output);
@@ -67,21 +72,24 @@ public class ApplicationConfig {
     }
 
     @NotNull
-    private String getProjectName() {
-        return Config.get("project.name", localPom.getArtifactId());
+    private String getProjectName() throws ConfigurationException {
+        String result = Config.get("project.name", localPom == null ? null : localPom.getArtifactId());
+        if (result == null) throw new ConfigurationException("Option project.name not specified");
+        return result;
     }
 
     @NotNull
-    private String getCurrentVersionName() {
+    private String getCurrentVersionName() throws ConfigurationException {
         String result = Config.get("project.commit.current", null);
         if (result == null) {
             result = Config.get("project.commit", null);
             if (result != null)
                 LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
         }
-        if (result == null) {
+        if (result == null && localPom != null) {
             result = localPom.getVersion();
         }
+        if (result == null) throw new ConfigurationException("Option project.commit not specified");
         return result;
     }
 

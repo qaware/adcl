@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import util.CompareHelper;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -107,13 +108,16 @@ public class ProjectInformation extends Information<RootInformation> {
 
     @Nullable
     public String resolveProjectByClassName(@NotNull String className) {
-        return externalIndices.getOrDefault(className, "null");
+        String result = externalIndices.getOrDefault(className, "null");
+        return result;
     }
 
     public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException {
         externalIndices.clear();
         IndexBuilder.index(pathToOwnFiles, getName(), externalIndices);
-        new PomDependencyReader(Paths.get("pom.xml")).readAllCompilationRelevantDependencies().forEach(d -> {
+        Path pomFile = Paths.get("pom.xml");
+        if (Files.exists(pomFile))
+            new PomDependencyReader(pomFile).readAllCompilationRelevantDependencies().forEach(d -> {
             try {
                 IndexBuilder.index(d, externalIndices);
             } catch (IOException e) {

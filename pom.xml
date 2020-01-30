@@ -37,7 +37,6 @@
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-ogm-bolt-driver</artifactId>
             <version>3.2.2</version>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- HTML DSL -->
