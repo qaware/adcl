@@ -68,7 +68,7 @@ public class Application {
             project = new ProjectInformation(root, appConfig.projectName, true, appConfig.currentVersionName);
             currentVersion = project.getLatestVersion();
         } else {
-            currentVersion = project.addVersion(appConfig.projectName);
+            currentVersion = project.addVersion(appConfig.currentVersionName);
         }
 
         LOGGER.info("Analysing new dependencies");
