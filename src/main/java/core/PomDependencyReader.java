@@ -1,9 +1,16 @@
 package core;
 
+import core.information.ProjectInformation;
+import core.information.VersionInformation;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.shared.invoker.*;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jetbrains.annotations.NotNull;
 import util.Utils;
@@ -12,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Properties;
@@ -97,5 +105,18 @@ public class PomDependencyReader {
         } finally {
             Files.deleteIfExists(outputPath);
         }
+    }
+
+    /**
+     * integrates the pom dependencies in the project
+     *
+     * @param pj                 determines to which project the dependencies should be integrated
+     * @param versionInformation determines which project version
+     */
+    public void integrateInDataModell(ProjectInformation pj, VersionInformation versionInformation) throws IOException, XmlPullParserException {
+        Set<Dependency> set = readDependencies();
+        ArrayList<VersionInformation> vi = new ArrayList<>();
+        set.forEach(x -> vi.add(new VersionInformation(x.getArtifactId(), pj)));
+        vi.forEach(x -> pj.addPomDependency(x, versionInformation));
     }
 }

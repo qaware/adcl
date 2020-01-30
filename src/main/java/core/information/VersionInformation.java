@@ -25,7 +25,7 @@ public class VersionInformation implements Comparable<VersionInformation> {
      * @see ProjectInformation#getVersions()
      * @see ProjectInformation#getLatestVersion()
      */
-    VersionInformation(@NotNull String name, @NotNull ProjectInformation project) {
+    public VersionInformation(@NotNull String name, @NotNull ProjectInformation project) {
         this.name = name;
         this.project = project;
     }
