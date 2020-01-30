@@ -108,8 +108,7 @@ public class ProjectInformation extends Information<RootInformation> {
 
     @Nullable
     public String resolveProjectByClassName(@NotNull String className) {
-        String result = externalIndices.getOrDefault(className, "null");
-        return result;
+        return externalIndices.getOrDefault(className, "null");
     }
 
     public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException {
