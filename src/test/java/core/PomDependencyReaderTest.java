@@ -1,7 +1,11 @@
 package core;
 
 
+import core.information2.ProjectInformation;
+import core.information2.RootInformation;
+import core.information2.VersionInformation;
 import org.apache.maven.model.Dependency;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -10,13 +14,57 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static util.DataGenerationUtil2.*;
+import static util.DataGenerationUtil2.mi;
 
 public class PomDependencyReaderTest {
     private static PomDependencyReader reader;
-
+    private static RootInformation dm;
     @BeforeAll
     static void setup() {
         reader = new PomDependencyReader("src/test/resources/pom/pom.xml");
+        dm = root(
+                project("proj", true, "v1.0.0",
+                        pir("packageA",
+                                cio("ClassA", false,
+                                        mi("<init>()"),
+                                        mi("methodA()"),
+                                        mi("methodB(packageB.ClassB)"),
+                                        mi("empty()")
+                                ),
+                                cio("ClassABase", false,
+                                        mi("empty()")
+                                )
+                        ),
+                        pir("packageB",
+                                cio("ClassB", true,
+                                        mi("<init>()"),
+                                        mi("<clinit>()"),
+                                        mi("getInstanceA()"),
+                                        mi("method(java.util.function.Predicate)"),
+                                        mi("lambda$getInstanceA$0(java.lang.String)"),
+                                        mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
+                                ),
+                                pis("emptyPackage")
+                        ),
+                        cir("ClassC", false,
+                                mi("<init>()"),
+                                mi("retrieveClassA()"),
+                                cii("1", false,
+                                        mi("<init>(ClassC)"),
+                                        mi("getClassC()")
+                                ),
+                                cii("ClassCInner", false,
+                                        mi("<init>(ClassC)"),
+                                        mi("retrieveClassA()")
+                                )
+                        ),
+
+                        cir("ExternalClass", false,
+                                mi("extMethod()")
+                        )
+                )
+        );
     }
 
     @Test
@@ -39,6 +87,12 @@ public class PomDependencyReaderTest {
         ).map(Object::toString).collect(Collectors.toSet());
 
         assertThat(list).containsExactlyInAnyOrderElementsOf(newList);
+        ProjectInformation proj = (ProjectInformation)dm.findByPath("proj", null);
+        VersionInformation at = proj.getLatestVersion();
+        reader.integrateInDataModell(proj, at);
+        Set<VersionInformation> pom_dep = proj.getPomDependencies(at);
+        reader.readDependency().forEach(x -> Assert.assertNotNull(proj.getPomDependencies(at).stream().
+                filter(y -> y.getName().equals(x.getArtifactId()))));
     }
 
     private Dependency dependency(String artifact, String group, String version) {

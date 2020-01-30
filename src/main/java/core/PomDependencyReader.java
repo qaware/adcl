@@ -1,5 +1,7 @@
 package core;
 
+import core.information2.ProjectInformation;
+import core.information2.VersionInformation;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -41,5 +44,17 @@ public class PomDependencyReader {
             LOGGER.error(ex.getMessage(), ex);
         }
         return null;
+    }
+
+    /**
+     * integrates the pom dependencies in the project
+     * @param pj                 determines to which project the dependencies should be integrated
+     * @param versionInformation determines which project version
+     */
+    public void integrateInDataModell(ProjectInformation pj, VersionInformation versionInformation){
+        Set<Dependency> set = readDependency();
+        ArrayList<VersionInformation> vi = new ArrayList<>();
+        set.forEach(x -> vi.add(new VersionInformation(x.getArtifactId(), pj)));
+        vi.forEach(x -> pj.addPomDependency(x, versionInformation));
     }
 }
