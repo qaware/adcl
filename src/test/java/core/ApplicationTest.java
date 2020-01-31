@@ -1,6 +1,6 @@
 package core;
 
-import core.information.Neo4jService;
+import core.database.Neo4jService;
 import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

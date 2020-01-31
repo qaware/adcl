@@ -1,5 +1,7 @@
-package core.information;
+package core.database;
 
+import core.information.Information;
+import core.information.RootInformation;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;

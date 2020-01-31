@@ -1,6 +1,7 @@
-package core.information;
+package core.database;
 
 import core.Application;
+import core.information.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

@@ -60,6 +60,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @GeneratedValue
     @Nullable Long id;
 
+    /**
+     * Only for neo4j
+     */
     Information() {
         this("<neo4jInit>");
     }
@@ -147,7 +150,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Class Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
+     * Returns *all* Project Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
      * If version is null dependencies at any time are returned.
      *
      * @param includeInternal whether dependencies that lead to another child node of this should be included

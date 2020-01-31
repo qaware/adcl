@@ -1,6 +1,6 @@
 package core;
 
-import core.information.Neo4jService;
+import core.database.Neo4jService;
 import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;
