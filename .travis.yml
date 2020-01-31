@@ -16,11 +16,11 @@ git:
 
 script:
   # generate fat jar, tests, sonar
-  - mvn clean verify sonar:sonar
+  - mvn clean install sonar:sonar -P fat,!thin
   # rename fat jar accordingly
-  - (cd target; mv $(find . -name '*.jar' -a ! -name '*sources.jar') $(find . -name '*.jar' -a ! -name '*sources.jar' | rev | cut -c 5- | rev)-fat.jar)
-  # generate thin jar, jdoc
-  - mvn install javadoc:jar -DskipTests -Dspring-boot.repackage.skip
+  - (cd target; for f in *.jar; do mv $f "${f%.jar}-fat.jar"; done)
+  # generate thin jar, jdoc, sources
+  - mvn install
   # quality gate breaker
   - mvn --batch-mode --update-snapshots --non-recursive de.qaware.tools.sonarqube-build-breaker:sqbb-maven-plugin:sqbb -Dsqbb.projectKey=ADCL -Dsqbb.sonarQubeUrl=https://sonarcloud.io -Dsqbb.sonarQubeToken=$SONAR_TOKEN
   # deploy
