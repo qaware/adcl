@@ -25,7 +25,7 @@ public class MethodInformation extends Information<ClassInformation<?>> {
     }
 
     /**
-     * Whether this method is a constructor
+     * @return whether this method is a constructor
      */
     public boolean isConstructor() {
         return getName().startsWith("<");

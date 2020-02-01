@@ -39,6 +39,8 @@ public class PomDependencyReader {
      * Reads all dependencies from pom.xml file
      *
      * @return returns a set with dependencies
+     * @throws IOException            if local pom exists but can't be read
+     * @throws XmlPullParserException if local pom exists but is invalid
      */
     public Set<Dependency> readDependencies() throws IOException, XmlPullParserException {
         MavenXpp3Reader reader = new MavenXpp3Reader();

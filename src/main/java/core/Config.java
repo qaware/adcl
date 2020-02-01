@@ -40,8 +40,10 @@ public class Config {
     }
 
     /**
-     * Determines whether a given key has a value in the Config.
      * Use this if you want to differentiate between a non-existent value and an invalid value if get() returns null.
+     *
+     * @param key the option key
+     * @return whether a given key has a value in the Config.
      */
     public static boolean valuePresent(String key) {
         return properties.containsKey(key);

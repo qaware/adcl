@@ -34,6 +34,9 @@ public class DependencyExtractor {
 
     /**
      * Analyse classes collection.
+     *
+     * @throws IOException              if scanLocation is invalid or project pom exists but is invalid
+     * @throws MavenInvocationException if maven fails to read dependencies of project pom
      */
     public void runAnalysis() throws IOException, MavenInvocationException {
         LOGGER.info("Updating indices...");

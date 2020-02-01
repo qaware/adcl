@@ -73,7 +73,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
-     * Returns the owner of the relationship. The owner of a relation is the node (which is attached to the relation) whose existence determines the existence of the relation
+     * @return the owner of the relationship. The owner of a relation is the node (which is attached to the relation) whose existence determines the existence of the relation
      */
     @NotNull
     Information<?> getOwner() {
@@ -86,7 +86,8 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
-     * Whether the relation exists at given version
+     * @param version the version to check
+     * @return whether the relation exists at given version
      */
     public final boolean exists(@NotNull VersionInformation version) {
         List<VersionInformation> versions = getOwner().getProject().getVersions();
@@ -98,6 +99,9 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     /**
      * ensures that at a given version the relation exists, setting an existence marker if not currently
      * default implementation will override child existences
+     *
+     * @param version the version to potentially set the existence if needed
+     * @param aim     the aimed existence value
      */
     public void setExists(@NotNull VersionInformation version, boolean aim) {
         boolean curr = exists(version);
@@ -122,7 +126,9 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
-     * returns the latest change entry in the own versionInfo map which is in the specified version range
+     * @param fromVersionInclusive the start version of the version range to check, inclusive
+     * @param untilVersionInclusive the end version of the version range to check, inclusive
+     * @return the latest change entry in the own versionInfo map which is in the specified version range
      */
     @Nullable
     final Pair<VersionInformation, Boolean> getLatestChange(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {
@@ -139,7 +145,9 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
-     * returns the latest change entry which is relevant for this relationship, traversing from root to this
+     * @param fromVersionInclusive the start version of the version range to check, inclusive
+     * @param untilVersionInclusive the end version of the version range to check, inclusive
+     * @return the latest change entry which is relevant for this relationship, traversing from root to this
      */
     @Nullable
     final Pair<VersionInformation, Boolean> getLatestChangeInPath(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {

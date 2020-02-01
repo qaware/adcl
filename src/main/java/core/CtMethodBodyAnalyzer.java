@@ -33,25 +33,13 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     }
 
     /**
-     * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
-     *
-     * @param ctMethod the ct method
-     */
-    void analyse(CtBehavior ctMethod) {
-        getTypesFromSignature(ctMethod.getSignature()).forEach(this::addDependency);
-        try {
-            ctMethod.instrument(this);
-        } catch (CannotCompileException e) {
-            logger.warn("Got CannotCompileException without intention to compile", e);
-        }
-    }
-
-    /**
      * Gets all types denoted by prefix 'L' and suffix ';' that can be found in the methods bytecode signature
      *
+     * @param signature a java bytecode method signature (e.g. {@code getTypesFromSignature(Ljava/lang/String;)Ljava/util/Set;})
      * @return a set of full class names (com.example.MyClass) that were found
      */
-    private static Set<String> getTypesFromSignature(String signature) {
+    @NotNull
+    private static Set<String> getTypesFromSignature(@NotNull String signature) {
         Set<String> result = new HashSet<>();
         int pos = 0;
         while (true) {
@@ -66,8 +54,12 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
 
     /**
      * Converts a bytecode signature to a java source signature (only parameter lists, starting with '(' and ending with ')')
+     *
+     * @param signature the java bytecode method signature's parameter list in its parentheses (e.g. {@code (Ljava/lang/String;)})
+     * @return the parameter list in java source form, also with parentheses (e.g. {@code (java.lang.String)})
      */
-    private static String convertSignature(String signature) {
+    @NotNull
+    private static String convertSignature(@NotNull String signature) {
         StringBuilder sb = new StringBuilder("(");
 
         int pos = 1;
@@ -77,7 +69,7 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
             switch (signature.charAt(pos)) {
                 case ')':
                     pos = signature.length();
-                    if (sb.length() > 1) sb.setLength(sb.length() - 2);
+                    if (sb.length() > 1) sb.setLength(sb.length() - 2); // remove last comma
                     break;
                 case 'Z':
                     sb.append("boolean");
@@ -127,45 +119,9 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
         return sb.toString().replace('/', '.');
     }
 
-    @Override
-    public void edit(Cast c) {
-        try {
-            addDependency(c.getType().getName());
-        } catch (NotFoundException e) {
-            //TODO needs to be analyzed
-            logger.warn("Could not process class cast in {} as the casted type is not initialized yet", c.where().getLongName());
-        }
-    }
-
-    @Override
-    public void edit(NewArray a) {
-        try {
-            addDependency(a.getComponentType().getName());
-        } catch (NotFoundException e) {
-            //TODO needs to be analyzed
-            logger.warn("Could not process newarr in {} as the casted type is not initialized yet", a.where().getLongName());
-        }
-    }
-
-    @Override
-    public void edit(FieldAccess f) {
-        getTypesFromSignature(f.getSignature()).forEach(this::addDependency);
-    }
-
-    @Override
-    public void edit(Instanceof i) {
-        try {
-            addDependency(i.getType().getName());
-        } catch (NotFoundException e) {
-            //TODO needs to be analyzed
-            logger.warn("Could not process instanceof in {} as the casted type is not initialized yet", i.where().getLongName());
-        }
-    }
-
     /**
-     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
-     *
      * @param className the class name to be checked
+     * @return whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
      */
     private static boolean isJRE(String className) {
         className = className.replace("[", "").replace("]", "");
@@ -177,16 +133,64 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     }
 
     /**
-     * Checks whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
-     *
      * @param clazz the class to be checked
+     * @return whether a class is internal (JRE). A class is internal if it can be loaded and it's source is internal (aka null)
      */
-    private static boolean isJRE(Class<?> clazz) {
+    private static boolean isJRE(@NotNull Class<?> clazz) {
         return clazz.getProtectionDomain().getCodeSource() == null;
     }
 
+    /**
+     * Analyses a {@link CtBehavior} and extracts parameter types, variable types, method-calls that happen inside a Method/Constructor body.
+     *
+     * @param ctMethod the ct method
+     */
+    void analyse(@NotNull CtBehavior ctMethod) {
+        getTypesFromSignature(ctMethod.getSignature()).forEach(this::addDependency);
+        try {
+            ctMethod.instrument(this);
+        } catch (CannotCompileException e) {
+            logger.warn("Got CannotCompileException without intention to compile", e);
+        }
+    }
+
     @Override
-    public void edit(Handler h) {
+    public void edit(@NotNull Cast c) {
+        try {
+            addDependency(c.getType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process class cast in {} as the casted type is not initialized yet", c.where().getLongName());
+        }
+    }
+
+    @Override
+    public void edit(@NotNull NewArray a) {
+        try {
+            addDependency(a.getComponentType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process newarr in {} as the casted type is not initialized yet", a.where().getLongName());
+        }
+    }
+
+    @Override
+    public void edit(@NotNull FieldAccess f) {
+        getTypesFromSignature(f.getSignature()).forEach(this::addDependency);
+    }
+
+    @Override
+    public void edit(@NotNull Instanceof i) {
+        try {
+            addDependency(i.getType().getName());
+        } catch (NotFoundException e) {
+            //TODO needs to be analyzed
+            logger.warn("Could not process instanceof in {} as the casted type is not initialized yet", i.where().getLongName());
+        }
+    }
+
+    @Override
+    public void edit(@NotNull Handler h) {
         try {
             CtClass type = h.getType();
             if (type == null) return; //finally block
@@ -198,12 +202,12 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     }
 
     @Override
-    public void edit(MethodCall m) {
+    public void edit(@NotNull MethodCall m) {
         addDependency(m.getClassName(), m.getMethodName() + convertSignature(m.getSignature()));
     }
 
     @Override
-    public void edit(NewExpr newExpr) {
+    public void edit(@NotNull NewExpr newExpr) {
         addDependency(newExpr.getClassName(), "<init>" + convertSignature(newExpr.getSignature()));
     }
 

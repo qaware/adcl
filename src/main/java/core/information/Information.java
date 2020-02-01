@@ -102,13 +102,14 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * Type specification: which kind of java structure is represented by this?
+     *
+     * @return the represented {@link Type} of this class
      */
     @NotNull
     public abstract Type getType();
 
     /**
-     * Gets the absolute path of the node
-     * e.g. for MethodInformation "projectA.packageA.packageB.Class1.InnerClass.foo(java.lang.String, int)
+     * @return the absolute path of the node (e.g. for a {@link MethodInformation}: {@code projectA.packageA.packageB.Class1.InnerClass.foo(java.lang.String, int)})
      */
     @Contract(pure = true)
     @NotNull
@@ -117,7 +118,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Determines whether the node exists at a given version.
+     * @param version the version to check
+     * @return whether the node exists at a given version.
      */
     public boolean exists(@NotNull VersionInformation version) {
         assert parent != null;
@@ -132,7 +134,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     ////////// DEPS //////////
 
     /**
-     * Returns all *own* Project Dependencies at a given version. If version is null dependencies at any time are returned.
+     * @param at the version to check. If null dependencies at any time are returned
+     * @return all *own* project dependencies at a given version
      */
     @NotNull
     public final Set<ProjectInformation> getProjectDependencies(@Nullable VersionInformation at) {
@@ -140,9 +143,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Project Dependencies at a given version. If version is null dependencies at any time are returned.
-     *
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* project dependencies at a given version
      */
     @NotNull
     public final Set<ProjectInformation> getAllProjectDependencies(@Nullable VersionInformation at, boolean includeInternal) {
@@ -150,10 +153,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Project Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
-     * If version is null dependencies at any time are returned.
-     *
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* project dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version
      */
     public final Set<ProjectInformation> getAllProjectDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
         return Stream.concat(
@@ -163,7 +165,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Adds a new project dependency at given version. If version is null existence will be ensured for latest version
+     * Adds a new project dependency at given version
+     * @param to the dependency
+     * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addProjectDependency(@NotNull ProjectInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
@@ -173,7 +177,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns all *own* Package Dependencies at a given version. If version is null dependencies at any time are returned.
+     * @param at the version to check. If null dependencies at any time are returned
+     * @return all *own* package Dependencies at a given version
      */
     @NotNull
     public final Set<PackageInformation<?>> getPackageDependencies(@Nullable VersionInformation at) {
@@ -181,9 +186,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Package Dependencies at a given version. If version is null dependencies at any time are returned.
-     *
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* package Dependencies at a given version
      */
     @NotNull
     public final Set<PackageInformation<?>> getAllPackageDependencies(@Nullable VersionInformation at, boolean includeInternal) {
@@ -191,11 +196,10 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Package Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
-     * If version is null dependencies at any time are returned.
-     * Aggregation stops at the lowest found Package, so proj.packageA.packageB.ClassC aggregates to a dependency to proj.packageA.packageB
-     *
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* package dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version
+     * @implSpec Aggregation stops at the lowest found Package, so proj.packageA.packageB.ClassC aggregates to a dependency to proj.packageA.packageB
      */
     public final Set<PackageInformation<?>> getAllPackageDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
         return Stream.concat(
@@ -205,7 +209,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Adds a new package dependency at given version. If version is null existence will be ensured for latest version
+     * Adds a new package dependency at given version
+     * @param to the dependency
+     * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addPackageDependency(@NotNull PackageInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
@@ -215,7 +221,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns all *own* Class Dependencies at a given version. If version is null dependencies at any time are returned.
+     * @param at the version to check. If null dependencies at any time are returned
+     * @return all *own* class dependencies at a given version
      */
     @NotNull
     public final Set<ClassInformation<?>> getClassDependencies(@Nullable VersionInformation at) {
@@ -223,9 +230,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Class Dependencies at a given version. If version is null dependencies at any time are returned.
-     *
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* class dependencies at a given version
      */
     @NotNull
     public final Set<ClassInformation<?>> getAllClassDependencies(@Nullable VersionInformation at, boolean includeInternal) {
@@ -233,11 +240,10 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Class Dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version.
-     * If version is null dependencies at any time are returned.
-     * Aggregation stops at the lowest found Class, so proj.ClassA$ClassC.foo() aggregates to a dependency to proj.ClassA$ClassC
-     *
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* class dependencies - aggregating lower type dependencies to unbound higher type dependencies - at a given version
+     * @implSpec Aggregation stops at the lowest found Package, so proj.packageA.packageB.ClassC aggregates to a dependency to proj.packageA.packageB
      */
     public final Set<ClassInformation<?>> getAllClassDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
         return Stream.concat(
@@ -247,7 +253,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Adds a new class dependency at given version. If version is null existence will be ensured for latest version
+     * Adds a new class dependency at given version
+     * @param to the dependency
+     * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addClassDependency(@NotNull ClassInformation<?> to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
@@ -257,7 +265,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns all *own* Method Dependencies at a given version. If version is null dependencies at any time are returned.
+     * @param at the version to check. If null dependencies at any time are returned
+     * @return all *own* method dependencies at a given version
      */
     @NotNull
     public final Set<MethodInformation> getMethodDependencies(@Nullable VersionInformation at) {
@@ -265,8 +274,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* Method Dependencies at a given version. If version is null dependencies at any time are returned.
+     * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included
+     * @return *all* method dependencies at a given version
      */
     @NotNull
     public final Set<MethodInformation> getAllMethodDependencies(@Nullable VersionInformation at, boolean includeInternal) {
@@ -274,7 +284,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Adds a new method dependency at given version. If version is null existence will be ensured for latest version
+     * Adds a new method dependency at given version
+     * @param to the dependency
+     * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addMethodDependency(@NotNull MethodInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
@@ -286,7 +298,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     ////////// TREE //////////
 
     /**
-     * Returns the parent of the node; returns root for root
+     * @return the parent of the node; returns root for root
      */
     @NotNull
     public P getParent() {
@@ -295,7 +307,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns the first parent of given type traveling up the path, returns null if none was found
+     * @param <T> The type of the parent that should be returned
+     * @param parentType the correspondent class for the type parameter
+     * @return the first parent of given type traveling up the path, returns null if none was found
      */
     @SuppressWarnings("unchecked" /* checked by Class#isInstance */)
     @Nullable
@@ -305,16 +319,17 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Checks whether the information has {@code potentialParent} in its path, including itself
+     * @param potentialParent the parent to check for
+     * @return whether the information has {@code potentialParent} in its path, including itself
      */
     public boolean hasParent(@NotNull Information<?> potentialParent) {
         return equals(potentialParent) || getParent().hasParent(potentialParent);
     }
 
     /**
-     * Returns the direct children of the node at given version. Direct children are represented by an incoming parent edge in the graph.
-     * If version is null children at any time are returned.
-     * Keep in mind that it is unknown of which concrete type the children are (e.g. a direct children of a class can be a method or an inner class)
+     * @param at the version to check. If null children at any time are returned.
+     * @return the direct children of the node at given version. Direct children are represented by an incoming parent edge in the graph.
+     * @apiNote Keep in mind that it is unknown of which concrete type the children are (e.g. a direct children of a package can be a package or a class)
      */
     @NotNull
     public final Set<Information<?>> getDirectChildren(@Nullable VersionInformation at) {
@@ -322,8 +337,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns all children of the node at given version, recursively
-     * The version is null all children at any time are returned.
+     * @param at the version to check. If null children at any time are returned.
+     * @return all children of the node at given version, recursively.
+     * @apiNote Keep in mind that it is unknown of which concrete type the children are (e.g. a direct children of a package can be a package or a class)
      */
     @NotNull
     public final Set<Information<?>> getAllChildren(@Nullable VersionInformation at) {
@@ -331,7 +347,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns the root node
+     * @return the root node
      */
     @NotNull
     public final RootInformation getRoot() {
@@ -341,8 +357,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns the project node.
-     *
+     * @return the project node.
      * @throws UnsupportedOperationException if called on root node
      */
     @NotNull
@@ -353,7 +368,10 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns all direct children which are fitting to the given type at given version
+     * @param <T> the type of children to search for
+     * @param clazz the correspondent class for the type parameter
+     * @param at the version to check. If null fitting children at any time are returned
+     * @return all direct children which are fitting to the given type at given version
      */
     @NotNull
     public <T extends Information<?>> Set<T> find(@NotNull Class<T> clazz, @Nullable VersionInformation at) {
@@ -361,14 +379,46 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Returns *all* children which are fitting to the given type
-     * e.g. findAll(MethodInformation.class, null) returns all methods in the class/package/project at any time
+     * @param <T>   the type of children to search for
+     * @param clazz the correspondent class for the type parameter
+     * @param at    the version to check. If null fitting children at any time are returned
+     * @return *all* children which are fitting to the given type at given version
+     * <br>e.g. {@code findAll(MethodInformation.class, null)} returns all methods in the class/package/project at any time
      */
     @NotNull
     public <T extends Information<?>> Set<T> findAll(@NotNull Class<T> clazz, @Nullable VersionInformation at) {
         return Utils.cast(getAllChildren(at), clazz);
     }
 
+    /**
+     * Tries to find a sub node located at the sub path relative to this node by its path. If you want to match a whole path use {@code getRoot().findByPath(path, at)}
+     *
+     * @param subPath a sub path (e.g. if you want to find a.b.c.d and this is a.b, subPath has to be c.d)
+     * @param at      the version to check. If null children at any time are taken into consideration
+     * @return The node at this subPath. Null otherwise
+     * @see Information#findOrCreate(String, VersionInformation, Type)  version with creation
+     */
+    @Nullable
+    public Information<?> find(@NotNull final String subPath, @Nullable VersionInformation at) {
+        return getDirectChildren(at).stream().map(i -> {
+            if (!subPath.startsWith(i.name)) return null;
+            String nextSub = subPath.substring(i.name.length());
+            if (nextSub.startsWith(".") || nextSub.startsWith("$")) nextSub = nextSub.substring(1);
+            if (nextSub.isEmpty()) return i;
+            return i.find(nextSub, at);
+        }).filter(Objects::nonNull).findAny().orElse(null);
+    }
+
+    /**
+     * Tries to find a sub node located at the sub path relative to this node by its path. If element is not found the method tries to create a new node based on creationType
+     *
+     * @param subPath      a sub path (e.g. if you want to find a.b.c.d and this is a.b, subPath has to be c.d)
+     * @param version      the version at which the element should exist. If null the latest version will be used TODO ensure that! Especially that it does not exist before
+     * @param creationType the {@link Type} of the new node, if creation needed. Does not ensure that the returned node has that type
+     * @return the found or newly created node
+     * @throws UnsupportedOperationException if creationType and child logic given by subPath are mutually exclusive
+     * @see Information#find(String, VersionInformation) version without node creation
+     */
     @NotNull
     public Information<?> findOrCreate(@NotNull String subPath, @Nullable VersionInformation version, Type creationType) {
         Information<?> result = getDirectChildren(null).stream().map(i -> {
@@ -391,6 +441,16 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return result;
     }
 
+    /**
+     * Tries to resolve the type of a potential direct child given on an imaginary subPath and the subPath's leaf type
+     * Example1: if this is a PACKAGE a.b and subPath is c.d and lastSegmentType is METHOD c has to be a CLASS
+     * Example2: if this is a CLASS a.b and subPath is c.d and lastSegmentType is METHOD it will throw an exception as c is undefined
+     *
+     * @param subPath         the imaginary sub path
+     * @param lastSegmentType the leaf type of the sub path
+     * @return the type of the next
+     * @throws UnsupportedOperationException if lastSegmentType and subPath cannot be put in a logical correlation
+     */
     private Type typeOfNextSegment(@NotNull String subPath, @NotNull Type lastSegmentType) {
         int paramsStart = subPath.indexOf('(');
         if (paramsStart != -1) subPath = subPath.substring(0, paramsStart);
@@ -412,6 +472,14 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         throw new IllegalArgumentException();
     }
 
+    /**
+     * Creates a new direct child to this. Won't check for an already existing child
+     *
+     * @param childType the creation type
+     * @param name      the name of the new child
+     * @return the newly created child
+     * @throws UnsupportedOperationException if the childType cannot cannot serve as child (e.g. METHOD as child to ROOT)
+     */
     public Information<?> createChild(Type childType, String name) {
         if (getType() == Type.ROOT && childType == Type.PROJECT)
             return new ProjectInformation((RootInformation) this, name, false, "<unknown>");
@@ -426,20 +494,6 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         if (getType() == Type.CLASS && childType == Type.METHOD)
             return new MethodInformation((ClassInformation<?>) this, name);
         throw new UnsupportedOperationException("There is no child of type " + childType + " for parent " + getType());
-    }
-
-    /**
-     * Tries to find an information by its sub-path. If you want to match a whole path use {@code getRoot().findByPath(path, at)}
-     */
-    @Nullable
-    public Information<?> find(@NotNull final String subPath, @Nullable VersionInformation at) {
-        return getDirectChildren(at).stream().map(i -> {
-            if (!subPath.startsWith(i.name)) return null;
-            String nextSub = subPath.substring(i.name.length());
-            if (nextSub.startsWith(".") || nextSub.startsWith("$")) nextSub = nextSub.substring(1);
-            if (nextSub.isEmpty()) return i;
-            return i.find(nextSub, at);
-        }).filter(Objects::nonNull).findAny().orElse(null);
     }
 
     ////////// DEFAULT //////////
@@ -485,9 +539,6 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return o == this ? 0 : comparator.compare(this, o);
     }
 
-    /**
-     * Compares two information objects completely, including their children
-     */
     @Contract(pure = true)
     @Override
     public final int deepCompareTo(@NotNull Information<?> o) {

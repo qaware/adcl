@@ -60,6 +60,9 @@ public class ProjectInformation extends Information<RootInformation> {
 
     /**
      * Add a new version for the project to the end of the version history
+     *
+     * @param name the name of the new version
+     * @return the newly added version
      */
     @NotNull
     public VersionInformation addVersion(@NotNull String name) {
@@ -69,16 +72,20 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     /**
-     * Returns all *own* Pom Dependencies at a given version. If version is null dependencies at any time are returned.
+     * Returns all *own* Pom Dependencies at a given version.
+     * @param at The version to check. If null dependencies at any time are returned.
+     * @return the pom dependencies at given version
      */
     @NotNull
     public final Set<VersionInformation> getPomDependencies(@Nullable VersionInformation at) {
-        //noinspection ConstantConditions TODO work on PomDependencyInformation so verionInfo and remoteVersionMap are in sync
+        //noinspection ConstantConditions TODO work on PomDependencyInformation so verionInfo and remoteVersionMap are in sync (@1.5.2)
         return pomDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.getVersionAt(at)).collect(Collectors.toSet());
     }
 
     /**
-     * Adds a new pom dependency at given version. If version is null existence will be ensured for latest version
+     * Adds a new pom dependency at given version.
+     * @param at the version at which the dependency is to be added. If null existence will be ensured for latest version
+     * @param to the version the new dependency should point to
      */
     public final void addPomDependency(@NotNull VersionInformation to, @Nullable VersionInformation at) {
         if (at == null) at = getProject().getLatestVersion();
@@ -89,7 +96,7 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     /**
-     * Whether a Project is an internal project (a project analysed by adcl)
+     * @return whether a Project is an internal project (a project analysed by adcl)
      */
     public boolean isInternal() {
         return isInternal;
@@ -100,7 +107,7 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     /**
-     * Returns the latest version information in the project
+     * @return the latest version information in the project
      */
     public VersionInformation getLatestVersion() {
         return versions.get(versions.size() - 1);

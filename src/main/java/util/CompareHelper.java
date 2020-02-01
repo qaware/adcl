@@ -9,14 +9,19 @@ import java.util.function.Function;
 public class CompareHelper<T> implements Comparator<T> {
     private final List<Comparator<T>> compares = new ArrayList<>();
 
+    @NotNull
     public static <E extends Comparable<? super E>> Comparator<Collection<E>> collectionComparator() {
         return collectionComparator(Comparator.<E>naturalOrder());
     }
 
+    @NotNull
+    @Contract(pure = true)
     public static <E extends DeepComparable<? super E>> Comparator<Collection<E>> deepCollectionComparator() {
         return collectionComparator(((o1, o2) -> o1.deepCompareTo(o2)));
     }
 
+    @NotNull
+    @Contract(pure = true)
     public static <E> Comparator<Collection<E>> collectionComparator(Comparator<E> comparator) {
         return (o1, o2) -> {
             int cmpSize = Integer.compare(o1.size(), o2.size());
@@ -40,6 +45,12 @@ public class CompareHelper<T> implements Comparator<T> {
      * For elements not castable to U the return value must not be 0. In such cases the method tries
      * to differentiate the elements by it's class name. If that is 0 then by it's identity (so at least order is secured).
      * If the identity of the elements is equal we don't care about the order anymore but still won't return 0.
+     *
+     * @param <T>        the original elements type
+     * @param <U>        the casted elements type
+     * @param clazz      the correspondent class for type parameter {@code <U>}
+     * @param comparator the comparator for the casted elements
+     * @return a comparator of type T working like the description
      */
     @NotNull
     @Contract(pure = true)

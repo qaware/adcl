@@ -1,11 +1,13 @@
 package core.information;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
 import util.CompareHelper;
 
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A Class Information
@@ -25,7 +27,18 @@ public abstract class ClassInformation<P extends Information<?>> extends Informa
     }
 
     /**
-     * Whether the class is a service (annotated with @Service)
+     * @param at the version to check. If null children at any time are returned.
+     * @return the direct children of the node at given version. Direct children are represented by an incoming parent edge in the graph.
+     * @see Information#getDirectChildren(VersionInformation)
+     * @see Information#find(Class, VersionInformation)
+     */
+    @NotNull
+    public final Set<MethodInformation> getMethods(@Nullable VersionInformation at) {
+        return find(MethodInformation.class, at);
+    }
+
+    /**
+     * @return whether the class is a service (annotated with @Service)
      */
     public boolean isService() {
         return isService;

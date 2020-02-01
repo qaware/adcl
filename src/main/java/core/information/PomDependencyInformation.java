@@ -51,6 +51,9 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
 
     /**
      * Adds a remote version marker at given version
+     *
+     * @param version       the version to add the marker
+     * @param remoteVersion the version this marker points to
      */
     public void addVersionMarker(@NotNull VersionInformation version, @NotNull VersionInformation remoteVersion) {
         if (!remoteVersion.getProject().equals(getTo().getProject()))
@@ -60,6 +63,8 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
 
     /**
      * Retrieves a remote version marker at given version
+     * @param at the version to query
+     * @return the remote version
      */
     @Nullable
     public VersionInformation getVersionAt(@NotNull VersionInformation at) {
