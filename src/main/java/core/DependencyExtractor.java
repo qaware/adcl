@@ -6,6 +6,7 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,20 +21,29 @@ import java.util.stream.Stream;
  */
 public class DependencyExtractor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DependencyExtractor.class);
+    @NotNull
     private final Path scanLocation;
+    @NotNull
     private final ProjectInformation project;
+    @NotNull
     private final VersionInformation version;
-
+    @NotNull
     private final ClassPool classPool = new ClassPool(true);
 
-    public DependencyExtractor(Path scanLocation, ProjectInformation project, VersionInformation version) {
+    /**
+     * Instantiate a new Extractor. Does nothing except field init. Start analysis with {@link DependencyExtractor#runAnalysis()}
+     *
+     * @param scanLocation the root directory where the class files are located.
+     * @param version      the version the to-be-analysed class files correspond to
+     */
+    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version) {
         this.scanLocation = scanLocation;
-        this.project = project;
+        this.project = version.getProject();
         this.version = version;
     }
 
     /**
-     * Analyse classes collection.
+     * Analyse classes given by scanLocation. Inserts the results into given project tree, but might also create new entries on root level
      *
      * @throws IOException              if scanLocation is invalid or project pom exists but is invalid
      * @throws MavenInvocationException if maven fails to read dependencies of project pom
@@ -49,6 +59,11 @@ public class DependencyExtractor {
         LOGGER.info("Done");
     }
 
+    /**
+     * Runs the class analysis after indices are updated and next version got prepared in {@link DependencyExtractor#runAnalysis()}
+     *
+     * @throws IOException if scanLocation is invalid
+     */
     private void analyseClasses() throws IOException {
         try (Stream<Path> classes = Files.walk(scanLocation)) {
             classes.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".class")).forEach(p -> {

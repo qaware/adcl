@@ -6,20 +6,67 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Function;
 
+/**
+ * A comparator that compares elements based on an ordered list of comparators that have been added beforehand
+ *
+ * @param <T> the element type the CompareHelper handles
+ */
 public class CompareHelper<T> implements Comparator<T> {
     private final List<Comparator<T>> compares = new ArrayList<>();
 
+    /**
+     * @param <E> the type of the elements in the collection
+     * @return a comparator for collections of a type E which compares the elements of the collections.
+     * <br><br>Rules:
+     * <ol>
+     *     <li>smaller collection before larger collection</li>
+     *     <li>compare value of first not equal elements in the collections</li>
+     * </ol>
+     * <br>Example (lexicographical order):
+     * <ul>
+     *     <li>[a, c] is before [a, b, c]</li>
+     *     <li>[a, b, c] is before [a, b, d]</li>
+     * </ul>
+     */
     @NotNull
     public static <E extends Comparable<? super E>> Comparator<Collection<E>> collectionComparator() {
         return collectionComparator(Comparator.<E>naturalOrder());
     }
 
+    /**
+     * @param <E> the type of the elements in the collection
+     * @return a comparator for collections of a type E which deep compares the elements of the collections.
+     * <br><br>Rules:
+     * <ol>
+     *     <li>smaller collection before larger collection</li>
+     *     <li>compare value of first not equal elements in the collections</li>
+     * </ol>
+     * <br>Example (lexicographical order):
+     * <ul>
+     *     <li>[a, c] is before [a, b, c]</li>
+     *     <li>[a, b, c] is before [a, b, d]</li>
+     * </ul>
+     */
     @NotNull
     @Contract(pure = true)
     public static <E extends DeepComparable<? super E>> Comparator<Collection<E>> deepCollectionComparator() {
         return collectionComparator(((o1, o2) -> o1.deepCompareTo(o2)));
     }
 
+    /**
+     * @param <E> the type of the elements in the collection
+     * @return a comparator for collections of a type E which compares the elements of the collections using given comparator.
+     * <br><br>Rules:
+     * <ol>
+     *     <li>smaller collection before larger collection</li>
+     *     <li>compare value of first not equal elements in the collections</li>
+     * </ol>
+     * <br>Example (lexicographical order):
+     * <ul>
+     *     <li>[a, c] is before [a, b, c]</li>
+     *     <li>[a, b, c] is before [a, b, d]</li>
+     * </ul>
+     */
     @NotNull
     @Contract(pure = true)
     public static <E> Comparator<Collection<E>> collectionComparator(Comparator<E> comparator) {
@@ -38,6 +85,58 @@ public class CompareHelper<T> implements Comparator<T> {
             }
             return 0;
         };
+    }
+
+    public <U extends Comparable<? super U>> CompareHelper<T> add(Function<T, U> comp) {
+        return add(Comparator.comparing(comp));
+    }
+
+    public <U extends Comparable<? super U>> CompareHelper<T> add(Function<T, U> comp, int index) {
+        return add(Comparator.comparing(comp), index);
+    }
+
+    public <U> CompareHelper<T> add(Function<T, U> comp, Comparator<U> withComparator) {
+        return add(Comparator.comparing(comp, withComparator));
+    }
+
+    public <U> CompareHelper<T> add(Function<T, U> comp, Comparator<U> withComparator, int index) {
+        return add(Comparator.comparing(comp, withComparator), index);
+    }
+
+    public CompareHelper<T> add(Comparator<T> comp) {
+        compares.add(comp);
+        return this;
+    }
+
+    // STATIC
+
+    public CompareHelper<T> add(Comparator<T> comp, int index) {
+        compares.add(index, comp);
+        return this;
+    }
+
+    /**
+     * @param clazz the corresponding class for the type parameter {@code <U>}
+     * @param <U>   The type the elements should be casted to
+     * @return a (already added) compareHelper which will be called with the casted elements
+     * @see CompareHelper#castingComparator(Class, Comparator)
+     */
+    public <U> CompareHelper<U> casted(Class<U> clazz) {
+        CompareHelper<U> result = new CompareHelper<>();
+        add(castingComparator(clazz, result));
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compare(T a, T b) {
+        for (Comparator<T> cmp : compares) {
+            int c = cmp.compare(a, b);
+            if (c != 0) return c;
+        }
+        return 0;
     }
 
     /**
@@ -65,46 +164,5 @@ public class CompareHelper<T> implements Comparator<T> {
                 return cmp;
             }
         };
-    }
-
-    public <U extends Comparable<? super U>> CompareHelper<T> add(Function<T, U> comp) {
-        return add(Comparator.comparing(comp));
-    }
-
-    public <U> CompareHelper<T> add(Function<T, U> comp, Comparator<U> withComparator) {
-        return add(Comparator.comparing(comp, withComparator));
-    }
-
-    public <U extends Comparable<? super U>> CompareHelper<T> add(Function<T, U> comp, int index) {
-        return add(Comparator.comparing(comp), index);
-    }
-
-    public <U> CompareHelper<T> add(Function<T, U> comp, Comparator<U> withComparator, int index) {
-        return add(Comparator.comparing(comp, withComparator), index);
-    }
-
-    public CompareHelper<T> add(Comparator<T> comp) {
-        compares.add(comp);
-        return this;
-    }
-
-    public CompareHelper<T> add(Comparator<T> comp, int index) {
-        compares.add(index, comp);
-        return this;
-    }
-
-    public <U> CompareHelper<U> casted(Class<U> clazz) {
-        CompareHelper<U> result = new CompareHelper<>();
-        add(castingComparator(clazz, result));
-        return result;
-    }
-
-    @Override
-    public int compare(T a, T b) {
-        for (Comparator<T> cmp : compares) {
-            int c = cmp.compare(a, b);
-            if (c != 0) return c;
-        }
-        return 0;
     }
 }

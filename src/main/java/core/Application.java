@@ -33,10 +33,21 @@ public class Application {
 
     private static ApplicationConfig appConfig;
 
+    /**
+     * Entry Point for fat jar
+     *
+     * @param args CLI args
+     */
     public static void main(String[] args) {
         System.exit(launch(args));
     }
 
+    /**
+     * launches the application
+     *
+     * @param args CLI args
+     * @return the exit code
+     */
     public static int launch(String[] args) {
         //Loading config
         Config.load(args);
@@ -73,7 +84,7 @@ public class Application {
 
         LOGGER.info("Analysing new dependencies");
         try {
-            new DependencyExtractor(appConfig.scanLocation, project, currentVersion).runAnalysis();
+            new DependencyExtractor(appConfig.scanLocation, currentVersion).runAnalysis();
         } catch (IOException | MavenInvocationException e) {
             LOGGER.error("Could not analyse current class structure", e);
             return 1;

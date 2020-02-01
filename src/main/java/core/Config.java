@@ -217,6 +217,11 @@ public class Config {
         logger.info("Configuration loaded: {}", properties);
     }
 
+    /**
+     * @param configPath a file in .properties format
+     * @return config entries loaded from configPath file
+     */
+    @NotNull
     private static Map<String, String> fileToMap(Path configPath) {
         try {
             Properties prop = new Properties();
@@ -232,6 +237,10 @@ public class Config {
         }
     }
 
+    /**
+     * @return config entries loaded from JVM system properties
+     */
+    @NotNull
     private static Map<String, String> propertiesToMap() {
         return new MapTool<>(System.getProperties())
                 .castKeys(String.class)
@@ -241,6 +250,11 @@ public class Config {
                 .get();
     }
 
+    /**
+     * @param args CLI arguments
+     * @return config entries loaded from CLI
+     */
+    @NotNull
     private static Map<String, String> argsToMap(String[] args) {
         Map<String, String> result = new HashMap<>();
         Matcher matcher = stringToArgsPattern.matcher(Arrays.stream(args).collect(Collectors.joining(" ", "", " ")));
@@ -256,6 +270,15 @@ public class Config {
         return result;
     }
 
+    /**
+     * Tries to retrieve a config entry
+     *
+     * @param key    the config key
+     * @param parser the parser from the raw string config value to T
+     * @param def    the default type if the config entry does not exist or cannot be parsed
+     * @param <T>    the desired retrieval type
+     * @return the retrieved config entry or def if retrieval was not successful
+     */
     private static <T> T tryParse(String key, @NotNull Function<String, T> parser, T def) {
         try {
             String raw = key == null ? null : properties.get(key);

@@ -16,6 +16,8 @@ import java.util.Set;
 
 /**
  * The CtMethodBodyAnalyzer is used to extract information about with classes and methods are referenced inside a method/constructor body.
+ *
+ * @see DependencyExtractor
  */
 public class CtMethodBodyAnalyzer extends ExprEditor {
     private static final Logger logger = LoggerFactory.getLogger(CtMethodBodyAnalyzer.class);
@@ -25,6 +27,11 @@ public class CtMethodBodyAnalyzer extends ExprEditor {
     private final RootInformation root;
     private final ProjectInformation project;
 
+    /**
+     * Instantiate a new Analyzer. Does nothing except field init. Start analysis with {@link CtMethodBodyAnalyzer#analyse(CtBehavior)}
+     * @param method the method that represents the to-be-analysed {@link CtBehavior}
+     * @param version the version of the project (on which to insert)
+     */
     public CtMethodBodyAnalyzer(@NotNull MethodInformation method, @NotNull VersionInformation version) {
         this.method = method;
         this.version = version;

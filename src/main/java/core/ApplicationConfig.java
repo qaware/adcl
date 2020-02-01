@@ -18,25 +18,46 @@ import java.util.StringJoiner;
 
 public class ApplicationConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfig.class);
+
+    /**
+     * The name of the previous version of the project, if given. Does not load from database
+     */
     @Nullable
     public final String previousVersionName = getPreviousVersionName();
+    /**
+     * The configuration for establishing a neo4j database connection
+     */
     @NotNull
     public final Configuration neo4jConfig = getNeo4jConfig();
+    /**
+     * The data of the local pom.xml of the project, if present
+     */
     @Nullable
     private final Model localPom = getLocalPom();
     /**
-     * An existing directory with .class-Files in it
+     * The location of the class files to analyse
+     * Ensured that it is an existing directory TODO ensure .class files are in it and package entry of a class file matches so that scanLocation is definitly the project root
      */
     @NotNull
     public final Path scanLocation = getScanLocation();
+
+    /**
+     * The project name
+     */
     @NotNull
     public final String projectName = getProjectName();
+
+    /**
+     * The name of the current (to be analyzed) version of the project
+     */
     @NotNull
     public final String currentVersionName = getCurrentVersionName();
 
     @SuppressWarnings("java:S1130" /* wrong, ConfigurationException can be thrown in field initialization */)
     ApplicationConfig() throws ConfigurationException {
     }
+
+    // GETTERS ONLY
 
     @Nullable
     private Model getLocalPom() throws ConfigurationException {
@@ -120,6 +141,11 @@ public class ApplicationConfig {
         return properties.createConfiguration();
     }
 
+    // OTHER
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return new StringJoiner(", ", ApplicationConfig.class.getSimpleName() + "[", "]")
@@ -132,6 +158,10 @@ public class ApplicationConfig {
                 .toString();
     }
 
+    /**
+     * Exception to be thrown if Application configuration is incomplete or invalid
+     * Instantly logs any exception
+     */
     static class ConfigurationException extends Exception {
         private ConfigurationException(String message, Object... format) {
             LOGGER.error(message, format);

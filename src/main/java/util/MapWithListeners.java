@@ -5,18 +5,29 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-@SuppressWarnings({"java:S2160" /* No equals method needed, abstractMap#equals covers this */})
+/**
+ * A {@link Map} implementation which wraps another map but provides hooks on write actions
+ */
+@SuppressWarnings("java:S2160" /* No equals method needed, abstractMap#equals covers this */)
 public class MapWithListeners<K, V> extends AbstractMap<K, V> {
     private final Map<K, V> map;
     private final BiConsumer<K, V> onPut;
     private final BiConsumer<K, V> onRemove;
 
+    /**
+     * @param map      the map to wrap
+     * @param onPut    will be called with added key/value before a put operation
+     * @param onRemove will be called with removed key/value after a remove operation
+     */
     public MapWithListeners(Map<K, V> map, BiConsumer<K, V> onPut, BiConsumer<K, V> onRemove) {
         this.map = map;
         this.onPut = onPut;
         this.onRemove = onRemove;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public Set<Entry<K, V>> entrySet() {
@@ -56,6 +67,9 @@ public class MapWithListeners<K, V> extends AbstractMap<K, V> {
         };
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public V put(K key, V value) {
         onPut.accept(key, value);

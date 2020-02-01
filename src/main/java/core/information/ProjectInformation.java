@@ -120,7 +120,7 @@ public class ProjectInformation extends Information<RootInformation> {
 
     public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException {
         externalIndices.clear();
-        IndexBuilder.index(pathToOwnFiles, getName(), externalIndices);
+        IndexBuilder.indexDirectory(pathToOwnFiles, getName(), externalIndices);
         Path pomFile = Paths.get("pom.xml");
         if (Files.exists(pomFile))
             new PomDependencyReader(pomFile).readAllCompilationRelevantDependencies().forEach(d -> {

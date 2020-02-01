@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Makes a list with all dependencies from the pom.xml
+ * Reads all dependencies from the pom.xml
  */
 public class PomDependencyReader {
     @NotNull
@@ -48,6 +48,15 @@ public class PomDependencyReader {
         return new HashSet<>(model.getDependencies());
     }
 
+    /**
+     * @return all compilation-relevant dependencies including transitive dependencies. Use only for personal read access!
+     * @throws MavenInvocationException if {@code mvn dependency:list} fails or mvn is not found on the system
+     * @throws IOException              if {@code ./dependencies.txt} cannot be deleted
+     * @apiNote Returned dependencies only have set groupId, artifactId, version, scope and systemPath. Even if scope is
+     * compile the system path is given (contrary to the definition of {@link Dependency#getSystemPath()}).
+     * @implSpec takes a while (dependent on internet connection and project size) as maven has to download the dependencies
+     * <br>uses {@link ./dependencies.txt} for temporary output storage
+     */
     public Set<Dependency> readAllCompilationRelevantDependencies() throws MavenInvocationException, IOException {
         Path outputPath = Paths.get("dependencies.txt");
         Files.deleteIfExists(outputPath);

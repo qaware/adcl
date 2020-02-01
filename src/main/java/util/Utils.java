@@ -21,11 +21,26 @@ public class Utils {
     private Utils() {
     }
 
+    /**
+     * Casts a Set of type T to type U, dropping not castable entries
+     *
+     * @param set     the original set
+     * @param toClass the corresponding class for type parameter {@code <U>}
+     * @param <T>     the old type
+     * @param <U>     the new type
+     * @return a new set of type U
+     */
     @NotNull
     public static <T, U> Set<U> cast(@NotNull Set<T> set, @NotNull Class<U> toClass) {
         return set.stream().filter(toClass::isInstance).map(toClass::cast).collect(Collectors.toSet());
     }
 
+    /**
+     * Tries to resolve a CLI command to the binary that provides it
+     *
+     * @param cmd the command to be resolved
+     * @return the binary that provides the command, or null if no such binary found
+     */
     @Nullable
     public static Path searchInPath(String cmd) {
         try {
@@ -38,6 +53,11 @@ public class Utils {
         }
     }
 
+    /**
+     * @param thr   the exception
+     * @param cause the Throwable type to search for
+     * @return whether the exception has given cause type in its (transitive) causes
+     */
     public static boolean hasCause(Throwable thr, @NotNull Class<? extends Throwable> cause) {
         if (cause.isInstance(thr)) return true;
         else if (thr.getCause() != null) return hasCause(thr.getCause(), cause);
