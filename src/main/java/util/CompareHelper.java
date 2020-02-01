@@ -55,6 +55,7 @@ public class CompareHelper<T> implements Comparator<T> {
 
     /**
      * @param <E> the type of the elements in the collection
+     * @param comparator the comparator to compare the elements against
      * @return a comparator for collections of a type E which compares the elements of the collections using given comparator.
      * <br><br>Rules:
      * <ol>

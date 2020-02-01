@@ -55,7 +55,7 @@ public class PomDependencyReader {
      * @apiNote Returned dependencies only have set groupId, artifactId, version, scope and systemPath. Even if scope is
      * compile the system path is given (contrary to the definition of {@link Dependency#getSystemPath()}).
      * @implSpec takes a while (dependent on internet connection and project size) as maven has to download the dependencies
-     * <br>uses {@link ./dependencies.txt} for temporary output storage
+     * <br>uses {@code ./dependencies.txt} for temporary output storage
      */
     public Set<Dependency> readAllCompilationRelevantDependencies() throws MavenInvocationException, IOException {
         Path outputPath = Paths.get("dependencies.txt");
