@@ -52,7 +52,7 @@ public class ApplicationTest {
 
         assertThat(Application.launch(args)).isZero();
 
-        //TODO re-implement
+        //TODO re-implement (@1.0.17)
         /*VersionInformation before = neo4jService.getVersion("test");
         VersionInformation after = neo4jService.getVersion("test2");
         ChangelogInformation changelog = neo4jService.getChangeLogRepository().findAll().iterator().next();

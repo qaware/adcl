@@ -82,5 +82,5 @@ public class DatamodelRelationsTest {
         assertThat(dm.getAllPackageDependenciesAggregated(null, true)).containsExactlyInAnyOrder(pa.getStored(), pb.getStored());
         assertThat(dm.getAllProjectDependenciesAggregated(null, true)).containsExactlyInAnyOrder(proj.getStored());
     }
-    //TODO pom dependencies
+    //TODO pom dependencies (@1.5.2)
 }

@@ -81,7 +81,7 @@ public class DatamodelCompareTest {
         assertThat(Information.Type.CLASS.isSub(Information.Type.ROOT)).isTrue();
     }
 
-    //TODO (deep)compare two trees
-    //TODO compare different information classes a) of same type b) different type
-    //TODO for each node type for each property in node for test equal and not equal elements
+    //TODO (deep)compare two trees (@1.0.17)
+    //TODO compare different information classes a) of same type b) different type (@1.0.17)
+    //TODO for each node type for each property in node for test equal and not equal elements (@1.0.17)
 }
