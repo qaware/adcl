@@ -61,7 +61,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Nullable Long id;
 
     /**
-     * Only for neo4j
+     * neo4j init
      */
     Information() {
         this("<neo4jInit>");
@@ -94,6 +94,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         initializeComparators();
     }
 
+    /**
+     * @return the node name (only name, not the path)
+     */
     @Contract(pure = true)
     @NotNull
     public final String getName() {
@@ -120,12 +123,20 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     /**
      * @param version the version to check
      * @return whether the node exists at a given version.
+     * @see RelationshipInformation#exists(VersionInformation)
      */
     public boolean exists(@NotNull VersionInformation version) {
         assert parent != null;
         return parent.exists(version);
     }
 
+    /**
+     * Set the existence of an information at a given version
+     *
+     * @param at     the version at which the node should exist
+     * @param exists the aimed existence
+     * @see RelationshipInformation#setExists(VersionInformation, boolean)
+     */
     public void setExists(@NotNull VersionInformation at, boolean exists) {
         assert parent != null;
         parent.setExists(at, exists);
@@ -498,6 +509,9 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     ////////// DEFAULT //////////
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public final String toString() {
@@ -508,20 +522,38 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return sb.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(getType(), getPath());
     }
 
-    void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
+    /**
+     * Fills a {@link CompareHelper} with comparators so that it's compareTo compares the Information instances
+     *
+     * @param cmp the CompareHelper that should be filled with the comparator elements
+     */
+    protected void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
         cmp.add(Information::getType).add(Information::getPath);
     }
 
-    void deepCompareElements(@NotNull CompareHelper<Information<?>> cmp) {
+    /**
+     * Fills a {@link CompareHelper} with comparators so that it's compareTo deep compares the Information instances
+     *
+     * @param cmp the CompareHelper that should be filled with the comparator elements
+     */
+    protected void deepCompareElements(@NotNull CompareHelper<Information<?>> cmp) {
         compareElements(cmp);
         edgesCompareElements(cmp);
     }
 
+    /**
+     * Fills a {@link CompareHelper} with comparators so that it's compareTo compares the edges (dependencies, children) of the Information instances
+     *
+     * @param cmp the CompareHelper that should be filled with the comparator elements
+     */
     final void edgesCompareElements(@NotNull CompareHelper<Information<?>> cmp) {
         cmp.add(i -> i.getProjectDependencies(null), CompareHelper.collectionComparator());
         cmp.add(i -> i.getPackageDependencies(null), CompareHelper.collectionComparator());
@@ -531,7 +563,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * Compares attributes of two information objects only by its own attributes
+     * {@inheritDoc}
      */
     @Contract(pure = true)
     @Override
@@ -539,38 +571,61 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         return o == this ? 0 : comparator.compare(this, o);
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
     @Contract(pure = true)
     @Override
     public final int deepCompareTo(@NotNull Information<?> o) {
         return deepComparator.compare(this, o);
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
     @Contract(value = "null -> false", pure = true)
     @Override
     public final boolean equals(Object o) {
         return o instanceof Information && compareTo((Information<?>) o) == 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Contract(value = "null -> false", pure = true)
+    @Override
     public final boolean deepEquals(Object o) {
         return o instanceof Information && deepCompareTo((Information<?>) o) == 0;
     }
 
+    /**
+     * Initializes the comparator fields for compareTo and deepCompareTo to work
+     */
     private void initializeComparators() {
         compareElements(comparator);
         deepCompareElements(deepComparator);
     }
 
     /**
-     * The types the java structure has (root for internal purposes)
+     * The types the java structure has ({@link Type#ROOT} for internal purposes)
      */
     public enum Type {
         ROOT, PROJECT, PACKAGE, CLASS, METHOD;
 
+        /**
+         * @param type the type to compare
+         * @return whether own type can be a parent of given type
+         */
         public boolean isSuper(@NotNull Type type) {
             return ordinal() < type.ordinal();
         }
 
+        /**
+         * @param type the type to compare
+         * @return whether own type can be a child of given type
+         */
         public boolean isSub(@NotNull Type type) {
             return ordinal() > type.ordinal();
         }

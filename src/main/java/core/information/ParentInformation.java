@@ -6,18 +6,31 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 
 /**
  * Represents an edge on the graph describing the structural hierarchy of the java project
+ *
+ * @param <P> the parent type
  */
 @RelationshipEntity("Parent")
-public final class ParentInformation<T extends Information<?>> extends RelationshipInformation<T> {
+public final class ParentInformation<P extends Information<?>> extends RelationshipInformation<P> {
+    /**
+     * Neo4j init
+     */
     @SuppressWarnings("unused")
     private ParentInformation() {
         super();
     }
 
-    ParentInformation(@NotNull Information<T> from, @NotNull T to) {
+    /**
+     * Creates a new parent information. Does not register itself in parent nor child
+     * @param from the child information
+     * @param to the parent information
+     */
+    ParentInformation(@NotNull Information<P> from, @NotNull P to) {
         super(from, to);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Contract(pure = true)
     @Override
@@ -25,6 +38,9 @@ public final class ParentInformation<T extends Information<?>> extends Relations
         return getTo();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Contract(pure = true)
     @Override
@@ -32,6 +48,9 @@ public final class ParentInformation<T extends Information<?>> extends Relations
         return getFrom();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setExists(@NotNull VersionInformation version, boolean aim) {
         if (aim) {

@@ -10,17 +10,31 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * A Class Information
+ * A general class node
+ *
+ * @param <P> the parent type
  */
 @NodeEntity
 public abstract class ClassInformation<P extends Information<?>> extends Information<P> {
     @Property
     private boolean isService;
 
+    /**
+     * Neo4j init
+     */
     ClassInformation() {
         super();
     }
 
+    /**
+     * Creates a new class information and registers itself in parent
+     * @param parent the parent node ({@link RootInformation} or {@link PackageInformation})
+     * @param name the class name (simple name only)
+     * @param isService whether the class has the {@link org.springframework.stereotype.Service} annotation
+     * @see Information#createChild(Type, String)
+     * @see RootClassInformation#RootClassInformation(ProjectInformation, String, boolean)
+     * @see OuterClassInformation#OuterClassInformation(PackageInformation, String, boolean)
+     */
     ClassInformation(@NotNull P parent, @NotNull String name, boolean isService) {
         super(parent, name);
         this.isService = isService;
@@ -38,31 +52,43 @@ public abstract class ClassInformation<P extends Information<?>> extends Informa
     }
 
     /**
-     * @return whether the class is a service (annotated with @Service)
+     * @return whether the class is a service (annotated with {@link org.springframework.stereotype.Service})
      */
     public boolean isService() {
         return isService;
     }
 
+    /**
+     * @param isService whether the class is a {@link org.springframework.stereotype.Service}
+     */
     public void setIsService(boolean isService) {
         this.isService = isService;
     }
 
     // Overrides
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull Type getType() {
         return Type.CLASS;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("java:S1206" /* final super.equals uses hashCode */)
     public int hashCode() {
         return Objects.hash(super.hashCode(), isService);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
+    protected void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
         super.compareElements(cmp);
         cmp.casted(ClassInformation.class).add(ClassInformation::isService);
     }

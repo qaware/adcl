@@ -51,7 +51,7 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     /**
-     * Initialize version informations correctly after being loaded from database
+     * Initializes versions correctly after being loaded from database
      */
     @PostLoad
     private void postLoad() {
@@ -146,7 +146,7 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     @Override
-    void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
+    protected void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
         super.compareElements(cmp);
         cmp.casted(ProjectInformation.class).add(ProjectInformation::isInternal)
                 .add(ProjectInformation::getVersions, CompareHelper.collectionComparator());

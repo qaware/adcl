@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A {@link ProjectDependency} which also stores remote version names for each version
+ * Like {@link ProjectDependency}, but also stores remote version names for each version
  */
 @RelationshipEntity("PomDependency")
 public final class PomDependencyInformation extends RelationshipInformation<ProjectInformation> {
@@ -30,17 +30,28 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
             (k, v) -> remoteVersionMapInternal.remove(k.getName())
     );
 
+    /**
+     * Neo4j init
+     */
     @SuppressWarnings("unused")
     private PomDependencyInformation() {
         super();
     }
 
+    /**
+     * Creates a new pom dependency.
+     *
+     * @param from the node which has the dependency
+     * @param to   the dependency
+     * @see ProjectInformation#addPomDependency(VersionInformation, VersionInformation)
+     * @see ProjectInformation#getPomDependencies(VersionInformation)
+     */
     PomDependencyInformation(@NotNull Information<?> from, @NotNull ProjectInformation to) {
         super(from, to);
     }
 
     /**
-     * Initialize remoteVersionMap after database initialization
+     * Initializes {@link PomDependencyInformation#remoteVersionMap} after database initialization
      */
     @Override
     @PostLoad
@@ -51,7 +62,6 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
 
     /**
      * Adds a remote version marker at given version
-     *
      * @param version       the version to add the marker
      * @param remoteVersion the version this marker points to
      */
@@ -73,6 +83,9 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
 
     // overrides
 
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("java:S2159" /* wrong, types might be related */)
     @Contract(value = "null -> false", pure = true)
     @Override
@@ -80,6 +93,9 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
         return o instanceof PomDependencyInformation && super.equals(o) && remoteVersionMap.equals(((PomDependencyInformation) o).remoteVersionMap);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), remoteVersionMap);

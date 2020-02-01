@@ -98,7 +98,7 @@ public class RootInformation extends Information<RootInformation> {
      * {@inheritDoc}
      */
     @Override
-    void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
+    protected void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
         cmp.casted(RootInformation.class).add(RootInformation::getModelVersion);
         super.compareElements(cmp);
     }

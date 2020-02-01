@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 /**
  * Represents a versioned edge on the graph
+ * Can be extended only once (in means of hierarchy depth) due to restrictions in neo4j
  */
 @RelationshipEntity
 @SuppressWarnings("java:S1452" /* Wildcards are needed */)
@@ -43,30 +44,47 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     @GeneratedValue
     private Long id;
 
+    /**
+     * Neo4j init
+     */
     @SuppressWarnings({"unused", "java:S2637", "ConstantConditions"} /* neo4jInit */)
     RelationshipInformation() {
         this.from = null;
         this.to = null;
     }
 
+    /**
+     * Creates a new RelationshipInformation. Direction of the edge has no meaning in base class but can be given a meaning by subclasses
+     *
+     * @param from the start of the directed edge
+     * @param to   the end of the directed edge
+     */
     RelationshipInformation(@NotNull Information<?> from, @NotNull T to) {
         this.from = from;
         this.to = to;
     }
 
     /**
-     * Initialize versionInternal after database is loaded
+     * Initializes {@link RelationshipInformation#versionInfo} after database is loaded
      */
     @PostLoad
     void postLoad() {
         versionInfoInternal.forEach((v, c) -> versionInfoBacking.put(new VersionInformation(v, getOwner().getProject()), c));
     }
 
+    /**
+     * @return the edge start
+     * @see RelationshipInformation#getTo()
+     */
     @NotNull
     public final Information<?> getFrom() {
         return from;
     }
 
+    /**
+     * @return the edge end
+     * @see RelationshipInformation#getFrom()
+     */
     @NotNull
     public final T getTo() {
         return to;
@@ -74,12 +92,17 @@ public abstract class RelationshipInformation<T extends Information<?>> {
 
     /**
      * @return the owner of the relationship. The owner of a relation is the node (which is attached to the relation) whose existence determines the existence of the relation
+     * @see RelationshipInformation#getAim()
      */
     @NotNull
     Information<?> getOwner() {
         return getFrom();
     }
 
+    /**
+     * @return the aim of the relationship. The aim of a relation is the opposite of the {@linkplain RelationshipInformation#getOwner() owner}
+     * @see RelationshipInformation#getOwner()
+     */
     @NotNull
     Information<?> getAim() {
         return getTo();
@@ -88,6 +111,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     /**
      * @param version the version to check
      * @return whether the relation exists at given version
+     * @see Information#exists(VersionInformation)
      */
     public final boolean exists(@NotNull VersionInformation version) {
         List<VersionInformation> versions = getOwner().getProject().getVersions();
@@ -101,7 +125,8 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      * default implementation will override child existences
      *
      * @param version the version to potentially set the existence if needed
-     * @param aim     the aimed existence value
+     * @param aim the aimed existence value
+     * @see Information#setExists(VersionInformation, boolean)
      */
     public void setExists(@NotNull VersionInformation version, boolean aim) {
         boolean curr = exists(version);
@@ -120,6 +145,13 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         }
     }
 
+    /**
+     * ensures that at a given version the relation exists, setting an existence marker if not currently.
+     * Does not look whether the existence can be set by modifying the owner
+     *
+     * @param version the version to potentially set the existence if needed
+     * @param aim     the aimed existence value
+     */
     void setExistsNoInheritanceCheck(@NotNull VersionInformation version, boolean aim) {
         boolean curr = exists(version);
         if (aim != curr) versionInfo.put(version, aim);
@@ -161,6 +193,9 @@ public abstract class RelationshipInformation<T extends Information<?>> {
 
     // Overrides
 
+    /**
+     * {@inheritDoc}
+     */
     @SuppressWarnings("java:S2159" /* wrong, types to and ro.to might be related */)
     @Override
     public boolean equals(Object o) {
@@ -169,11 +204,17 @@ public abstract class RelationshipInformation<T extends Information<?>> {
         return from.equals(ro.from) && to.equals(ro.to) && versionInfo.equals(ro.versionInfo);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         return Objects.hash(versionInfo, from, to);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         String vi = versionInfo.entrySet().stream().map(e -> (Boolean.TRUE.equals(e.getValue()) ? '+' : '-') + e.getKey().toString()).collect(Collectors.joining(","));
