@@ -6,6 +6,7 @@ import core.information.RootInformation;
 import core.information.VersionInformation;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.neo4j.driver.exceptions.AuthenticationException;
+import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.ogm.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,12 @@ public class Application {
      * @param args CLI args
      */
     public static void main(String[] args) {
-        System.exit(launch(args));
+        try {
+            System.exit(launch(args));
+        } catch (Exception e) {
+            LOGGER.error("Application run failed!", e);
+            System.exit(1);
+        }
     }
 
     /**
@@ -48,7 +54,8 @@ public class Application {
      * @param args CLI args
      * @return the exit code
      */
-    public static int launch(String[] args) {
+    @SuppressWarnings({"RedundantThrows", "java:S112"} /* enforce caller to catch any potential exception */)
+    public static int launch(String[] args) throws Exception {
         //Loading config
         Config.load(args);
 
@@ -66,6 +73,8 @@ public class Application {
         } catch (Exception e) {
             if (Utils.hasCause(e, AuthenticationException.class)) {
                 LOGGER.error("Could not authenticate to neo4j");
+            } else if (Utils.hasCause(e, ServiceUnavailableException.class)) {
+                LOGGER.error("Could not connect to neo4j, service unavailable");
             } else throw e;
             return 1;
         }

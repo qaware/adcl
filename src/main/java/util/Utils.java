@@ -12,6 +12,8 @@ import java.io.InputStreamReader;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,5 +64,28 @@ public class Utils {
         if (cause.isInstance(thr)) return true;
         else if (thr.getCause() != null) return hasCause(thr.getCause(), cause);
         else return false;
+    }
+
+    /**
+     * Resolves a Map with String keys and either Boolean or other such Maps as values to a {@code Map<String, Boolean>}, concatenating the keys to one "super" key
+     *
+     * @param <T>       the value type to be expected in the map
+     * @param valueType the corresponding class for type parameter {@code <T>}
+     * @param prefix    the prefix for the final super keys
+     * @param map       the map to resolve
+     * @return the map with "super" keys
+     */
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T> Map<String, T> resolveNestedMaps(@NotNull Class<T> valueType, @Nullable String prefix, @NotNull Map<String, Object> map) {
+        Map<String, T> result = new HashMap<>();
+        map.forEach((k, v) -> {
+            String key = prefix == null ? k : (prefix + '.' + k);
+            if (valueType.isInstance(v)) result.put(key, (T) v);
+            else if (v instanceof Map) resolveNestedMaps(valueType, key, (Map<String, Object>) v);
+            else
+                throw new IllegalStateException("versionInfoInternal contains invalid element of type " + (v == null ? Void.class : v.getClass()));
+        });
+        return result;
     }
 }
