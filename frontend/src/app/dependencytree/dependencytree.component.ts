@@ -53,6 +53,8 @@ export class DependencyTreeDatabase {
   dataChange = new BehaviorSubject<TreeItemNode[]>([]);
   treeData: any[];
   changelogIds: any[];
+  projectNames: string[];
+  selectedProject: string;
   root = 'root';
   selectedDisplayOption: DisplayOption;
 
@@ -66,9 +68,8 @@ export class DependencyTreeDatabase {
 
   initialize() {
     this.treeData = [];
-    // Build the tree nodes from Json object. The result is a list of `changelog notes` with nested
     this.connectToDatabase();
-    this.loadChangelogIds();
+    this.loadProjectName();
     this.selectedDisplayOption = DisplayOption.CompactMiddlePackages;
   }
 
@@ -98,11 +99,20 @@ export class DependencyTreeDatabase {
   /**
    * Load the Identifier for the Changelogs
    */
-  loadChangelogIds() {
-    const queryChangelogId = 'MATCH (b:VersionInformation)-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-(a:VersionInformation) ' +
-      'RETURN b.versionName +\'&\'+ a.versionName;';
-    this.neo4j.run(queryChangelogId).then(changelogInformationIds => {
-      this.changelogIds = changelogInformationIds;
+  loadChangelogIds(projectName: string) {
+    this.selectedProject = projectName;
+    const params = {pName: projectName.toString()};
+    console.log(params);
+    const queryChangelogId = 'MATCH (n:ProjectInformation{name: {pName}}) return n.versions';
+    this.neo4j.run(queryChangelogId, params).then(changelogInformationIds => {
+      this.changelogIds = changelogInformationIds.flat(2);
+    });
+  }
+
+  private loadProjectName() {
+    const queryProjectNames = 'MATCH (p:ProjectInformation) WHERE p.internal=true RETURN p.name;';
+    this.neo4j.run(queryProjectNames).then(projectNames => {
+      this.projectNames = projectNames;
     });
   }
 
@@ -259,7 +269,7 @@ export class DependencyTreeDatabase {
           // flatten packages
           if (displayOption === DisplayOption.FlattenPackages && node.filterType === FilterType.Package) {
             const subpackages = node.children.filter(n => n.filterType === FilterType.Package);
-            node.children = node.children.filter(n => !(n.filterType === FilterType.Package));
+            node.children = node.children.filter(n => (n.filterType !== FilterType.Package));
             subpackages.forEach(sp => {
               const spNode: TreeItemNode = {...node};
               spNode.children = sp.children;
@@ -436,5 +446,10 @@ export class DependencytreeComponent {
       this.input.nativeElement.value = selectedFilter + ':' + this.input.nativeElement.value;
     }
     this.input.nativeElement.dispatchEvent(new Event('input'));
+  }
+
+  /** Event-Handler triggered by project selection, loads the available changelog version */
+  loadProjectVersion(projectName: string) {
+    this.db.loadChangelogIds(projectName);
   }
 }
