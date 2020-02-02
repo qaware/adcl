@@ -54,7 +54,7 @@ public class ProjectInformation extends Information<RootInformation> {
      * Initializes versions correctly after being loaded from database
      */
     @PostLoad
-    private void postLoad() {
+    void postLoad() {
         versions.forEach(v -> v.postLoad(this));
     }
 
@@ -150,10 +150,5 @@ public class ProjectInformation extends Information<RootInformation> {
         super.compareElements(cmp);
         cmp.casted(ProjectInformation.class).add(ProjectInformation::isInternal)
                 .add(ProjectInformation::getVersions, CompareHelper.collectionComparator());
-    }
-
-    @Override
-    public @NotNull String getPath() {
-        return getName();
     }
 }
