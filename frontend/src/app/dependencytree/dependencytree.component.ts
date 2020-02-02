@@ -44,6 +44,15 @@ export enum DisplayOption {
   FlattenPackages = 'Flat Packages'
 }
 
+/** Display options */
+export enum Label {
+  Package = 'Package',
+  Class = 'Class',
+  Method = 'Method',
+  AddedDependency = '+ Dependency',
+  DeletedDependency = '- Dependency'
+}
+
 /**
  * Dependency database, it can build a tree structured Json object.
  * Each node in Json object represents a changelog item.
@@ -102,7 +111,6 @@ export class DependencyTreeDatabase {
   loadChangelogIds(projectName: string) {
     this.selectedProject = projectName;
     const params = {pName: projectName.toString()};
-    console.log(params);
     const queryChangelogId = 'MATCH (n:ProjectInformation{name: {pName}}) return n.versions';
     this.neo4j.run(queryChangelogId, params).then(changelogInformationIds => {
       this.changelogIds = changelogInformationIds.flat(2);
@@ -118,124 +126,134 @@ export class DependencyTreeDatabase {
 
   /**
    * Load the changelog data for the selected changelog identifier
-   * @param value the changelog identifier
+   * @param version the changelog identifier
+   * @param projectName project name
    */
-  loadChangelogFromDatabase(value) {
-    // split the identifier for use in queries
-    const split = (value as string).toString().split('&', 2);
-    const params = {before: split[0], after: split[1]};
-
-    // Query fetching the package information related to the changelog
-    const queryPackageInformation = 'MATCH (b:VersionInformation{versionName: {before}})-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
-      '(a:VersionInformation{versionName: {after}}) WITH ' +
-      'n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) RETURN p.packageName';
-
-    // Query fetching the class information related to the changelog
-    const queryClassInformation = 'MATCH (b:VersionInformation{versionName: {before}})-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
-      '(a:VersionInformation{versionName: {after}}) WITH n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) ' +
-      'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) return c.className, toString(c.isService), p.packageName;';
-
-    // Query fetching the method information related to the changelog
-    const queryMethodInformation = 'MATCH (b:VersionInformation{versionName: {before}})-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
-      '(a:VersionInformation{versionName: {after}}) WITH n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) ' +
-      'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
-      'WITH c, p MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) return m.name, c.className, p.packageName;';
-
-    // Query fetching the dependency information regarding methods related to the changelog
-    const queryDependencyInformationMethod = 'MATCH (b:VersionInformation{versionName: {before}})' +
-      '-[:BEFORE]-(n:ChangelogInformation)-[:AFTER]-' +
-      '(a:VersionInformation{versionName: {after}}) WITH n MATCH (p:PackageInformation)-[:CHANGELOG]-(n:ChangelogInformation) ' +
-      'WITH p MATCH (c:ClassInformation)-[r:IS_CLASS_OF]->(p:PackageInformation) ' +
-      'WITH p, c MATCH (m:MethodInformation)-[r:IS_METHOD_OF]->(c:ClassInformation) ' +
-      'WITH p, m MATCH (dm:ChangelogDependencyInformation)<-[r:USES]-(m:MethodInformation)' +
-      'return dm.name, dm.changeStatus, m.name, p.packageName;';
-
+  loadChangelogFromDatabase(projectName: string, version: string) {
+    const params = {pName: projectName.toString(), version: version.toString()};
 
     const packageInformation: any[] = [{text: '', code: this.root}];
     const classInformation: any[] = [];
     const methodInformation: any[] = [];
-    const dependencyInformationMethod: any[] = [];
-    // executing the queries and saving the data in appropriate way for display in tree view
-    const packageResult = this.neo4j.run(queryPackageInformation, params).then(packageInfo => {
-      packageInfo.forEach(pInfo => {
-        let code = this.root;
-        const splitPackageName = (pInfo[0] as string).toString().split('.');
-        splitPackageName.forEach((pn) => {
-          code = code + '.' + pn;
-          if (packageInformation.find(e => e.code === code) === undefined) {
-            const obj: { [k: string]: any } = {};
-            obj.text = pn;
-            obj.path = code.substr(this.root.length + 1);
-            obj.code = code;
-            code = obj.code;
-            obj.label = 'Package';
+    const dependencyClass: any[] = [];
+    const dependencyMethod: any[] = [];
+
+    // Query fetching all nodes with contain changes
+    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
+      'where any(x in nodes(p) where exists(x.`versionInfo.' + version + '`)) ' +
+      'or any(x in relationships(p) where exists(x.`versionInfo.' + version + '`))' +
+      'return i.path, i.name, labels(i) as labels';
+
+    // Query fetching all dependencies
+    const queryDependencies = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
+      '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
+      'where any(x in nodes(p) where exists(x.`versionInfo.' + version + '`)' +
+      'and  x<>di) or any(x in relationships(p) where exists(x.`versionInfo.' + version + '`))' +
+      'return di.path as path, di.name as name, labels(di) as diLabels, any(x in nodes(p) where x.`versionInfo.' + version + '`) ' +
+      'as Changestatus, i.path as iPath ';
+
+    const treeResult = this.neo4j.run(queryTree, params).then(nodes => {
+      nodes.forEach(node => {
+        const path = (node[0] as string).substr((projectName.toString()).length + 1);
+        const name = node[1];
+        const type = this.resolveType(node[2]);
+        const obj: { [k: string]: any } = {};
+        obj.text = name;
+        obj.path = path;
+        obj.code = this.root + '.' + path;
+        switch (type) {
+          case 1: {
+            obj.label = Label.Package;
             obj.filterType = FilterType.Package;
             packageInformation.push(obj);
+            break;
+          }
+          case 2: {
+            obj.label = Label.Class;
+            obj.filterType = FilterType.Class;
+            classInformation.push(obj);
+            break;
+          }
+          case 3: {
+            obj.label = Label.Method;
+            obj.filterType = FilterType.Method;
+            methodInformation.push(obj);
+            methodInformation.push(this.createAddedDependenciesNode(obj.code));
+            methodInformation.push(this.createDeletedDependenciesNode(obj.code));
+            break;
+          }
         }
-        });
+
+
       });
     });
 
-    const classResult = this.neo4j.run(queryClassInformation, params).then(classInfo => {
-      classInfo.forEach(cInfo => {
+    const dependencyResult = this.neo4j.run(queryDependencies, params).then(nodes => {
+      nodes.forEach(node => {
+        const path = (node[0] as string).substr((projectName.toString()).length + 1);
+        const name = node[1];
+        const type = this.resolveType(node[2]);
+        const status = (node[3] === true) ? 'added' : 'deleted';
+        const usedByPath = (node[4] as string).substr((projectName.toString()).length + 1);
         const obj: { [k: string]: any } = {};
-        obj.text = cInfo[0].match(/[^.]*$/)[0];
-        obj.path = cInfo[0];
-        obj.code = this.root + '.' + cInfo[2] + '.' + obj.text;
-        obj.service = cInfo[1];
-        obj.package = cInfo[2];
-        obj.label = 'Class';
-        obj.filterType = FilterType.Class;
-        classInformation.push(obj);
-      });
-    });
-
-    const methodResult = this.neo4j.run(queryMethodInformation, params).then(methodInfo => {
-      methodInfo.forEach(mInfo => {
-        const obj: { [k: string]: any } = {};
-        obj.text = mInfo[0].match(/\..[^.]*\(.*\)/)[0].substr(1);
-        const midPath = (mInfo[1] as string).startsWith(mInfo[2]) ? mInfo[1] : mInfo[2] + '.' + mInfo[1];
-        obj.code = this.root + '.' + midPath + '.' + obj.text;
-        obj.path = mInfo[0];
-        obj.className = mInfo[1];
-        obj.label = 'Method';
-        obj.filterType = FilterType.Method;
-        methodInformation.push(obj);
-
-        const added: { [k: string]: any } = {};
-        added.label = 'Added dependencies';
-        added.text = '';
-        added.code = obj.code + '.added';
-        methodInformation.push(added);
-        const deleted: { [k: string]: any } = {};
-        deleted.label = 'Deleted dependencies';
-        deleted.text = '';
-        deleted.code = obj.code + '.deleted';
-        methodInformation.push(deleted);
-      });
-    });
-
-    const dependencyMethodResult = this.neo4j.run(queryDependencyInformationMethod, params).then(dependencyClassInfo => {
-      dependencyClassInfo.forEach(dcInfo => {
-        const status = (dcInfo[1] === 'ADDED') ? '.added' : '.deleted';
-        const obj: { [k: string]: any } = {};
-        obj.text = dcInfo[0];
-        obj.path = dcInfo[0];
-        const midPath = (dcInfo[2] as string).startsWith(dcInfo[3]) ? dcInfo[2] : dcInfo[3] + '.' + dcInfo[2];
-        obj.code = this.root + '.' + midPath + status + '.' + 0;
-        obj.changeStatus = dcInfo[1];
-        obj.usedByMethod = dcInfo[2];
-        obj.label = (status === '.added') ? '+ Dependency' : '- Dependency';
+        obj.text = name;
+        obj.path = path;
+        obj.code = this.root + '.' + usedByPath + '.' + status + '.' + name;
         obj.filterType = FilterType.Dependency;
-        dependencyInformationMethod.push(obj);
+        obj.label = (node[3] === true) ? Label.AddedDependency : Label.DeletedDependency;
+        switch (type) {
+          case 1: {
+            // not displayed
+            break;
+          }
+          case 2: {
+            dependencyClass.push(obj);
+            break;
+          }
+          case 3: {
+            dependencyMethod.push(obj);
+            break;
+          }
+        }
       });
     });
+
     // wait for all query results before building the tree
-    forkJoin(packageResult, classResult, methodResult, dependencyMethodResult).subscribe(_ => {
-      this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyInformationMethod];
+    forkJoin(treeResult, dependencyResult).subscribe(_ => {
+      this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyClass, ...dependencyMethod];
       const data = this.buildDependencyTree(this.treeData, this.root, this.selectedDisplayOption);
       this.dataChange.next(data);
     });
+  }
+
+  resolveType(typeArr: string[]) {
+    for (const l of typeArr) {
+      if (l.toLowerCase().indexOf('package') > -1) {
+        return 1;
+      }
+      if (l.toLowerCase().indexOf('class') > -1) {
+        return 2;
+      }
+      if (l.toLowerCase().indexOf('method') > -1) {
+        return 3;
+      }
+    }
+  }
+
+  createAddedDependenciesNode(code: string) {
+    const added: { [k: string]: any } = {};
+    added.label = 'Added dependencies';
+    added.text = '';
+    added.code = code + '.added';
+    return added;
+  }
+
+  createDeletedDependenciesNode(code: string) {
+    const deleted: { [k: string]: any } = {};
+    deleted.label = 'Deleted dependencies';
+    deleted.text = '';
+    deleted.code = code + '.deleted';
+    return deleted;
   }
 
   /**
@@ -247,7 +265,7 @@ export class DependencyTreeDatabase {
     const treeItemNodes: TreeItemNode[] = [];
     obj.filter(o =>
       (o.code as string).startsWith(level + '.')
-      && (o.code.replace(/\(.*\)/g, '').match(/\./g) || []).length === (level.replace(/\(.*\)/g, '').match(/\./g) || []).length + 1
+      && (o.code.replace(/\([^)]*\)/g, '').match(/\./g) || []).length === (level.replace(/\([^)]*\)/g, '').match(/\./g) || []).length + 1
     )
       .forEach(o => {
         const node = new TreeItemNode();
@@ -282,8 +300,11 @@ export class DependencyTreeDatabase {
               return;
             }
           }
+          if (node.children.length < 1 && node.filterType !== FilterType.Dependency) {
+            return;
+          }
+          treeItemNodes.push(node);
         }
-        treeItemNodes.push(node);
       });
     return treeItemNodes;
   }
@@ -410,11 +431,11 @@ export class DependencytreeComponent {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  };
+  }
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
-    this.db.loadChangelogFromDatabase(value);
+    this.db.loadChangelogFromDatabase(this.database.selectedProject, value);
   }
 
   /** Event-Handler triggered then input text in search field changes */
@@ -427,7 +448,6 @@ export class DependencytreeComponent {
       this.treeControl.collapseAll();
     }
   }
-
 
   /** Event-Handler triggered then displayOption is selected */
   changeDisplayOption(displayOption: DisplayOption) {
