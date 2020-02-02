@@ -10,7 +10,7 @@ import java.util.Properties;
 
 /**
  * ApplicationMojo is the entry point for maven goal {@code adcl:start}.
- * Goal is to start the Application with the arguments given via Maven in the configuration tag.
+ * Goal is to start the application with the arguments given via Maven in the configuration tag.
  */
 @Mojo(name = "start")
 public class ApplicationMojo extends AbstractMojo {
@@ -18,6 +18,11 @@ public class ApplicationMojo extends AbstractMojo {
     @Parameter
     private Properties properties;
 
+    /**
+     * Launches the application
+     *
+     * @throws MojoExecutionException if the application does not exit gracefully
+     */
     @Override
     public void execute() throws MojoExecutionException {
         Properties propertiesBackup = new Properties(System.getProperties());

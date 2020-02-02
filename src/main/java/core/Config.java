@@ -3,6 +3,7 @@ package core;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.MapTool;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -40,8 +40,10 @@ public class Config {
     }
 
     /**
-     * Determines whether a given key has a value in the Config.
      * Use this if you want to differentiate between a non-existent value and an invalid value if get() returns null.
+     *
+     * @param key the option key
+     * @return whether a given key has a value in the Config.
      */
     public static boolean valuePresent(String key) {
         return properties.containsKey(key);
@@ -215,6 +217,11 @@ public class Config {
         logger.info("Configuration loaded: {}", properties);
     }
 
+    /**
+     * @param configPath a file in .properties format
+     * @return config entries loaded from configPath file
+     */
+    @NotNull
     private static Map<String, String> fileToMap(Path configPath) {
         try {
             Properties prop = new Properties();
@@ -230,6 +237,10 @@ public class Config {
         }
     }
 
+    /**
+     * @return config entries loaded from JVM system properties
+     */
+    @NotNull
     private static Map<String, String> propertiesToMap() {
         return new MapTool<>(System.getProperties())
                 .castKeys(String.class)
@@ -239,6 +250,11 @@ public class Config {
                 .get();
     }
 
+    /**
+     * @param args CLI arguments
+     * @return config entries loaded from CLI
+     */
+    @NotNull
     private static Map<String, String> argsToMap(String[] args) {
         Map<String, String> result = new HashMap<>();
         Matcher matcher = stringToArgsPattern.matcher(Arrays.stream(args).collect(Collectors.joining(" ", "", " ")));
@@ -254,6 +270,15 @@ public class Config {
         return result;
     }
 
+    /**
+     * Tries to retrieve a config entry
+     *
+     * @param key    the config key
+     * @param parser the parser from the raw string config value to T
+     * @param def    the default type if the config entry does not exist or cannot be parsed
+     * @param <T>    the desired retrieval type
+     * @return the retrieved config entry or def if retrieval was not successful
+     */
     private static <T> T tryParse(String key, @NotNull Function<String, T> parser, T def) {
         try {
             String raw = key == null ? null : properties.get(key);
@@ -262,61 +287,6 @@ public class Config {
             return res == null ? def : res;
         } catch (NumberFormatException e) {
             return def;
-        }
-    }
-
-    /**
-     * A util class for easy Map transformation
-     * Use {@link MapTool#get()} to retrieve the resulting map
-     * Other Methods are self-explanatory
-     */
-    private static class MapTool<K, V> {
-        private final Map<K, V> map;
-
-        public MapTool(Map<K, V> map) {
-            this.map = map;
-        }
-
-        public MapTool<K, V> filterKeys(Predicate<K> filter) {
-            return transform((m, k, v) -> {
-                if (filter.test(k)) m.put(k, v);
-            });
-        }
-
-        public MapTool<K, V> filterValues(Predicate<V> filter) {
-            return transform((m, k, v) -> {
-                if (filter.test(v)) m.put(k, v);
-            });
-        }
-
-        public <K2> MapTool<K2, V> mapKeys(Function<K, K2> mapper) {
-            return transform((m, k, v) -> m.put(mapper.apply(k), v));
-        }
-
-        public <V2> MapTool<K, V2> mapValues(Function<V, V2> mapper) {
-            return transform((m, k, v) -> m.put(k, mapper.apply(v)));
-        }
-
-        public <K2> MapTool<K2, V> castKeys(Class<K2> keyClass) {
-            return filterKeys(keyClass::isInstance).mapKeys(keyClass::cast);
-        }
-
-        public <V2> MapTool<K, V2> castValues(Class<V2> valueClass) {
-            return filterValues(valueClass::isInstance).mapValues(valueClass::cast);
-        }
-
-        public Map<K, V> get() {
-            return map;
-        }
-
-        private <K2, V2> MapTool<K2, V2> transform(TriConsumer<Map<K2, V2>, K, V> transformer) {
-            Map<K2, V2> result = new HashMap<>();
-            map.forEach((k, v) -> transformer.accept(result, k, v));
-            return new MapTool<>(result);
-        }
-
-        interface TriConsumer<A, B, C> {
-            void accept(A a, B b, C c);
         }
     }
 }

@@ -1,20 +1,12 @@
-package core;
+package core.information;
 
-import core.information.*;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
 
-class DependencyExtractorTest {
-    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
-
+public class DatamodelCompareTest {
     Ref<ProjectInformation, RootInformation> proj;
     Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
     Ref<ClassInformation<PackageInformation<?>>, PackageInformation<?>> ca, cabase, cb;
@@ -45,7 +37,8 @@ class DependencyExtractorTest {
                                         cbM = mi("method(java.util.function.Predicate)"),
                                         cbL = mi("lambda$getInstanceA$0(java.lang.String)"),
                                         cbGia2 = mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
-                                )
+                                ),
+                                pis("emptyPackage")
                         ),
                         cc = cir("ClassC", false,
                                 ccC = mi("<init>()"),
@@ -58,35 +51,37 @@ class DependencyExtractorTest {
                         cci = cir("ClassC$ClassCInner", false,
                                 cciC = mi("<init>(ClassC)"),
                                 cciRca = mi("retrieveClassA()")
-                        )
-                ),
-                project("null", false, "<unknown>",
+                        ),
                         ce = cir("ExternalClass", false,
                                 ceEm = mi("extMethod()")
                         )
                 )
         );
 
-        p(cciRca, ca, ceEm);
-        p(cciC, cc);
-        p(cbCC, cabase, caC);
-        p(cbGia1, cabase, ca);
-        p(cbGia2, ca, cbM);
+        p(cbM, proj);
+        p(cbGia1, pa);
         p(caMb, cb);
-        p(caMa, cb, cbC);
-        p(ccC, ccaC);
-        p(ccRca, ca, cbGia1);
-        p(ccaC, cc);
-        p(ccaGcc, cc, ccC);
+        p(ccC, cca, ccaC);
+        p(caMa, cbC);
+        p(cbCC, caC);
     }
 
     @Test
-    void analyseClasses() throws IOException, MavenInvocationException {
-        RootInformation root = new RootInformation();
-        ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
-
-        new DependencyExtractor(TESTCLASS_FOLDER, proj.getLatestVersion()).runAnalysis();
-
-        assertThat(root.deepEquals(dm)).overridingErrorMessage("Not deep equal!\nExpected:\n%s\n\nActual:\n%s", dm, root).isTrue();
+    void compareVersions() {
+        ProjectInformation p = dm.getProjects(null).iterator().next();
+        VersionInformation v1 = p.getLatestVersion();
+        VersionInformation v2 = p.addVersion("2.0.0");
+        assertThat(v1.isBefore(v2)).isTrue();
+        assertThat(v2.isAfter(v1)).isTrue();
     }
+
+    @Test
+    void compareTypes() {
+        assertThat(Information.Type.ROOT.isSuper(Information.Type.CLASS)).isTrue();
+        assertThat(Information.Type.CLASS.isSub(Information.Type.ROOT)).isTrue();
+    }
+
+    //TODO (deep)compare two trees (@1.0.17)
+    //TODO compare different information classes a) of same type b) different type (@1.0.17)
+    //TODO for each node type for each property in node for test equal and not equal elements (@1.0.17)
 }
