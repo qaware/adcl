@@ -4,6 +4,7 @@ package core;
 import org.apache.maven.model.Dependency;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import util.Utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -76,7 +77,7 @@ public class IndexBuilder {
         Map<String, String> index = appendTo == null ? new HashMap<>() : appendTo;
 
         try (Stream<Path> walker = Files.walk(directory)) {
-            walker.filter(Files::isRegularFile).map(p -> directory.relativize(p).toString().replace(p.getFileSystem().getSeparator(), "."))
+            walker.filter(Files::isRegularFile).map(p -> Utils.pathToPackage(directory.relativize(p)))
                     .filter(s -> s.endsWith(".class")).forEach(s -> index.put(s.substring(0, s.length() - 6), projectName));
         }
 
