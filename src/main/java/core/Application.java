@@ -1,7 +1,11 @@
 package core;
 
+import core.database.Neo4jService;
+import core.information.ProjectInformation;
+import core.information.RootInformation;
 import core.information.VersionInformation;
-import database.services.GraphDBService;
+import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.ogm.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +15,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import util.Utils;
 
 import java.io.IOException;
 
@@ -22,18 +26,28 @@ import java.io.IOException;
  */
 @SpringBootApplication
 @SpringBootConfiguration
-@ComponentScan(basePackages = "database.*")
-@EnableNeo4jRepositories("database.repositories")
-@EntityScan("core.information")
+@EnableNeo4jRepositories(basePackageClasses = Neo4jService.InformationRepository.class, considerNestedRepositories = true)
+@EntityScan(basePackageClasses = RootInformation.class)
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
     private static ApplicationConfig appConfig;
 
+    /**
+     * Entry Point for fat jar
+     *
+     * @param args CLI args
+     */
     public static void main(String[] args) {
         System.exit(launch(args));
     }
 
+    /**
+     * launches the application
+     *
+     * @param args CLI args
+     * @return the exit code
+     */
     public static int launch(String[] args) {
         //Loading config
         Config.load(args);
@@ -43,43 +57,41 @@ public class Application {
         } catch (ApplicationConfig.ConfigurationException configurationException) {
             return 1;
         }
+        LOGGER.info("ADCL args: {}", appConfig);
 
-        VersionInformation currentVersion;
+        LOGGER.info("Launching Spring");
+        ConfigurableApplicationContext ctx;
         try {
-            currentVersion = new DependencyExtractor().analyseClasses(appConfig.scanLocation, appConfig.currentVersionName);
-        } catch (IOException e) {
+            ctx = SpringApplication.run(Application.class);
+        } catch (Exception e) {
+            if (Utils.hasCause(e, AuthenticationException.class)) {
+                LOGGER.error("Could not authenticate to neo4j");
+            } else throw e;
+            return 1;
+        }
+        LOGGER.info("Querying project data");
+        Neo4jService neo4jService = ctx.getBean(Neo4jService.class);
+        RootInformation root = neo4jService.getRoot();
+        ProjectInformation project = (ProjectInformation) root.find(appConfig.projectName, null);
+        VersionInformation currentVersion;
+        if (project == null) {
+            LOGGER.warn("Project {} not found. Creating new project", appConfig.projectName);
+            project = new ProjectInformation(root, appConfig.projectName, true, appConfig.currentVersionName);
+            currentVersion = project.getLatestVersion();
+        } else {
+            currentVersion = project.addVersion(appConfig.currentVersionName);
+        }
+
+        LOGGER.info("Analysing new dependencies");
+        try {
+            new DependencyExtractor(appConfig.scanLocation, currentVersion).runAnalysis();
+        } catch (IOException | MavenInvocationException e) {
             LOGGER.error("Could not analyse current class structure", e);
             return 1;
         }
 
-        //Starting Database Service
-        ConfigurableApplicationContext ctx = SpringApplication.run(Application.class);
-        GraphDBService graphDBService = ctx.getBean(GraphDBService.class);
-
-
-        //Getting previous Commit
-        VersionInformation previousVersion;
-        if (appConfig.previousVersionName == null) {
-            previousVersion = graphDBService.getVersionRepository().findVersionInformationByVersionName(graphDBService.getVersionRepository().findLatestVersion());
-        } else {
-            previousVersion = graphDBService.getVersion(appConfig.previousVersionName);
-            if (previousVersion == null) {
-                LOGGER.error("Version {} does not exist in the database. Not creating diff", appConfig.previousVersionName);
-            }
-        }
-
-        if (previousVersion != null) {
-            currentVersion.setPreviousVersion(previousVersion);
-
-            //Analyse differences between current and previous Commit
-            DiffExtractor diffExtractor = new DiffExtractor(previousVersion, currentVersion);
-
-            //Save the Analysis in the Database
-            graphDBService.saveChangelog(diffExtractor.getChangelogInformation());
-        }
-
-        //Save the Version in the Database
-        graphDBService.saveVersion(currentVersion);
+        LOGGER.info("Saving collected data");
+        neo4jService.saveRoot();
 
         ctx.close();
         return 0;

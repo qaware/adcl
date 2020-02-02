@@ -1,223 +1,95 @@
 package core.information;
 
 import org.jetbrains.annotations.NotNull;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
+import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-import util.Utils;
+import org.neo4j.ogm.annotation.Property;
+import util.CompareHelper;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Set;
 
 /**
- * The type Class information contains Information about the static dependencies of a java class.
+ * A general class node
+ *
+ * @param <P> the parent type
  */
 @NodeEntity
-public class ClassInformation implements Comparable<ClassInformation> {
-
-    @Id
-    @GeneratedValue
-    private Long id;
-    private String className;
-    @Relationship(type = "IS_METHOD_OF", direction = Relationship.INCOMING)
-    private Set<MethodInformation> methodInformations;
-
-
+public abstract class ClassInformation<P extends Information<?>> extends Information<P> {
+    @Property
     private boolean isService;
-    private boolean isInternal;
 
     /**
-     * Instantiates a new Class information.
-     *
-     * @param className the name of the java class
+     * Neo4j init
      */
-    public ClassInformation(String className) {
-        this(className, new TreeSet<>(), false);
+    ClassInformation() {
+        super();
     }
 
     /**
-     * Instantiates a new Class information.
-     *
-     * @param className the name of the java class
-     * @param isService true if this class is a Service
+     * Creates a new class information and registers itself in parent
+     * @param parent the parent node ({@link RootInformation} or {@link PackageInformation})
+     * @param name the class name (simple name only)
+     * @param isService whether the class has the {@link org.springframework.stereotype.Service} annotation
+     * @see Information#createChild(Type, String)
+     * @see RootClassInformation#RootClassInformation(ProjectInformation, String, boolean)
+     * @see OuterClassInformation#OuterClassInformation(PackageInformation, String, boolean)
      */
-    public ClassInformation(String className, boolean isService) {
-        this(className, new TreeSet<>(), isService);
-    }
-
-    /**
-     * Instantiates a new Class information.
-     *
-     * @param className            the name of the java class
-     * @param behaviorInformations the behavior informations of the java class
-     * @param isService            true if Class has service annotation
-     */
-    public ClassInformation(String className, Set<MethodInformation> behaviorInformations, boolean isService) {
-        this.className = className;
-        this.methodInformations = behaviorInformations;
+    ClassInformation(@NotNull P parent, @NotNull String name, boolean isService) {
+        super(parent, name);
         this.isService = isService;
     }
 
     /**
-     * Should not be used is only for Spring Data
+     * @param at the version to check. If null children at any time are returned.
+     * @return the direct children of the node at given version. Direct children are represented by an incoming parent edge in the graph.
+     * @see Information#getDirectChildren(VersionInformation)
+     * @see Information#find(Class, VersionInformation)
      */
-    public ClassInformation() {
-        methodInformations = new TreeSet<>();
+    @NotNull
+    public final Set<MethodInformation> getMethods(@Nullable VersionInformation at) {
+        return find(MethodInformation.class, at);
     }
 
     /**
-     * Gets the class name.
-     *
-     * @return the class name
-     */
-    public String getClassName() {
-        return className;
-    }
-
-    /**
-     * Gets all referenced packages by extracting them from it's {@link MethodInformation}.
-     *
-     * @return the referenced packages
-     */
-    public Set<PackageInformation> getPackageDependencies() {
-        Set<PackageInformation> packageDependencies = new TreeSet<>();
-        methodInformations.forEach(behaviorInformation -> packageDependencies.addAll(behaviorInformation.getPackageDependencies()));
-        return packageDependencies;
-    }
-
-    /**
-     * Gets all referenced classes by extracting them from it's {@link MethodInformation}.
-     *
-     * @return the referenced classes
-     */
-    public Set<ClassInformation> getClassDependencies() {
-        Set<ClassInformation> classDependencies = new TreeSet<>();
-        methodInformations.forEach(behaviorInformation -> classDependencies.addAll(behaviorInformation.getClassDependencies()));
-        return classDependencies;
-    }
-
-    /**
-     * Gets Behavior information owned by the described class.
-     *
-     * @return a set of the behavior information
-     */
-    public Set<MethodInformation> getMethodInformations() {
-        return methodInformations;
-    }
-
-    /**
-     * Gets all referenced Behavior by extracting them from it's {@link MethodInformation}.
-     *
-     * @return the referenced methods
-     */
-    public Set<MethodInformation> getMethodDependencies() {
-        Set<MethodInformation> methodDependencies = new TreeSet<>();
-        methodInformations.forEach(behaviorInformation -> methodDependencies.addAll(behaviorInformation.getMethodDependencies()));
-        return methodDependencies;
-    }
-
-    /**
-     * Adds a BehaviorInformation to the set of BehaviorInformation owned by the described class.
-     * @param methodInformation that will be added
-     */
-    public void addMethodInformation(MethodInformation methodInformation) {
-        methodInformations.add(methodInformation);
-    }
-
-    /**
-     * @return True if class has Service annotation
+     * @return whether the class is a service (annotated with {@link org.springframework.stereotype.Service})
      */
     public boolean isService() {
         return isService;
     }
 
     /**
-     * Set true if class is also a spring boot service
-     *
-     * @param isService set true if Class is spring boot service
+     * @param isService whether the class is a {@link org.springframework.stereotype.Service}
      */
-    public void setService(boolean isService) {
+    public void setIsService(boolean isService) {
         this.isService = isService;
     }
 
-    /**
-     * @return True if class is in analyzed project (false for class of library)
-     */
-    public boolean isInternal() {
-        return isInternal;
-    }
+    // Overrides
 
     /**
-     * @param internal whether the class is in the analyzed project
+     * {@inheritDoc}
      */
-    public void setInternal(boolean internal) {
-        this.isInternal = internal;
+    @Override
+    public @NotNull Type getType() {
+        return Type.CLASS;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public int compareTo(@NotNull ClassInformation classInformation) {
-        return Comparator.comparing(ClassInformation::isInternal)
-                .thenComparing(ClassInformation::isService)
-                .thenComparing(ClassInformation::getClassName)
-                .thenComparing(ClassInformation::getMethodInformations, Utils.setComparator())
-                .compare(this, classInformation);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof ClassInformation && ((ClassInformation) obj).compareTo(this) == 0;
-    }
-
-    @Override
+    @SuppressWarnings("java:S1206" /* final super.equals uses hashCode */)
     public int hashCode() {
-        return Objects.hash(isInternal, isService, className, methodInformations);
+        return Objects.hash(super.hashCode(), isService);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String toString() {
-        return ("Class " + className + " (id=" + id + ", " + (isInternal ? "internal" : "external") + ", " + (isService ? "service" : "no-service") + ") {\n"
-                + methodInformations.stream().map(MethodInformation::toString).collect(Collectors.joining(",\n"))
-        ).replace("\n", "\n    ") + "\n}";
-    }
-
-
-    /**
-     * Method which returns the PackageName of the current class
-     * @return mentioned PackageName as String
-     */
-    public String getPackageName(){
-        String s=getClassName();
-        String result=s;
-        for (int i=0;i<s.length();i++){
-            if(s.charAt(i)=='.'){
-                result=s.substring(0,i);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Method to search for the Package in which the current Class resides.
-     * Since we only have a downward dependency Tree a List of all PackageInformation has to be given as Parameter
-     * @param piList mentioned parameter
-     * @return PackageInformation in which the Class resides
-     */
-
-    public PackageInformation getPackageInformation(List<PackageInformation> piList){
-        for (PackageInformation pi : piList) {
-            if (pi.getClassInformations().contains(this)) {
-                return pi;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Method to filter Methods to constructors only
-     * @return set with only constructors
-     */
-    public Set<MethodInformation> getConstructorInformation() {
-        return getMethodInformations().stream().filter(MethodInformation::isConstructor).collect(Collectors.toSet());
+    protected void compareElements(@NotNull CompareHelper<Information<?>> cmp) {
+        super.compareElements(cmp);
+        cmp.casted(ClassInformation.class).add(ClassInformation::isService);
     }
 }
