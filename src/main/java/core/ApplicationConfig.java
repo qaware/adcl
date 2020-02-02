@@ -1,5 +1,7 @@
 package core;
 
+import javassist.ClassPool;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
@@ -15,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.StringJoiner;
+import java.util.stream.Stream;
 
 public class ApplicationConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfig.class);
@@ -36,7 +39,7 @@ public class ApplicationConfig {
     private final Model localPom = getLocalPom();
     /**
      * The location of the class files to analyse
-     * Ensured that it is an existing directory TODO ensure .class files are in it and package entry of a class file matches so that scanLocation is definitly the project root
+     * Ensured that it is an existing directory with class files and correct package headers in it (random sample)
      */
     @NotNull
     public final Path scanLocation = getScanLocation();
@@ -79,17 +82,37 @@ public class ApplicationConfig {
         if (result == null) {
             String raw = Config.get("project.uri", null);
             if (raw == null) {
-                if (localPom == null) throw new ConfigurationException("Option project.uri not specified");
-                String output = localPom.getBuild().getOutputDirectory();
-                if (output == null) output = "target/classes"; // as stated in jdoc of Build#getOutputDirectory()
-                return Paths.get(output);
+                result = tryGetScanLocationByPom();
             } else {
                 throw new ConfigurationException("project.uri not valid. Is: {}", raw);
             }
         } else if (!Files.isDirectory(result)) {
             throw new ConfigurationException("project.uri does not point to a directory. Is: {}", result);
         }
+        validateScanLocation(result);
         return result;
+    }
+
+    private void validateScanLocation(@NotNull Path scanLocation) throws ConfigurationException {
+        try (Stream<Path> walker = Files.walk(scanLocation)) {
+            Path classFile = walker.filter(p -> p.toString().endsWith(".class")).findAny().orElseThrow(() -> new ConfigurationException("project.uri contains no class files"));
+            String packageName = new ClassPool().makeClassIfNew(Files.newInputStream(classFile)).getPackageName();
+            if (packageName == null) packageName = "";
+            if (!packageName.equals(scanLocation.relativize(classFile.getParent()).toString())) {
+                throw new ConfigurationException("project.uri does not point to the root of the class files. Package entry in " + classFile + " does not match");
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Could not verify project.uri as a valid directory", e);
+        }
+    }
+
+    @NotNull
+    private Path tryGetScanLocationByPom() throws ConfigurationException {
+        if (localPom == null) throw new ConfigurationException("Option project.uri not specified");
+        Build build = localPom.getBuild();
+        String output = build == null ? null : build.getOutputDirectory();
+        if (output == null) output = "target/classes"; // as stated in jdoc of Build#getOutputDirectory()
+        return Paths.get(output);
     }
 
     @NotNull
