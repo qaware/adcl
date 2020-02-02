@@ -4,7 +4,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.*;
+import util.MapTool;
 import util.MapWithListeners;
+import util.Utils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +31,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     private final T to;
 
     @Properties(prefix = "versionInfo")
-    private final Map<String, Boolean> versionInfoInternal = new HashMap<>();
+    private final Map<String, Object> versionInfoInternal = new HashMap<>();
 
     @Transient
     private final Map<VersionInformation, Boolean> versionInfoBacking = new HashMap<>();
@@ -69,7 +71,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      */
     @PostLoad
     void postLoad() {
-        versionInfoInternal.forEach((v, c) -> versionInfoBacking.put(new VersionInformation(v, getOwner().getProject()), c));
+        new MapTool<>(Utils.resolveNestedMaps(Boolean.class, null, versionInfoInternal)).mapKeys(n -> new VersionInformation(n, getOwner().getProject())).overrideTo(versionInfoBacking);
     }
 
     /**

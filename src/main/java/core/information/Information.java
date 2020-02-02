@@ -75,7 +75,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     Information(@NotNull P parent, @NotNull String name) {
         this.name = name;
-        this.path = parent.getPath() + '.' + name;
+        String parentPath = parent.getPath();
+        this.path = parentPath.isEmpty() ? name : (parentPath + '.' + name);
         this.parent = new ParentInformation<>(this, parent);
         parent.directChildren.add(this.parent);
         initializeComparators();
@@ -318,8 +319,8 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * @param <T> The type of the parent that should be returned
-     * @param parentType the correspondent class for the type parameter
+     * @param <T>        The type of the parent that should be returned
+     * @param parentType the corresponding class for the type parameter
      * @return the first parent of given type traveling up the path, returns null if none was found
      */
     @SuppressWarnings("unchecked" /* checked by Class#isInstance */)
@@ -380,7 +381,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * @param <T> the type of children to search for
-     * @param clazz the correspondent class for the type parameter
+     * @param clazz the corresponding class for the type parameter
      * @param at the version to check. If null fitting children at any time are returned
      * @return all direct children which are fitting to the given type at given version
      */
@@ -391,7 +392,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
 
     /**
      * @param <T>   the type of children to search for
-     * @param clazz the correspondent class for the type parameter
+     * @param clazz the corresponding class for the type parameter
      * @param at    the version to check. If null fitting children at any time are returned
      * @return *all* children which are fitting to the given type at given version
      * <br>e.g. {@code findAll(MethodInformation.class, null)} returns all methods in the class/package/project at any time

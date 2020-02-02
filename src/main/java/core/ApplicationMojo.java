@@ -1,6 +1,5 @@
 package core;
 
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -30,7 +29,12 @@ public class ApplicationMojo extends AbstractMojo {
             if (properties != null) {
                 properties.forEach((key, value) -> System.setProperty("adcl." + key.toString(), value.toString()));
             }
-            int exitCode = Application.launch(new String[0]);
+            int exitCode;
+            try {
+                exitCode = Application.launch(new String[0]);
+            } catch (Exception e) {
+                exitCode = 1;
+            }
             if (exitCode != 0) throw new MojoExecutionException("Application terminated with exit code " + exitCode);
         } finally {
             System.setProperties(propertiesBackup);

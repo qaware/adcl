@@ -60,6 +60,15 @@ public class MapTool<K, V> {
         return map;
     }
 
+    public void overrideTo(@NotNull Map<K, V> map) {
+        map.clear();
+        appendTo(map);
+    }
+
+    public void appendTo(@NotNull Map<K, V> map) {
+        map.putAll(get());
+    }
+
     @NotNull
     @Contract("_ -> new")
     private <K2, V2> MapTool<K2, V2> transform(@NotNull TriConsumer<Map<K2, V2>, K, V> transformer) {
