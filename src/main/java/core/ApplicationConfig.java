@@ -11,6 +11,7 @@ import org.neo4j.ogm.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jProperties;
+import util.Utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -96,10 +97,11 @@ public class ApplicationConfig {
     private void validateScanLocation(@NotNull Path scanLocation) throws ConfigurationException {
         try (Stream<Path> walker = Files.walk(scanLocation)) {
             Path classFile = walker.filter(p -> p.toString().endsWith(".class")).findAny().orElseThrow(() -> new ConfigurationException("project.uri contains no class files"));
-            String packageName = new ClassPool().makeClassIfNew(Files.newInputStream(classFile)).getPackageName();
-            if (packageName == null) packageName = "";
-            if (!packageName.equals(scanLocation.relativize(classFile.getParent()).toString())) {
-                throw new ConfigurationException("project.uri does not point to the root of the class files. Package entry in " + classFile + " does not match");
+            String actualPackageName = new ClassPool().makeClassIfNew(Files.newInputStream(classFile)).getPackageName();
+            if (actualPackageName == null) actualPackageName = "";
+            String expectedPackageName = Utils.pathToPackage(scanLocation.relativize(classFile.getParent()));
+            if (!actualPackageName.equals(expectedPackageName)) {
+                throw new ConfigurationException("project.uri does not point to the root of the class files. Package entry in {} does not match. Expected: {}, Actual: {}", classFile, expectedPackageName, actualPackageName);
             }
         } catch (IOException e) {
             LOGGER.warn("Could not verify project.uri as a valid directory", e);
