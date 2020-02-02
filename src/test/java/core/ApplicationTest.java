@@ -51,7 +51,7 @@ public class ApplicationTest {
         args2[3] = "project.commit.current=test2";
         args2[4] = "project.uri=src/test/resources/testclassfiles3/epro2";
 
-        assertThatCode(() -> assertThat(Application.launch(args)).isZero()).doesNotThrowAnyException();
+        assertThatCode(() -> assertThat(Application.launch(args2)).isZero()).doesNotThrowAnyException();
 
         //TODO re-implement (@1.0.17)
         /*VersionInformation before = neo4jService.getVersion("test");

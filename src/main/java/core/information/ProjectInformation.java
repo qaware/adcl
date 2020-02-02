@@ -35,6 +35,7 @@ public class ProjectInformation extends Information<RootInformation> {
     @Relationship(type = "PomDependency")
     private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
 
+    @Transient
     @Properties
     private final Map<String, String> externalIndices = new HashMap<>();
 
