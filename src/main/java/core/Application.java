@@ -1,6 +1,7 @@
 package core;
 
 import core.database.Neo4jService;
+import core.depex.DependencyExtractor;
 import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;

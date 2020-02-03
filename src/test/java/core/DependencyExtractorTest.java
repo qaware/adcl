@@ -1,5 +1,6 @@
 package core;
 
+import core.depex.DependencyExtractor;
 import core.information.*;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,7 @@ class DependencyExtractorTest {
                                         cbGia1 = mi("getInstanceA()"),
                                         cbM = mi("method(java.util.function.Predicate)"),
                                         cbL = mi("lambda$getInstanceA$0(java.lang.String)"),
-                                        cbGia2 = mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
+                                        cbGia2 = mi("getInstanceA(java.lang.String, int, packageA.ClassA[])")
                                 )
                         ),
                         cc = cir("ClassC", false,
@@ -68,9 +69,10 @@ class DependencyExtractorTest {
         );
 
         p(cciRca, ca, ceEm);
-        p(cciC, cc);
-        p(cbCC, cabase, caC);
-        p(cbGia1, cabase, ca);
+        p(cciC, cc, ccC);
+        p(cbCC, caC);
+        p(cbGia1, ca);
+        p(cbC, ca);
         p(cbGia2, ca, cbM);
         p(caMb, cb);
         p(caMa, cb, cbC);

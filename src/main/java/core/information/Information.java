@@ -203,7 +203,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addProjectDependency(@NotNull ProjectInformation to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
+        if (at == null) at = getProject().getLatestVersion(); // TODO check not already exists
         ProjectDependency dep = new ProjectDependency(this, to);
         dep.setExists(at, true);
         projectDependencies.add(dep);
@@ -247,7 +247,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addPackageDependency(@NotNull PackageInformation<?> to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
+        if (at == null) at = getProject().getLatestVersion(); // TODO check not already exists
         PackageDependency dep = new PackageDependency(this, to);
         dep.setExists(at, true);
         packageDependencies.add(dep);
@@ -291,7 +291,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addClassDependency(@NotNull ClassInformation<?> to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
+        if (at == null) at = getProject().getLatestVersion(); // TODO check not already exists
         ClassDependency dep = new ClassDependency(this, to);
         dep.setExists(at, true);
         classDependencies.add(dep);
@@ -322,7 +322,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addMethodDependency(@NotNull MethodInformation to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
+        if (at == null) at = getProject().getLatestVersion(); // TODO check not already exists
         MethodDependency dep = new MethodDependency(this, to);
         dep.setExists(at, true);
         methodDependencies.add(dep);

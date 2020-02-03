@@ -68,19 +68,22 @@ public class ApplicationTest {
 
     @BeforeAll
     static void setUpDatabase() {
-        BoltConnector bolt = new BoltConnector("0");
+        try {
+            BoltConnector bolt = new BoltConnector("0");
+            dbService = new GraphDatabaseFactory()
+                    .newEmbeddedDatabaseBuilder(new File("neo4j"))
+                    .setConfig(bolt.type, "BOLT")
+                    .setConfig(bolt.enabled, "true")
+                    .setConfig(bolt.listen_address, "localhost:7687")
+                    .newGraphDatabase();
+        } catch (Exception ignored) {
 
-        dbService = new GraphDatabaseFactory()
-                .newEmbeddedDatabaseBuilder(new File("neo4j"))
-                .setConfig(bolt.type, "BOLT")
-                .setConfig(bolt.enabled, "true")
-                .setConfig(bolt.listen_address, "localhost:7687")
-                .newGraphDatabase();
+        }
     }
 
     @AfterAll
     static void cleanup() throws IOException {
-        dbService.shutdown();
+        if (dbService != null) dbService.shutdown();
         FileSystemUtils.deleteRecursively(new File("neo4j"));
         FileSystemUtils.deleteRecursively(new File("certificates"));
         Files.deleteIfExists(Paths.get("store_lock"));
@@ -94,7 +97,7 @@ public class ApplicationTest {
             Neo4jProperties properties = new Neo4jProperties();
             properties.setUri("bolt://127.0.0.1:7687");
             properties.setUsername("neo4j");
-            properties.setPassword("neo4j");
+            properties.setPassword("test");
             return properties.createConfiguration();
         }
     }
