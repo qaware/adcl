@@ -14,9 +14,12 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Utils {
     private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
@@ -106,5 +109,15 @@ public class Utils {
                 throw new IllegalStateException("versionInfoInternal contains invalid element of type " + (v == null ? Void.class : v.getClass()));
         });
         return result;
+    }
+
+    /**
+     * @param list the list to stream
+     * @param <T>  the element type
+     * @return a stream of T traversing the list's elements in reverse order
+     */
+    public static <T> Stream<T> reverseStream(@NotNull List<T> list) {
+        int size = list.size();
+        return IntStream.rangeClosed(0, size).mapToObj(i -> list.get(size - i));
     }
 }

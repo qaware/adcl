@@ -1,5 +1,6 @@
 package core.information;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -141,6 +142,26 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public void setExists(@NotNull VersionInformation at, boolean exists) {
         assert parent != null;
         parent.setExists(at, exists);
+    }
+
+    /**
+     * @return the first version where the information exists
+     * @see RelationshipInformation#firstExistence()
+     */
+    @NotNull
+    public VersionInformation firstExistence() {
+        assert parent != null;
+        return parent.firstExistence();
+    }
+
+    /**
+     * @return the last version where the information exists
+     * @see RelationshipInformation#lastExistence()
+     */
+    @NotNull
+    public VersionInformation lastExistence() {
+        assert parent != null;
+        return parent.lastExistence();
     }
 
     ////////// DEPS //////////
@@ -408,24 +429,23 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param subPath a sub path (e.g. if you want to find a.b.c.d and this is a.b, subPath has to be c.d)
      * @param at      the version to check. If null children at any time are taken into consideration
      * @return The node at this subPath. Null otherwise
-     * @see Information#findOrCreate(String, VersionInformation, Type)  version with creation
+     * @see Information#findOrCreate(String, VersionInformation, Type) version with creation
      */
     @Nullable
     public Information<?> find(@NotNull final String subPath, @Nullable VersionInformation at) {
-        return getDirectChildren(at).stream().map(i -> {
-            if (!subPath.startsWith(i.name)) return null;
-            String nextSub = subPath.substring(i.name.length());
-            if (nextSub.startsWith(".") || nextSub.startsWith("$")) nextSub = nextSub.substring(1);
-            if (nextSub.isEmpty()) return i;
-            return i.find(nextSub, at);
-        }).filter(Objects::nonNull).findAny().orElse(null);
+        if (subPath.isEmpty()) return this;
+        Pair<String, String> split = splitSegment(subPath);
+        for (Information<?> i : getDirectChildren(at)) {
+            if (i.getName().equals(split.getKey())) return i.find(split.getValue(), at);
+        }
+        return null;
     }
 
     /**
      * Tries to find a sub node located at the sub path relative to this node by its path. If element is not found the method tries to create a new node based on creationType
      *
      * @param subPath      a sub path (e.g. if you want to find a.b.c.d and this is a.b, subPath has to be c.d)
-     * @param version      the version at which the element should exist. If null the latest version will be used TODO ensure that! Especially that it does not exist before
+     * @param version      the version at which the element should exist. If null the latest version will be used
      * @param creationType the {@link Type} of the new node, if creation needed. Does not ensure that the returned node has that type
      * @return the found or newly created node
      * @throws UnsupportedOperationException if creationType and child logic given by subPath are mutually exclusive
@@ -433,24 +453,27 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      */
     @NotNull
     public Information<?> findOrCreate(@NotNull String subPath, @Nullable VersionInformation version, Type creationType) {
-        Information<?> result = getDirectChildren(null).stream().map(i -> {
-            if (!subPath.startsWith(i.name)) return null;
-            String nextSub = subPath.substring(i.name.length());
-            if (nextSub.isEmpty()) return i;
-            if (nextSub.startsWith(".")) {
-                nextSub = nextSub.substring(1);
-                return i.findOrCreate(nextSub, version, creationType);
-            } else {
-                return null;
-            }
-        }).filter(Objects::nonNull).findAny().orElse(null);
+        if (subPath.isEmpty()) return this;
+        if (version == null && getType() != Type.ROOT) version = getProject().getLatestVersion();
+        Pair<String, String> split = splitSegment(subPath);
+        Information<?> result = find(split.getKey(), null);
         if (result == null) {
-            int paramsStart = subPath.indexOf('(');
-            int i = ((paramsStart != -1) ? subPath.substring(0, paramsStart) : subPath).indexOf('.');
-            result = i == -1 ? createChild(creationType, subPath) : createChild(typeOfNextSegment(subPath, creationType), subPath.substring(0, i)).findOrCreate(subPath.substring(i + 1), version, creationType);
+            result = createChild(typeOfNextSegment(subPath, creationType), split.getKey());
+            if (getType().isSub(Type.ROOT)) result.setExists(result.firstExistence(), false);
         }
         if (version != null) result.setExists(version, true);
-        return result;
+        return result.findOrCreate(split.getValue(), version, creationType);
+    }
+
+    /**
+     * @param path a path
+     * @return the path, split by its next segment and the rest
+     */
+    @NotNull
+    private Pair<String, String> splitSegment(@NotNull String path) {
+        int paramsStart = path.indexOf('(');
+        int splitPoint = path.indexOf('.');
+        return (splitPoint < 0 || (paramsStart >= 0 && paramsStart < splitPoint)) ? Pair.of(path, "") : Pair.of(path.substring(0, splitPoint), path.substring(splitPoint + 1));
     }
 
     /**
@@ -481,7 +504,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
             if (segments.length == 2 && lastSegmentType == Type.METHOD) return Type.CLASS;
             return Type.PACKAGE;
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Parameters cannot be put in logical context: " + getType() + " -> " + subPath + " -> " + lastSegmentType);
     }
 
     /**

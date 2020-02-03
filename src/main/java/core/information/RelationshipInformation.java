@@ -123,11 +123,30 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
+     * @return the first version where the information exists
+     * @see Information#firstExistence()
+     */
+    @NotNull
+    public VersionInformation firstExistence() {
+        return getOwner().getProject().getVersions().stream().filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
+    }
+
+    /**
+     * @return the last version where the information exists
+     * @see Information#lastExistence()
+     */
+    @NotNull
+    public VersionInformation lastExistence() {
+        return Utils.reverseStream(getOwner().getProject().getVersions()).filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
+    }
+
+    /**
      * ensures that at a given version the relation exists, setting an existence marker if not currently
      * default implementation will override child existences
+     * TODO this implementation doesn't correctly apply edits on older versions
      *
      * @param version the version to potentially set the existence if needed
-     * @param aim the aimed existence value
+     * @param aim     the aimed existence value
      * @see Information#setExists(VersionInformation, boolean)
      */
     public void setExists(@NotNull VersionInformation version, boolean aim) {
