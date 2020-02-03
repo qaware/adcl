@@ -148,7 +148,7 @@ public class CompareHelper<T> implements Comparator<T> {
      *
      * @param <T>        the original elements type
      * @param <U>        the casted elements type
-     * @param clazz      the correspondent class for type parameter {@code <U>}
+     * @param clazz      the corresponding class for type parameter {@code <U>}
      * @param comparator the comparator for the casted elements
      * @return a comparator of type T working like the description
      */

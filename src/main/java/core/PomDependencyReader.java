@@ -90,7 +90,7 @@ public class PomDependencyReader {
             if (mvnResult.getExitCode() != 0)
                 throw new MavenInvocationException("mvn call failed", mvnResult.getExecutionException());
 
-            Matcher matcher = Pattern.compile("(?<group>\\S+?):(?<artifact>\\S+):.+?:(?<version>\\S+?):compile:(?<path>.+?)\\x{1b}").matcher(new String(Files.readAllBytes(outputPath)));
+            Matcher matcher = Pattern.compile("(?<group>\\S+?):(?<artifact>\\S+):.+?:(?<version>\\S+?):compile:(?<path>.+?\\.jar)[\\x{1b}\\n\\s]").matcher(new String(Files.readAllBytes(outputPath)));
             Set<Dependency> result = new HashSet<>();
             while (matcher.find()) {
                 Dependency dep = new Dependency();

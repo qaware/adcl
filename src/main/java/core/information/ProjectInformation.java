@@ -35,6 +35,7 @@ public class ProjectInformation extends Information<RootInformation> {
     @Relationship(type = "PomDependency")
     private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
 
+    @Transient
     @Properties
     private final Map<String, String> externalIndices = new HashMap<>();
 
@@ -54,8 +55,9 @@ public class ProjectInformation extends Information<RootInformation> {
      * Initializes versions correctly after being loaded from database
      */
     @PostLoad
-    private void postLoad() {
+    void postLoad() {
         versions.forEach(v -> v.postLoad(this));
+        if (versions.isEmpty()) throw new IllegalStateException("project loaded with no versions");
     }
 
     /**
@@ -66,6 +68,7 @@ public class ProjectInformation extends Information<RootInformation> {
      */
     @NotNull
     public VersionInformation addVersion(@NotNull String name) {
+        if (getVersion(name) != null) throw new IllegalArgumentException("Version " + name + " already exists");
         VersionInformation result = new VersionInformation(name, this);
         versions.add(result);
         return result;
@@ -102,6 +105,7 @@ public class ProjectInformation extends Information<RootInformation> {
         return isInternal;
     }
 
+    @NotNull
     public List<VersionInformation> getVersions() {
         return versions;
     }
@@ -109,8 +113,18 @@ public class ProjectInformation extends Information<RootInformation> {
     /**
      * @return the latest version information in the project
      */
+    @NotNull
     public VersionInformation getLatestVersion() {
         return versions.get(versions.size() - 1);
+    }
+
+    /**
+     * @param name the name of the requested versionInformation
+     * @return the corresponding version to that name, if exists
+     */
+    @Nullable
+    public VersionInformation getVersion(String name) {
+        return versions.stream().filter(v -> v.getName().equals(name)).findAny().orElse(null);
     }
 
     @Nullable
@@ -150,10 +164,5 @@ public class ProjectInformation extends Information<RootInformation> {
         super.compareElements(cmp);
         cmp.casted(ProjectInformation.class).add(ProjectInformation::isInternal)
                 .add(ProjectInformation::getVersions, CompareHelper.collectionComparator());
-    }
-
-    @Override
-    public @NotNull String getPath() {
-        return getName();
     }
 }
