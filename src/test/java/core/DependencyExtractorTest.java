@@ -18,7 +18,7 @@ class DependencyExtractorTest {
 
     Ref<ProjectInformation, RootInformation> proj;
     Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
-    Ref<ClassInformation<PackageInformation<?>>, PackageInformation<?>> ca, cabase, cb;
+    Ref<ClassInformation<PackageInformation<?>>, PackageInformation<?>> ca, cabase, cb, service;
     Ref<ClassInformation<ProjectInformation>, ProjectInformation> cc, ce, cca, cci;
     Ref<MethodInformation, ClassInformation<?>> caMa, caMb, caE, cabaseE, cbC, cbGia1, ccRca, ccC, ccaC, ccaGcc, cciC, cciRca, ceEm, caC, cbCC, cbM, cbL, cbGia2;
     private RootInformation dm;
@@ -65,21 +65,27 @@ class DependencyExtractorTest {
                         ce = cir("ExternalClass", false,
                                 ceEm = mi("extMethod()")
                         )
-                )
+                ),
+                project("spring-context", false, "<unknown>", pir("org", pis("springframework", pis("stereotype", service = cio("Service", false)))))
         );
 
-        p(cciRca, ca, ceEm);
-        p(cciC, cc, ccC);
+        p(ca, cabase);
+        p(caMa, cb, cbC);
+        p(caMb, cb);
+        p(cb, cabase, service);
+        p(cbC, ca);
         p(cbCC, caC);
         p(cbGia1, ca);
-        p(cbC, ca);
         p(cbGia2, ca, cbM);
-        p(caMb, cb);
-        p(caMa, cb, cbC);
-        p(ccC, ccaC);
-        p(ccRca, ca, cbGia1);
+        p(cc, ce);
+        p(cca, cc);
         p(ccaC, cc);
         p(ccaGcc, cc, ccC);
+        p(ccC, ccaC);
+        p(cci, cc);
+        p(cciC, cc, ccC);
+        p(cciRca, ca, ceEm);
+        p(ccRca, ca, cbGia1);
     }
 
     @Test
