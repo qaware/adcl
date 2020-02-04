@@ -636,6 +636,23 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
+     * For use by {@link core.database.Neo4jService only}
+     * deletes the id so the object gets stored in db as new object
+     */
+    public void purgeId() {
+        id = null;
+    }
+
+    /**
+     * @return all {@link RelationshipInformation} that starts from this object
+     */
+    public Stream<RelationshipInformation<?>> getOutgoingRelations() {
+        Stream<RelationshipInformation<?>> result = Utils.concatStreams(projectDependencies.stream(), packageDependencies.stream(), classDependencies.stream(), methodDependencies.stream());
+        if (parent != null) result = Stream.concat(Stream.of(parent), result);
+        return result;
+    }
+
+    /**
      * The types the java structure has ({@link Type#ROOT} for internal purposes)
      */
     public enum Type {

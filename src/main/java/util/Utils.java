@@ -120,4 +120,19 @@ public class Utils {
         int size = list.size();
         return IntStream.rangeClosed(0, size).mapToObj(i -> list.get(size - i));
     }
+
+    /**
+     * A vararg variant for {@link Stream#concat(Stream, Stream)}
+     *
+     * @param streams the streams to concat. Order determines resulting stream element order
+     * @param <T>     element type
+     * @return the concatenated stream
+     * @see Stream#concat(Stream, Stream)
+     */
+    @SafeVarargs
+    public static <T> Stream<T> concatStreams(@NotNull Stream<? extends T>... streams) {
+        Stream<T> result = Stream.empty();
+        for (Stream<? extends T> stream : streams) result = Stream.concat(result, stream);
+        return result;
+    }
 }

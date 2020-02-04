@@ -150,7 +150,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      * @see Information#setExists(VersionInformation, boolean)
      */
     public void setExists(@NotNull VersionInformation version, boolean aim) {
-        if (aim != exists(version)) if (versionInfo.remove(version) == null) versionInfo.put(version, aim);
+        if (aim != exists(version) && versionInfo.remove(version) == null) versionInfo.put(version, aim);
     }
 
     /**
@@ -216,5 +216,13 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     public String toString() {
         String vi = versionInfo.entrySet().stream().map(e -> (Boolean.TRUE.equals(e.getValue()) ? '+' : '-') + e.getKey().toString()).collect(Collectors.joining(","));
         return "(" + from.getPath() + ")->[" + vi + "]->(" + to.getPath() + ")";
+    }
+
+    /**
+     * For use by {@link core.database.Neo4jService only}
+     * deletes the id so the object gets stored in db as new object
+     */
+    public void purgeId() {
+        id = null;
     }
 }
