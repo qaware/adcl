@@ -459,7 +459,10 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         Information<?> result = find(split.getKey(), null);
         if (result == null) {
             result = createChild(typeOfNextSegment(subPath, creationType), split.getKey());
-            if (getType().isSub(Type.ROOT)) result.setExists(result.firstExistence(), false);
+            if (getType().isSub(Type.ROOT)) {
+                VersionInformation firstExistence = result.firstExistence();
+                if (!firstExistence.equals(version)) result.setExists(firstExistence, false);
+            }
         }
         if (version != null) result.setExists(version, true);
         return result.findOrCreate(split.getValue(), version, creationType);

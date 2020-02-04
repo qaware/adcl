@@ -56,7 +56,7 @@ public final class ParentInformation<P extends Information<?>> extends Relations
         if (aim) {
             if (!exists(version)) {
                 super.setExists(version, true);
-                getFrom().directChildren.forEach(i -> i.setExistsNoInheritanceCheck(version, false));
+                getFrom().directChildren.forEach(i -> i.setExists(version, false));
             }
         } else {
             super.setExists(version, false);

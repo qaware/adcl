@@ -150,32 +150,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      * @see Information#setExists(VersionInformation, boolean)
      */
     public void setExists(@NotNull VersionInformation version, boolean aim) {
-        boolean curr = exists(version);
-        if (aim != curr) {
-            VersionInformation previous = version.previous();
-            if (previous != null && exists(previous) == aim) {
-                // just modify existence so previous is restored
-                if (versionInfo.containsKey(version)) {
-                    versionInfo.remove(version);
-                } else {
-                    getOwner().setExists(version, aim);
-                }
-            } else {
-                versionInfo.put(version, aim);
-            }
-        }
-    }
-
-    /**
-     * ensures that at a given version the relation exists, setting an existence marker if not currently.
-     * Does not look whether the existence can be set by modifying the owner
-     *
-     * @param version the version to potentially set the existence if needed
-     * @param aim     the aimed existence value
-     */
-    void setExistsNoInheritanceCheck(@NotNull VersionInformation version, boolean aim) {
-        boolean curr = exists(version);
-        if (aim != curr) versionInfo.put(version, aim);
+        if (aim != exists(version)) if (versionInfo.remove(version) == null) versionInfo.put(version, aim);
     }
 
     /**
@@ -206,10 +181,11 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     final Pair<VersionInformation, Boolean> getLatestChangeInPath(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {
         Pair<VersionInformation, Boolean> ownLatestChange = getLatestChange(fromVersionInclusive, untilVersionInclusive);
         if (getOwner().parent == null) return ownLatestChange;
-        Pair<VersionInformation, Boolean> parentLatestChange = getOwner().parent.getLatestChange(fromVersionInclusive, untilVersionInclusive);
+        Pair<VersionInformation, Boolean> parentLatestChange = getOwner().parent.getLatestChangeInPath(fromVersionInclusive, untilVersionInclusive);
         if (parentLatestChange == null) return ownLatestChange;
         else if (ownLatestChange == null) return parentLatestChange;
-        return ownLatestChange.getKey().isBefore(parentLatestChange.getKey()) ? parentLatestChange : ownLatestChange;
+        else
+            return ownLatestChange.getKey().isBefore(parentLatestChange.getKey()) ? parentLatestChange : ownLatestChange;
     }
 
     // Overrides
