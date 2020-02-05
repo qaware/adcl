@@ -93,7 +93,7 @@ public class Neo4jServiceTest {
                                         cbGia1 = mi("getInstanceA()"),
                                         cbM = mi("method(java.util.function.Predicate)"),
                                         cbL = mi("lambda$getInstanceA$0(java.lang.String)"),
-                                        cbGia2 = mi("getInstanceA(java.lang.String,int,packageA.ClassA[])")
+                                        cbGia2 = mi("getInstanceA(java.lang.String, int, packageA.ClassA[])")
                                 ),
                                 pis("emptyPackage")
                         ),
