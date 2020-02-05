@@ -653,6 +653,13 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
+     * @return all {@link RelationshipInformation} that have this as {@link RelationshipInformation#getOwner()}
+     */
+    Stream<RelationshipInformation<?>> getOwnedRelations() {
+        return Utils.concatStreams(directChildren.stream(), projectDependencies.stream(), packageDependencies.stream(), classDependencies.stream(), methodDependencies.stream());
+    }
+
+    /**
      * The types the java structure has ({@link Type#ROOT} for internal purposes)
      */
     public enum Type {
