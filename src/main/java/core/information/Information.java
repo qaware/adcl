@@ -203,9 +203,16 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addProjectDependency(@NotNull ProjectInformation to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
-        ProjectDependency dep = projectDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> new ProjectDependency(this, to));
-        dep.setExists(at, true);
+        VersionInformation fAt = at == null ? getProject().getLatestVersion() : at;
+        ProjectDependency dep = projectDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> {
+            ProjectDependency result = new ProjectDependency(this, to);
+            if (getType().isSub(Type.ROOT)) {
+                VersionInformation firstExistence = result.firstExistence();
+                if (!firstExistence.equals(fAt)) result.setExists(firstExistence, false);
+            }
+            return result;
+        });
+        dep.setExists(fAt, true);
         projectDependencies.add(dep);
     }
 
@@ -247,9 +254,16 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addPackageDependency(@NotNull PackageInformation<?> to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
-        PackageDependency dep = packageDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> new PackageDependency(this, to));
-        dep.setExists(at, true);
+        VersionInformation fAt = at == null ? getProject().getLatestVersion() : at;
+        PackageDependency dep = packageDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> {
+            PackageDependency result = new PackageDependency(this, to);
+            if (getType().isSub(Type.ROOT)) {
+                VersionInformation firstExistence = result.firstExistence();
+                if (!firstExistence.equals(fAt)) result.setExists(firstExistence, false);
+            }
+            return result;
+        });
+        dep.setExists(fAt, true);
         packageDependencies.add(dep);
     }
 
@@ -291,9 +305,16 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addClassDependency(@NotNull ClassInformation<?> to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
-        ClassDependency dep = classDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> new ClassDependency(this, to));
-        dep.setExists(at, true);
+        VersionInformation fAt = at == null ? getProject().getLatestVersion() : at;
+        ClassDependency dep = classDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> {
+            ClassDependency result = new ClassDependency(this, to);
+            if (getType().isSub(Type.ROOT)) {
+                VersionInformation firstExistence = result.firstExistence();
+                if (!firstExistence.equals(fAt)) result.setExists(firstExistence, false);
+            }
+            return result;
+        });
+        dep.setExists(fAt, true);
         classDependencies.add(dep);
     }
 
@@ -322,9 +343,16 @@ public abstract class Information<P extends Information<?>> implements Comparabl
      * @param at The start version on which the dependency should exist. If null existence will be ensured for latest version
      */
     public final void addMethodDependency(@NotNull MethodInformation to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
-        MethodDependency dep = methodDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> new MethodDependency(this, to));
-        dep.setExists(at, true);
+        VersionInformation fAt = at == null ? getProject().getLatestVersion() : at;
+        MethodDependency dep = methodDependencies.stream().filter(d -> d.getTo().equals(to)).findAny().orElseGet(() -> {
+            MethodDependency result = new MethodDependency(this, to);
+            if (getType().isSub(Type.ROOT)) {
+                VersionInformation firstExistence = result.firstExistence();
+                if (!firstExistence.equals(fAt)) result.setExists(firstExistence, false);
+            }
+            return result;
+        });
+        dep.setExists(fAt, true);
         methodDependencies.add(dep);
     }
 
