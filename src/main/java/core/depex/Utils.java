@@ -2,11 +2,8 @@ package core.depex;
 
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Handle;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -146,20 +143,5 @@ class Utils {
      */
     public static boolean isJRE(@NotNull Class<?> clazz) {
         return clazz.getProtectionDomain().getCodeSource() == null;
-    }
-
-    /**
-     * @param num opcode
-     * @return the name of that opcode
-     * @see Opcodes
-     */
-    public static String getOpCode(int num) {
-        return Arrays.stream(Opcodes.class.getFields()).filter(f -> {
-            try {
-                return f.getInt(null) == num;
-            } catch (Exception e) {
-                return false;
-            }
-        }).findAny().map(Field::getName).orElse(null);
     }
 }

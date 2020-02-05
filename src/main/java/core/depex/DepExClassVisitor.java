@@ -46,7 +46,7 @@ class DepExClassVisitor extends ClassVisitor {
     public AnnotationVisitor visitAnnotation(@NotNull String descriptor, boolean visible) {
         if (descriptor.equals("Lorg/springframework/stereotype/Service;")) classInfo.setIsService(true);
         Utils.getTypesFromDescriptor(descriptor).forEach(this::addDependency);
-        return new AnnotationExtractor(this::addDependency, this::addDependency);
+        return new AnnotationExtractor(this::addDependency);
     }
 
     /*
@@ -56,7 +56,7 @@ class DepExClassVisitor extends ClassVisitor {
     public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
         Utils.getTypesFromDescriptor(descriptor).forEach(this::addDependency);
         new SignatureExtractor(signature, this::addDependency);
-        return new FieldExtractor(this::addDependency, this::addDependency);
+        return new FieldExtractor(this::addDependency);
     }
 
     /*
@@ -72,27 +72,12 @@ class DepExClassVisitor extends ClassVisitor {
      * The (new) resulting class will be marked external, but the dependencyExtractor will mark them internal afterwards
      *
      * @param toClass the class the class dependency is pointing to
-     * @return whether a new class dependency got added
      */
-    private boolean addDependency(String toClass) {
+    private void addDependency(String toClass) {
         toClass = toClass.replace('/', '.');
-        if (Utils.isJRE(toClass)) return false;
-        classInfo.addClassDependency((ClassInformation<?>) root.findOrCreate(project.resolveProjectByClassName(toClass) + '.' + toClass, null, Information.Type.CLASS), versionInfo);
-        return true;
-    }
-
-    /**
-     * Add a new method dependency to the list of dependencies the class has. Dependencies to internal (JRE) methods are omitted
-     * The (new) resulting class will be marked external, but the dependencyExtractor will mark them internal afterwards
-     *
-     * @param toClass  the class the method dependency is pointing to
-     * @param toMethod the method the method dependency is pointing to
-     * @return whether a new method dependency got added
-     */
-    boolean addDependency(String toClass, String toMethod) {
-        toClass = toClass.replace('/', '.');
-        if (Utils.isJRE(toClass)) return false;
-        classInfo.addMethodDependency((MethodInformation) root.findOrCreate(project.resolveProjectByClassName(toClass) + '.' + toClass + '.' + toMethod, null, Information.Type.METHOD), versionInfo);
-        return true;
+        if (Utils.isJRE(toClass)) return;
+        String path = project.resolveProjectByClassName(toClass) + '.' + toClass;
+        if (path.equals(classInfo.getPath())) return;
+        classInfo.addClassDependency((ClassInformation<?>) root.findOrCreate(path, null, Information.Type.CLASS), versionInfo);
     }
 }

@@ -5,7 +5,6 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.TypePath;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -13,12 +12,10 @@ import java.util.function.Consumer;
  */
 class FieldExtractor extends FieldVisitor {
     private final Consumer<String> addDependency;
-    private final BiConsumer<String, String> methodDepConsumer;
 
-    public FieldExtractor(Consumer<String> addDependency, BiConsumer<String, String> methodDepConsumer) {
+    public FieldExtractor(Consumer<String> addDependency) {
         super(Opcodes.ASM7);
         this.addDependency = addDependency;
-        this.methodDepConsumer = methodDepConsumer;
     }
 
     /*
@@ -27,16 +24,17 @@ class FieldExtractor extends FieldVisitor {
     @Override
     public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
         Utils.getTypesFromDescriptor(descriptor).forEach(addDependency);
-        return new AnnotationExtractor(addDependency, methodDepConsumer);
+        return new AnnotationExtractor(addDependency);
     }
 
     //TODO where is the difference?
     /*
      * - @DEP Field myField
+     * - Field<@DEP T> myField
      */
     @Override
     public AnnotationVisitor visitTypeAnnotation(int typeRef, TypePath typePath, String descriptor, boolean visible) {
         Utils.getTypesFromDescriptor(descriptor).forEach(addDependency);
-        return new AnnotationExtractor(addDependency, methodDepConsumer);
+        return new AnnotationExtractor(addDependency);
     }
 }

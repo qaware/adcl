@@ -158,7 +158,7 @@ class DepExMethodVisitor extends MethodVisitor {
     @Contract("_ -> new")
     private AnnotationVisitor visitAnnotation(String descriptor) {
         Utils.getTypesFromDescriptor(descriptor).forEach(this::addDependency);
-        return new AnnotationExtractor(this::addDependency, this::addDependency);
+        return new AnnotationExtractor(this::addDependency);
     }
 
     /**
@@ -167,13 +167,13 @@ class DepExMethodVisitor extends MethodVisitor {
      *
      * @param toClass  the class the method dependency is pointing to
      * @param toMethod the method the method dependency is pointing to
-     * @return whether a new method dependency got added
      */
-    boolean addDependency(String toClass, String toMethod) {
+    private void addDependency(String toClass, String toMethod) {
         toClass = toClass.replace('/', '.');
-        if (Utils.isJRE(toClass)) return false;
-        methodInfo.addMethodDependency((MethodInformation) root.findOrCreate(project.resolveProjectByClassName(toClass) + '.' + toClass + '.' + toMethod, null, Information.Type.METHOD), versionInfo);
-        return true;
+        if (Utils.isJRE(toClass)) return;
+        String path = project.resolveProjectByClassName(toClass) + '.' + toClass + '.' + toMethod;
+        if (path.equals(methodInfo.getPath())) return;
+        methodInfo.addMethodDependency((MethodInformation) root.findOrCreate(path, null, Information.Type.METHOD), versionInfo);
     }
 
     /**
@@ -181,12 +181,12 @@ class DepExMethodVisitor extends MethodVisitor {
      * The (new) resulting class will be marked external, but the dependencyExtractor will mark them internal afterwards
      *
      * @param toClass the class the class dependency is pointing to
-     * @return whether a new class dependency got added
      */
-    boolean addDependency(String toClass) {
+    private void addDependency(String toClass) {
         toClass = toClass.replace('/', '.');
-        if (Utils.isJRE(toClass)) return false;
-        methodInfo.addClassDependency((ClassInformation<?>) root.findOrCreate(project.resolveProjectByClassName(toClass) + '.' + toClass, null, Information.Type.CLASS), versionInfo);
-        return true;
+        if (Utils.isJRE(toClass)) return;
+        String path = project.resolveProjectByClassName(toClass) + '.' + toClass;
+        if (path.equals(methodInfo.getParent().getPath())) return;
+        methodInfo.addClassDependency((ClassInformation<?>) root.findOrCreate(path, null, Information.Type.CLASS), versionInfo);
     }
 }
