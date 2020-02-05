@@ -4,7 +4,9 @@ body {
   font-family: Roboto, Arial, sans-serif;
   margin: auto;
 }
-
+h2 {
+  margin-left: 3%;
+}
 
 .version-info {
   font-size: 8pt;

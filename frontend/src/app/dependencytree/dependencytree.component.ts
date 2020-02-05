@@ -149,12 +149,12 @@ export class DependencyTreeDatabase {
       'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
       'return di.path as path, di.name as name, labels(di) as diLabels,' +
       ' any(x in relationships(p) where x["versionInfo.' + version + '"]) ' +
-      'as Changestatus, i.path as iPath ';
+      'as Changestatus, i.path as iPath, labels(i) as iLabels, i.name as iName';
 
     const treeResult = this.neo4j.run(queryTree, params).then(nodes => {
       nodes.forEach(node => {
-        const path = (node[0] as string).substr((projectName.toString()).length + 1);
-        const name = node[1];
+        const path: string = (node[0] as string).substr((projectName.toString()).length + 1);
+        const name: string = node[1];
         const type = this.resolveType(node[2]);
         const obj: { [k: string]: any } = {};
         obj.text = name;
@@ -171,11 +171,15 @@ export class DependencyTreeDatabase {
             obj.label = Label.Class;
             obj.filterType = FilterType.Class;
             classInformation.push(obj);
+            classInformation.push(this.createMethodsNode(obj.code));
+            classInformation.push(this.createAddedDependenciesNode(obj.code));
+            classInformation.push(this.createDeletedDependenciesNode(obj.code));
             break;
           }
           case 3: {
             obj.label = Label.Method;
             obj.filterType = FilterType.Method;
+            obj.code = obj.code.substr(0, obj.code.length - (name.length + 1)) + '.methods.' + name;
             methodInformation.push(obj);
             methodInformation.push(this.createAddedDependenciesNode(obj.code));
             methodInformation.push(this.createDeletedDependenciesNode(obj.code));
@@ -190,12 +194,19 @@ export class DependencyTreeDatabase {
         const path = (node[0] as string).substr((projectName.toString()).length + 1);
         const name = node[1];
         const type = this.resolveType(node[2]);
+        const usedByType = this.resolveType(node[5]);
+        const usedByName = node[6];
         const status = (node[3] === true) ? 'added' : 'deleted';
         const usedByPath = (node[4] as string).substr((projectName.toString()).length + 1);
         const obj: { [k: string]: any } = {};
         obj.text = name;
         obj.path = path;
-        obj.code = this.root + '.' + usedByPath + '.' + status + '.' + name;
+        if (usedByType === 3) {
+          obj.code = this.root + '.' +
+            usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.methods.' + usedByName + '.' + status + '.' + name;
+        } else {
+          obj.code = this.root + '.' + usedByPath + '.' + status + '.' + name;
+        }
         obj.filterType = FilterType.Dependency;
         obj.label = (node[3] === true) ? Label.AddedDependency : Label.DeletedDependency;
         switch (type) {
@@ -205,6 +216,9 @@ export class DependencyTreeDatabase {
           }
           case 2: {
             dependencyClass.push(obj);
+            const cpy = Object.assign({}, obj);
+            cpy.code = this.root + '.' + usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.' + status + '.' + name;
+            dependencyClass.push(cpy);
             break;
           }
           case 3: {
@@ -251,6 +265,13 @@ export class DependencyTreeDatabase {
     deleted.text = '';
     deleted.code = code + '.deleted';
     return deleted;
+  }
+  createMethodsNode(code: string) {
+    const methods: { [k: string]: any } = {};
+    methods.label = 'Methods';
+    methods.text = '';
+    methods.code = code + '.methods';
+    return methods;
   }
 
   /**
