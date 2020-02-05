@@ -1,5 +1,7 @@
 package core;
 
+import core.information.Information;
+import core.information.PomDependencyInformation;
 import core.information.ProjectInformation;
 import core.information.VersionInformation;
 import org.apache.maven.model.Dependency;
@@ -19,11 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +31,8 @@ import java.util.regex.Pattern;
 public class PomDependencyReader {
     @NotNull
     private final Path pomPath;
-
+    private Object Information;
+    private ArrayList<Information<?>> informationArrayList;
     /**
      * Init PomDependencyReader
      *
@@ -41,6 +40,7 @@ public class PomDependencyReader {
      */
     public PomDependencyReader(@NotNull Path pomPath) {
         this.pomPath = pomPath;
+        informationArrayList = new ArrayList<Information<?>>();
     }
 
     /**
@@ -108,15 +108,20 @@ public class PomDependencyReader {
     }
 
     /**
-     * integrates the pom dependencies in the project
+     * integrates the pom into dependencies project
      *
      * @param pj                 determines to which project the dependencies should be integrated
-     * @param versionInformation determines which project version
+     * @param versionInformation creates new node in data modell
      */
-    public void integrateInDataModell(ProjectInformation pj, VersionInformation versionInformation) throws IOException, XmlPullParserException {
+    public void integrateIntoDataModell(ProjectInformation pj, VersionInformation versionInformation) throws IOException, XmlPullParserException {
         Set<Dependency> set = readDependencies();
-        ArrayList<VersionInformation> vi = new ArrayList<>();
-        set.forEach(x -> vi.add(new VersionInformation(x.getArtifactId(), pj)));
-        vi.forEach(x -> pj.addPomDependency(x, versionInformation));
+        Set<PomDependencyInformation> pomDependencyInformationSet = pj.getPomDependencyInformations(versionInformation);
+        set.forEach(dependency -> {
+            Information<?> remote = pj.findOrCreate(pj.getPath(), new VersionInformation(dependency.getArtifactId(), pj),core.information.Information.Type.CLASS); //Anders
+            pomDependencyInformationSet.forEach(pomDependencyInformation -> {
+               if(pomDependencyInformation.exists(new VersionInformation(dependency.getVersion(), remote.getProject())))
+                   pj.addPomDependency(new VersionInformation(dependency.getVersion(), remote.getProject()), versionInformation);
+            });
+        });
     }
 }

@@ -89,7 +89,7 @@ public class PomDependencyReaderTest {
         assertThat(list).containsExactlyInAnyOrderElementsOf(newList);
         ProjectInformation proj = projRef.getStored();
         VersionInformation at = proj.getLatestVersion();
-        reader.integrateInDataModell(proj, at);
+        reader.integrateIntoDataModell(proj, at);
         reader.readDependencies().forEach(x -> Assert.assertNotNull(proj.getPomDependencies(at).stream().
                 filter(y -> y.getName().equals(x.getArtifactId()))));
     }
