@@ -137,18 +137,18 @@ export class DependencyTreeDatabase {
     const dependencyClass: any[] = [];
     const dependencyMethod: any[] = [];
 
-    // Query fetching all nodes with contain changes
+// Query fetching all nodes with contain changes
     const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
-      'where any(x in nodes(p) where exists(x.`versionInfo.' + version + '`)) ' +
-      'or any(x in relationships(p) where exists(x.`versionInfo.' + version + '`))' +
+      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
+      'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
       'return i.path, i.name, labels(i) as labels';
 
     // Query fetching all dependencies
     const queryDependencies = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
       '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
-      'where any(x in nodes(p) where exists(x.`versionInfo.' + version + '`)' +
-      'and  x<>di) or any(x in relationships(p) where exists(x.`versionInfo.' + version + '`))' +
-      'return di.path as path, di.name as name, labels(di) as diLabels, any(x in nodes(p) where x.`versionInfo.' + version + '`) ' +
+      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
+      'return di.path as path, di.name as name, labels(di) as diLabels,' +
+      ' any(x in relationships(p) where x["versionInfo.' + version + '"]) ' +
       'as Changestatus, i.path as iPath ';
 
     const treeResult = this.neo4j.run(queryTree, params).then(nodes => {
