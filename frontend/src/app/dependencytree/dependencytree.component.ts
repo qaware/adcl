@@ -506,13 +506,14 @@ export class DependencytreeComponent implements OnInit {
       const pVersion = this.cookieService.get('projectVersion');
       if (pVersion !== undefined) {
         this.projectVersion = pVersion;
+        this.changeDependencyTree(this.projectVersion);
       }
-      this.changeDependencyTree(this.projectVersion);
     }
     if (this.cookieService.check('filterText')) {
       const fText = this.cookieService.get('filterText');
       if (fText !== undefined) {
         this.filterText = fText;
+        this.database.filter(fText);
       }
     }
   }
