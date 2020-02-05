@@ -44,6 +44,7 @@ export enum DisplayOption {
   CompactMiddlePackages = 'Compact Middle Packages',
   FlattenPackages = 'Flat Packages'
 }
+
 const reverseDisplayOption = new Map<string, DisplayOption>();
 reverseDisplayOption.set('Normal', DisplayOption.Standard);
 reverseDisplayOption.set('Compact Middle Packages', DisplayOption.CompactMiddlePackages);
@@ -119,13 +120,6 @@ export class DependencyTreeDatabase {
     const queryChangelogId = 'MATCH (n:ProjectInformation{name: {pName}}) return n.versions';
     this.neo4j.run(queryChangelogId, params).then(changelogInformationIds => {
       this.changelogIds = changelogInformationIds.flat(2).slice(1);
-    });
-  }
-
-  private loadProjectName() {
-    const queryProjectNames = 'MATCH (p:ProjectInformation) WHERE p.internal=true RETURN p.name;';
-    this.neo4j.run(queryProjectNames).then(projectNames => {
-      this.projectNames = projectNames;
     });
   }
 
@@ -340,6 +334,13 @@ export class DependencyTreeDatabase {
     this.dataChange.next(data);
   }
 
+  private loadProjectName() {
+    const queryProjectNames = 'MATCH (p:ProjectInformation) WHERE p.internal=true RETURN p.name;';
+    this.neo4j.run(queryProjectNames).then(projectNames => {
+      this.projectNames = projectNames;
+    });
+  }
+
   private addParentNodes(filteredTreeData: any[], codeString: string) {
     while (codeString.lastIndexOf('.') > -1) {
       const index = codeString.lastIndexOf('.');
@@ -377,6 +378,19 @@ export class DependencyTreeDatabase {
 export class DependencytreeComponent implements OnInit {
 
 
+  /** Map from flat node to nested node. This helps us finding the nested node to be modified */
+  flatNodeMap = new Map<TreeItemFlatNode, TreeItemNode>();
+  /** Map from nested node to flattened node. This helps us to keep the same object for selection */
+  nestedNodeMap = new Map<TreeItemNode, TreeItemFlatNode>();
+  treeControl: FlatTreeControl<TreeItemFlatNode>;
+  treeFlattener: MatTreeFlattener<TreeItemNode, TreeItemFlatNode>;
+  dataSource: MatTreeFlatDataSource<TreeItemNode, TreeItemFlatNode>;
+  @ViewChild('searchField', {static: false}) searchField;
+  selectedProject: string;
+  projectVersion: string;
+  filterText = '';
+  private db: DependencyTreeDatabase;
+
   constructor(private database: DependencyTreeDatabase, private cookieService: CookieService) {
 
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
@@ -389,6 +403,7 @@ export class DependencytreeComponent implements OnInit {
     });
 
   }
+
   get FilterType() {
     return FilterType;
   }
@@ -396,24 +411,6 @@ export class DependencytreeComponent implements OnInit {
   get DisplayOption() {
     return DisplayOption;
   }
-  /** Map from flat node to nested node. This helps us finding the nested node to be modified */
-  flatNodeMap = new Map<TreeItemFlatNode, TreeItemNode>();
-
-  /** Map from nested node to flattened node. This helps us to keep the same object for selection */
-  nestedNodeMap = new Map<TreeItemNode, TreeItemFlatNode>();
-
-  treeControl: FlatTreeControl<TreeItemFlatNode>;
-
-  treeFlattener: MatTreeFlattener<TreeItemNode, TreeItemFlatNode>;
-
-  dataSource: MatTreeFlatDataSource<TreeItemNode, TreeItemFlatNode>;
-
-  private db: DependencyTreeDatabase;
-
-  @ViewChild('searchField', {static: false} ) searchField;
-  selectedProject: string;
-  projectVersion: string;
-  filterText = '';
 
   ngOnInit() {
     this.loadCookies();
@@ -485,38 +482,53 @@ export class DependencytreeComponent implements OnInit {
     this.db.loadChangelogIds(projectName);
   }
 
-  private loadCookies() {
-
-    if (this.cookieService.check('projectName')) {
-        this.selectedProject = this.cookieService.get('projectName').toString();
-        this.loadProjectVersion(this.selectedProject);
-    }
-    if (this.cookieService.check('displayOption')) {
-        this.db.selectedDisplayOption = reverseDisplayOption.get(this.cookieService.get('displayOption').toString());
-    }
-    if (this.cookieService.check('projectVersion')) {
-        this.projectVersion = this.cookieService.get('projectVersion');
-        this.changeDependencyTree(this.projectVersion);
-    }
-    if (this.cookieService.check('filterText')) {
-        this.filterText = this.cookieService.get('filterText');
-    }
-  }
-  private saveToCookies() {
-    if (this.filterText) {
-      this.cookieService.set('filterText', this.filterText, 365, '/', '', false, 'Strict');
-    }
-    if (this.projectVersion) {
-      this.cookieService.set('projectVersion', this.projectVersion, 365, '/', '', false, 'Strict');
-    }
-    if (this.selectedProject) {
-      this.cookieService.set('projectName', this.selectedProject, 365, '/', '', false, 'Strict');
-    }
-    this.cookieService.set('displayOption', this.db.selectedDisplayOption.toString(), 365, '/', '', false, 'Strict');
-  }
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
     this.saveToCookies();
+  }
+
+  private loadCookies() {
+
+    if (this.cookieService.check('projectName')) {
+      const pName = this.cookieService.get('projectName').toString();
+      if (pName !== undefined) {
+        this.selectedProject = pName;
+        this.loadProjectVersion(this.selectedProject);
+      }
+    }
+    if (this.cookieService.check('displayOption')) {
+      const dOption = reverseDisplayOption.get(this.cookieService.get('displayOption').toString());
+      if (dOption !== undefined) {
+        this.db.selectedDisplayOption = dOption;
+      }
+    }
+    if (this.cookieService.check('projectVersion')) {
+      const pVersion = this.cookieService.get('projectVersion');
+      if (pVersion !== undefined) {
+        this.projectVersion = pVersion;
+      }
+      this.changeDependencyTree(this.projectVersion);
+    }
+    if (this.cookieService.check('filterText')) {
+      const fText = this.cookieService.get('filterText');
+      if (fText !== undefined) {
+        this.filterText = fText;
+      }
+    }
+  }
+
+  private saveToCookies() {
+    this.cookieService.set('filterText', this.filterText, 365, '/', '', false, 'Strict');
+    this.cookieService.set('projectVersion', this.projectVersion, 365, '/', '', false, 'Strict');
+    this.cookieService.set('projectName', this.selectedProject, 365, '/', '', false, 'Strict');
+    this.cookieService.set('displayOption', this.db.selectedDisplayOption.toString(), 365, '/', '', false, 'Strict');
+  }
+
+  private reset() {
+    this.selectedProject = '';
+    this.projectVersion = '';
+    this.filterText = '';
+    this.db.selectedDisplayOption = DisplayOption.CompactMiddlePackages;
   }
 }
 
