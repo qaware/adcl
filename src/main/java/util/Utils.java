@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.FileSystems;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,15 +76,6 @@ public class Utils {
     @NotNull
     public static String pathToPackage(@NotNull Path path) {
         return path.toString().replace(path.getFileSystem().getSeparator(), ".");
-    }
-
-    /**
-     * @param pack a package name
-     * @return the corresponding path relative to the project root
-     */
-    @NotNull
-    public static Path packageToPath(@NotNull String pack) {
-        return Paths.get(pack.replace(".", FileSystems.getDefault().getSeparator()));
     }
 
     /**

@@ -1,6 +1,5 @@
 package core;
 
-import javassist.ClassPool;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -8,6 +7,8 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.config.Configuration;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jProperties;
@@ -97,8 +98,7 @@ public class ApplicationConfig {
     private void validateScanLocation(@NotNull Path scanLocation) throws ConfigurationException {
         try (Stream<Path> walker = Files.walk(scanLocation)) {
             Path classFile = walker.filter(p -> p.toString().endsWith(".class")).findAny().orElseThrow(() -> new ConfigurationException("project.uri contains no class files"));
-            String actualPackageName = new ClassPool().makeClassIfNew(Files.newInputStream(classFile)).getPackageName();
-            if (actualPackageName == null) actualPackageName = "";
+            String actualPackageName = readPackageOfClass(classFile);
             String expectedPackageName = Utils.pathToPackage(scanLocation.relativize(classFile.getParent()));
             if (!actualPackageName.equals(expectedPackageName)) {
                 throw new ConfigurationException("project.uri does not point to the root of the class files. Package entry in {} does not match. Expected: {}, Actual: {}", classFile, expectedPackageName, actualPackageName);
@@ -106,6 +106,14 @@ public class ApplicationConfig {
         } catch (IOException e) {
             LOGGER.warn("Could not verify project.uri as a valid directory", e);
         }
+    }
+
+    @NotNull
+    private String readPackageOfClass(Path classPath) throws IOException {
+        ClassNode classNode = new ClassNode();
+        new ClassReader(Files.newInputStream(classPath)).accept(classNode, 0);
+        int index = classNode.name.lastIndexOf('/');
+        return (index < 0 ? "" : classNode.name.substring(0, index)).replace('/', '.');
     }
 
     @NotNull

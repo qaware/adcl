@@ -27,9 +27,14 @@
     <dependencies>
         <!-- Class file analysis -->
         <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.26.0-GA</version>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>7.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>7.2</version>
         </dependency>
 
         <!-- Database -->
