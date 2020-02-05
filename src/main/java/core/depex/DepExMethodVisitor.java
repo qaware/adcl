@@ -97,7 +97,6 @@ class DepExMethodVisitor extends MethodVisitor {
      */
     @Override
     public void visitInvokeDynamicInsn(String name, String descriptor, Handle bootstrapMethodHandle, @NotNull Object... bootstrapMethodArguments) {
-        Utils.getTypesFromDescriptor(descriptor).forEach(this::addDependency); //TODO convert to method dependency
         Utils.analyseConstant(bootstrapMethodHandle, this::addDependency, this::addDependency);
         for (Object arg : bootstrapMethodArguments)
             Utils.analyseConstant(arg, this::addDependency, this::addDependency);

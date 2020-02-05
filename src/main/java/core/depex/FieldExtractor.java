@@ -19,7 +19,7 @@ class FieldExtractor extends FieldVisitor {
     }
 
     /*
-     * - @DEP Field myField
+     * - @DEP Field myField (annotates the field itself)
      */
     @Override
     public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
@@ -27,9 +27,8 @@ class FieldExtractor extends FieldVisitor {
         return new AnnotationExtractor(addDependency);
     }
 
-    //TODO where is the difference?
     /*
-     * - @DEP Field myField
+     * - @DEP Field myField (annotates the field type)
      * - Field<@DEP T> myField
      */
     @Override
