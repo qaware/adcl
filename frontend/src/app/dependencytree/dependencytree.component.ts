@@ -530,6 +530,9 @@ export class DependencytreeComponent implements OnInit {
     this.projectVersion = '';
     this.filterText = '';
     this.db.selectedDisplayOption = DisplayOption.CompactMiddlePackages;
+    this.db.treeData = [];
+    const data = this.db.buildDependencyTree(this.db.treeData, this.db.root, this.db.selectedDisplayOption);
+    this.db.dataChange.next(data);
   }
 }
 
