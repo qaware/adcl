@@ -1,9 +1,10 @@
 import {FlatTreeControl} from '@angular/cdk/tree';
-import {Component, Injectable, ViewChild} from '@angular/core';
+import {Component, HostListener, Injectable, OnInit, ViewChild} from '@angular/core';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
+import {CookieService} from 'ngx-cookie-service';
 
 /**
  * Base Node for Tree item nodes
@@ -43,8 +44,12 @@ export enum DisplayOption {
   CompactMiddlePackages = 'Compact Middle Packages',
   FlattenPackages = 'Flat Packages'
 }
+const reverseDisplayOption = new Map<string, DisplayOption>();
+reverseDisplayOption.set('Normal', DisplayOption.Standard);
+reverseDisplayOption.set('Compact Middle Packages', DisplayOption.CompactMiddlePackages);
+reverseDisplayOption.set('Flat Packages', DisplayOption.FlattenPackages);
 
-/** Display options */
+/** Display Label */
 export enum Label {
   Package = 'Package',
   Class = 'Class',
@@ -113,7 +118,7 @@ export class DependencyTreeDatabase {
     const params = {pName: projectName.toString()};
     const queryChangelogId = 'MATCH (n:ProjectInformation{name: {pName}}) return n.versions';
     this.neo4j.run(queryChangelogId, params).then(changelogInformationIds => {
-      this.changelogIds = changelogInformationIds.flat(2);
+      this.changelogIds = changelogInformationIds.flat(2).slice(1);
     });
   }
 
@@ -183,8 +188,6 @@ export class DependencyTreeDatabase {
             break;
           }
         }
-
-
       });
     });
 
@@ -300,6 +303,7 @@ export class DependencyTreeDatabase {
               return;
             }
           }
+          // skip adding branches that dont end on a dependency
           if (node.children.length < 1 && node.filterType !== FilterType.Dependency) {
             return;
           }
@@ -368,9 +372,30 @@ export class DependencyTreeDatabase {
   selector: 'app-dependencytree',
   templateUrl: 'dependencytree.component.html',
   styleUrls: ['dependencytree.component.css'],
-  providers: [DependencyTreeDatabase]
+  providers: [DependencyTreeDatabase, CookieService]
 })
-export class DependencytreeComponent {
+export class DependencytreeComponent implements OnInit {
+
+
+  constructor(private database: DependencyTreeDatabase, private cookieService: CookieService) {
+
+    this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
+      this.isExpandable, this.getChildren);
+    this.treeControl = new FlatTreeControl<TreeItemFlatNode>(this.getLevel, this.isExpandable);
+    this.dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
+    this.db = database;
+    database.dataChange.subscribe(data => {
+      this.dataSource.data = data;
+    });
+
+  }
+  get FilterType() {
+    return FilterType;
+  }
+
+  get DisplayOption() {
+    return DisplayOption;
+  }
   /** Map from flat node to nested node. This helps us finding the nested node to be modified */
   flatNodeMap = new Map<TreeItemFlatNode, TreeItemNode>();
 
@@ -385,17 +410,13 @@ export class DependencytreeComponent {
 
   private db: DependencyTreeDatabase;
 
-  @ViewChild('searchField', {static: false} ) input;
+  @ViewChild('searchField', {static: false} ) searchField;
+  selectedProject: string;
+  projectVersion: string;
+  filterText = '';
 
-  constructor(private database: DependencyTreeDatabase) {
-    this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
-      this.isExpandable, this.getChildren);
-    this.treeControl = new FlatTreeControl<TreeItemFlatNode>(this.getLevel, this.isExpandable);
-    this.dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
-    this.db = database;
-    database.dataChange.subscribe(data => {
-      this.dataSource.data = data;
-    });
+  ngOnInit() {
+    this.loadCookies();
   }
 
   getLevel = (node: TreeItemFlatNode) => node.level;
@@ -405,14 +426,6 @@ export class DependencytreeComponent {
   getChildren = (node: TreeItemNode): TreeItemNode[] => node.children;
 
   hasChild = (_: number, nodeData: TreeItemFlatNode) => nodeData.expandable;
-
-  get FilterType() {
-    return FilterType;
-  }
-
-  get DisplayOption() {
-    return DisplayOption;
-  }
 
   /** Transformer to convert nested node to flat node. Record the nodes in maps for later use. */
   transformer = (node: TreeItemNode, level: number) => {
@@ -455,21 +468,55 @@ export class DependencytreeComponent {
     const data = this.database.buildDependencyTree(this.database.treeData, this.database.root, displayOption);
     this.database.selectedDisplayOption = displayOption;
     this.database.dataChange.next(data);
-
   }
 
   /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
   searchFilterSelected(selectedFilter: FilterType) {
-    if (this.input.nativeElement.value.match(/^[pcmd]:/) !== null) {
-      this.input.nativeElement.value = selectedFilter + this.input.nativeElement.value.substr(1);
+    if (this.searchField.nativeElement.value.match(/^[pcmd]:/) !== null) {
+      this.searchField.nativeElement.value = selectedFilter + this.searchField.nativeElement.value.substr(1);
     } else {
-      this.input.nativeElement.value = selectedFilter + ':' + this.input.nativeElement.value;
+      this.searchField.nativeElement.value = selectedFilter + ':' + this.searchField.nativeElement.value;
     }
-    this.input.nativeElement.dispatchEvent(new Event('input'));
+    this.searchField.nativeElement.dispatchEvent(new Event('input'));
   }
 
   /** Event-Handler triggered by project selection, loads the available changelog version */
   loadProjectVersion(projectName: string) {
     this.db.loadChangelogIds(projectName);
   }
+
+  private loadCookies() {
+
+    if (this.cookieService.check('projectName')) {
+        this.selectedProject = this.cookieService.get('projectName').toString();
+        this.loadProjectVersion(this.selectedProject);
+    }
+    if (this.cookieService.check('displayOption')) {
+        this.db.selectedDisplayOption = reverseDisplayOption.get(this.cookieService.get('displayOption').toString());
+    }
+    if (this.cookieService.check('projectVersion')) {
+        this.projectVersion = this.cookieService.get('projectVersion');
+        this.changeDependencyTree(this.projectVersion);
+    }
+    if (this.cookieService.check('filterText')) {
+        this.filterText = this.cookieService.get('filterText');
+    }
+  }
+  private saveToCookies() {
+    if (this.filterText) {
+      this.cookieService.set('filterText', this.filterText, 365, '/', '', false, 'Strict');
+    }
+    if (this.projectVersion) {
+      this.cookieService.set('projectVersion', this.projectVersion, 365, '/', '', false, 'Strict');
+    }
+    if (this.selectedProject) {
+      this.cookieService.set('projectName', this.selectedProject, 365, '/', '', false, 'Strict');
+    }
+    this.cookieService.set('displayOption', this.db.selectedDisplayOption.toString(), 365, '/', '', false, 'Strict');
+  }
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    this.saveToCookies();
+  }
 }
+
