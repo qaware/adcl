@@ -82,7 +82,33 @@ public class RootInformation extends Information<RootInformation> {
      */
     @Override
     public void setExists(@NotNull VersionInformation at, boolean exists) {
-        if (!exists) throw new UnsupportedOperationException("Root always exists");
+        if (!exists) errCallOnExistence();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull VersionInformation firstExistence() {
+        return errCallOnExistence();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull VersionInformation lastExistence() {
+        return errCallOnExistence();
+    }
+
+    /**
+     * Error helper method. Call if existence operation is not logical for root
+     *
+     * @param <T> ignored (will throw)
+     * @return nothing (will throw)
+     */
+    private <T> T errCallOnExistence() {
+        throw new UnsupportedOperationException("Root always exists");
     }
 
     /**
@@ -116,6 +142,6 @@ public class RootInformation extends Information<RootInformation> {
      */
     @Override
     public @NotNull ProjectInformation getProject() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("root is super project");
     }
 }
