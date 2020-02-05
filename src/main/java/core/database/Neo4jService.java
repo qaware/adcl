@@ -32,6 +32,7 @@ public class Neo4jService {
      * Service init by spring. Instantly loads the root
      *
      * @param infoRepo       the information repository bean
+     * @param sessionFactory the neo4j driver session factory
      */
     @SuppressWarnings("java:S2637" /* gets initialized in constructor */)
     public Neo4jService(InformationRepository infoRepo, SessionFactory sessionFactory) {

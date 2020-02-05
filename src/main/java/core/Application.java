@@ -54,6 +54,7 @@ public class Application {
      *
      * @param args CLI args
      * @return the exit code
+     * @throws Exception potentially any exception, just to enforce catching so application stops in a controlled manner
      */
     @SuppressWarnings({"RedundantThrows", "java:S112"} /* enforce caller to catch any potential exception */)
     public static int launch(String[] args) throws Exception {

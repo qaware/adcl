@@ -22,8 +22,8 @@ class Utils {
     /**
      * A one-method-extractor for constants
      * A constant might be a string literal, an integer constant, etc...
-     * but also a Type constant (-> ClassDependency)
-     * or a Method Handle (-> MethodDependency)
+     * but also a Type constant (create ClassDependency)
+     * or a Method Handle (create MethodDependency)
      *
      * @param value        the constant to analyse
      * @param addClassDep  consumer for found class dependencies
