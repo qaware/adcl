@@ -1,14 +1,20 @@
 package core.database;
 
 import core.information.Information;
+import core.information.RelationshipInformation;
 import core.information.RootInformation;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
+import org.neo4j.ogm.transaction.Transaction;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * ADCLs database service. Holds the root node represented by the database
@@ -26,7 +32,6 @@ public class Neo4jService {
      * Service init by spring. Instantly loads the root
      *
      * @param infoRepo       the information repository bean
-     * @param sessionFactory the neo4j driver session factory
      */
     @SuppressWarnings("java:S2637" /* gets initialized in constructor */)
     public Neo4jService(InformationRepository infoRepo, SessionFactory sessionFactory) {
@@ -48,15 +53,9 @@ public class Neo4jService {
      */
     @Transactional(readOnly = true)
     public void loadRoot() {
-        RootInformation result = null;
-        for (Information<?> i : infoRepo.findAll()) {
-            if (i instanceof RootInformation) {
-                result = (RootInformation) i;
-                break;
-            }
-        }
-        if (result == null) result = new RootInformation();
-        root = result;
+        root = StreamSupport.stream(infoRepo.findAll().spliterator(), true)
+                .filter(RootInformation.class::isInstance).findAny()
+                .map(RootInformation.class::cast).orElseGet(RootInformation::new);
     }
 
     /**
@@ -64,7 +63,19 @@ public class Neo4jService {
      */
     @Transactional
     public void saveRoot() {
-        infoRepo.save(root);
+        Set<Information<?>> all = root.getAllChildren(null);
+        all.add(root);
+        all.forEach(Information::purgeId);
+        Set<RelationshipInformation<?>> rels = all.stream().flatMap(Information::getOutgoingRelations).collect(Collectors.toSet());
+        rels.forEach(RelationshipInformation::purgeId);
+
+        Session session = sessionFactory.openSession();
+        session.purgeDatabase();
+        Transaction transaction = session.beginTransaction();
+        all.forEach(i -> session.save(i, 0));
+        rels.forEach(i -> session.save(i, 0));
+        transaction.commit();
+        transaction.close();
     }
 
     /**
@@ -74,8 +85,6 @@ public class Neo4jService {
      */
     @Transactional
     public void overrideRoot(@NotNull RootInformation newRoot) {
-        Session s = sessionFactory.openSession();
-        s.purgeDatabase();
         root = newRoot;
         saveRoot();
     }

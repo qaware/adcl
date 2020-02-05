@@ -123,40 +123,34 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
-     * ensures that at a given version the relation exists, setting an existence marker if not currently
-     * default implementation will override child existences
-     *
-     * @param version the version to potentially set the existence if needed
-     * @param aim the aimed existence value
-     * @see Information#setExists(VersionInformation, boolean)
+     * @return the first version where the information exists
+     * @see Information#firstExistence()
      */
-    public void setExists(@NotNull VersionInformation version, boolean aim) {
-        boolean curr = exists(version);
-        if (aim != curr) {
-            VersionInformation previous = version.previous();
-            if (previous != null && exists(previous) == aim) {
-                // just modify existence so previous is restored
-                if (versionInfo.containsKey(version)) {
-                    versionInfo.remove(version);
-                } else {
-                    getOwner().setExists(version, aim);
-                }
-            } else {
-                versionInfo.put(version, aim);
-            }
-        }
+    @NotNull
+    public VersionInformation firstExistence() {
+        return getOwner().getProject().getVersions().stream().filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
     }
 
     /**
-     * ensures that at a given version the relation exists, setting an existence marker if not currently.
-     * Does not look whether the existence can be set by modifying the owner
+     * @return the last version where the information exists
+     * @see Information#lastExistence()
+     */
+    @NotNull
+    public VersionInformation lastExistence() {
+        return Utils.reverseStream(getOwner().getProject().getVersions()).filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
+    }
+
+    /**
+     * ensures that at a given version the relation exists, setting an existence marker if not currently
+     * default implementation will override child existences
+     * TODO this implementation doesn't correctly apply edits on older versions
      *
      * @param version the version to potentially set the existence if needed
      * @param aim     the aimed existence value
+     * @see Information#setExists(VersionInformation, boolean)
      */
-    void setExistsNoInheritanceCheck(@NotNull VersionInformation version, boolean aim) {
-        boolean curr = exists(version);
-        if (aim != curr) versionInfo.put(version, aim);
+    public void setExists(@NotNull VersionInformation version, boolean aim) {
+        if (aim != exists(version) && versionInfo.remove(version) == null) versionInfo.put(version, aim);
     }
 
     /**
@@ -187,10 +181,11 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     final Pair<VersionInformation, Boolean> getLatestChangeInPath(@NotNull VersionInformation fromVersionInclusive, @NotNull VersionInformation untilVersionInclusive) {
         Pair<VersionInformation, Boolean> ownLatestChange = getLatestChange(fromVersionInclusive, untilVersionInclusive);
         if (getOwner().parent == null) return ownLatestChange;
-        Pair<VersionInformation, Boolean> parentLatestChange = getOwner().parent.getLatestChange(fromVersionInclusive, untilVersionInclusive);
+        Pair<VersionInformation, Boolean> parentLatestChange = getOwner().parent.getLatestChangeInPath(fromVersionInclusive, untilVersionInclusive);
         if (parentLatestChange == null) return ownLatestChange;
         else if (ownLatestChange == null) return parentLatestChange;
-        return ownLatestChange.getKey().isBefore(parentLatestChange.getKey()) ? parentLatestChange : ownLatestChange;
+        else
+            return ownLatestChange.getKey().isBefore(parentLatestChange.getKey()) ? parentLatestChange : ownLatestChange;
     }
 
     // Overrides
@@ -221,5 +216,13 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     public String toString() {
         String vi = versionInfo.entrySet().stream().map(e -> (Boolean.TRUE.equals(e.getValue()) ? '+' : '-') + e.getKey().toString()).collect(Collectors.joining(","));
         return "(" + from.getPath() + ")->[" + vi + "]->(" + to.getPath() + ")";
+    }
+
+    /**
+     * For use by {@link core.database.Neo4jService only}
+     * deletes the id so the object gets stored in db as new object
+     */
+    public void purgeId() {
+        id = null;
     }
 }
