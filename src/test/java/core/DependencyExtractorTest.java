@@ -76,7 +76,7 @@ class DependencyExtractorTest {
         p(cbC, ca);
         p(cbCC, caC);
         p(cbGia1, ca);
-        p(cbGia2, ca, cbM);
+        p(cbGia2, ca, cbM, cbL);
         p(cc, ce);
         p(cca, cc);
         p(ccaC, cc);
@@ -93,8 +93,7 @@ class DependencyExtractorTest {
         RootInformation root = new RootInformation();
         ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
 
-        new DependencyExtractor(TESTCLASS_FOLDER, proj.getLatestVersion()).runAnalysis();
-
+        new DependencyExtractor(Paths.get("target/classes"), proj.getLatestVersion()).runAnalysis();
         assertThat(root.deepEquals(dm)).overridingErrorMessage("Not deep equal!\nExpected:\n%s\n\nActual:\n%s", dm, root).isTrue();
     }
 }

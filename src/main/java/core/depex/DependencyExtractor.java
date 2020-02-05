@@ -59,21 +59,11 @@ public class DependencyExtractor {
         try (Stream<Path> classes = Files.walk(scanLocation)) {
             classes.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".class")).forEach(p -> {
                 try {
-                    analyseClass(p);
+                    new ClassReader(Files.newInputStream(p)).accept(new DepExClassVisitor(version), 0);
                 } catch (IOException e) {
                     LOGGER.error("Could not analyse class file {}", p);
                 }
             });
         }
-    }
-
-    /**
-     * Creates ClassInformation for a Class.
-     *
-     * @param classPath Path to class file
-     * @throws IOException if class not contained in ClassPool and could not be loaded through the given path.
-     */
-    private void analyseClass(Path classPath) throws IOException {
-        new ClassReader(Files.newInputStream(classPath)).accept(new DepExClassVisitor(version), 0);
     }
 }
