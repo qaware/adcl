@@ -1,21 +1,35 @@
-# adcl
+adcl
+====
+[![](https://jitpack.io/v/qaware/adcl.svg)](https://jitpack.io/#qaware/adcl)  
 Automatic Dependency Change Log - project together with TH Bingen
 
-### Configuration:   
-If tool is started as a plugin your pom.xml should look like this:
+This tool generates changelogs between two java project versions.
+
+## Requirements
+- A Neo4j Database
+- The class files of the project you want to analyse
+
+## How to use:  
+### As maven plugin (recommended)
+If you want to use ADCL as a maven plugin your pom.xml should look like this:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-...
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+    
     <build>
         <plugins>
-            ...
             <plugin>
-                <groupId>de.thbingen</groupId>
-                <artifactId>adcl</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <groupId>com.github.qaware</groupId>
+	            <artifactId>adcl</artifactId>
+	            <version>${adcl.version}</version>
                 <configuration>
                     <properties>
                         <!-- Database connection --> 
@@ -29,84 +43,58 @@ If tool is started as a plugin your pom.xml should look like this:
                         </property>
                         <property>
                             <name>spring.data.neo4j.password</name>
-                            <value>test</value>
+                            <value>neo4j</value>
                         </property>
-                        <!-- (Optional) Folder where .class files of the project are located  -->
-                        <property>
-                            <name>project.uri</name>
-                            <value>path/to/project/classes</value>
-                        </property>
-                        <!-- (Optional) Name to store new analysed data -->
-                        <property>
-                            <name>project.commit.current</name>
-                            <value>test2</value>
-                        </property>
-                        <!-- (Optional) Name for last data to create a changelog against -->
-                        <property>
-                            <name>project.commit.previous</name>
-                            <value>versionRef2</value>
-                        </property>
-                        <!-- (Optional) Every missing variable can also be loaded from a file. See properties definition -->
-                        <property>
-                            <name>configPath</name>
-                            <value>path/to/config</value>
-                        </property>
+                        <!-- More optional parameters -->
                     </properties>
                 </configuration>
             </plugin>
-            ...
         </plugins>
     </build>
-...
 </project>
 ```
+Project gets analysed with the adcl:start goal.
+### Without maven
+Download the fat jar from the releases page. You need to specify more startup options.
 
-If you want to start ADCL as a jar it needs either a file which looks like this:  
-```properties
-# Database connection  
-spring.data.neo4j.uri=bolt://localhost:7687
-spring.data.neo4j.username=neo4j
-spring.data.neo4j.password=neo4j
-# (Optional) Folder where .class files of the project are located  
-project.uri=path/to/project/classes
-# (Optional) Name for last data to create a changelog against
-project.commit.previous=versionRef1
-# (Optional) Name to store new analysed data  
-project.commit.current=versionRef2
+## Configuration
+### Configuration options
+| key                        | description                                                      | default                                                            | required | required w/o maven | optional |
+|----------------------------|------------------------------------------------------------------|--------------------------------------------------------------------|----------|--------------------|----------|
+| spring.data.neo4j.uri      | host and port to the neo4j database                              | bolt://127.0.0.1:7687                                              |          |                    | X        |
+| spring.data.neo4j.username | username for the neo4j database                                  | neo4j                                                              |          |                    | X        |
+| spring.data.neo4j.password | password for the neo4j database                                  |                                                                    | X        |                    |          |
+| project.name               | the project name to persist in database                          | the artifactId specified in your pom                               |          | X                  |          |
+| project.uri                | root folder for the class files                                  | the classes output specified in your pom (default: target/classes) |          | X                  |          |
+| project.commit.previous    | the version name of the latest version in the database           | the latest version in the database                                 |          |                    | X        |
+| project.commit.current     | the version name of the current data set that should be analysed | the version specified in your pom                                  |          | X                  |          |
+| configPath                 | a path to a .properties file to load further options from        | ./config.properties                                                  |          |                    | X        |
+| nomaven                    | disable maven pom analysis even if a pom is found                | false                                                              |          |                    | X        |
+### Configuration methods
+**Note**: Configuration methods shown below are ordered in priority
+#### (Maven) pom.xml
+Just add more properties to your pom.xml
+```xml
+<property>
+    <name>option-key</name>
+    <value>option-value</value>
+</property>
 ```
-or you can launch it by giving ADCL the informations directly via the commandline.  
-You can also decide to use a mix of everything.  
-
-### Install plugin as a 3rd party JAR  
-```shell script
-jar xf adcl.jar META-INF/maven/de.thbingen/adcl/pom.xml; mvn install:install-file -Dfile="adcl.jar" -DpomFile="META-INF\maven\de.thbingen\adcl\pom.xml";
+#### JVM arguments
+Options can be set before launch as JVM arguments, prepended with `adcl.`
+This would translate to
+```sh
+mvn adcl:start -Dadcl.spring.data.neo4j.password=neo4j
 ```
-### Launch:  
-As a plugin with thin jar:  
-```shell script
-mvn adcl:start  
+when calling from CLI
+#### Program arguments (w/o maven)
+Options can be set as program arguments
+```sh
+java -jar adcl-fat.jar spring.data.neo4j.password="password with spaces"
 ```
-with arguments (arguments must start with prefix `adcl.`):
-```shell script
-mvn adcl:start -Dadcl.spring.data.neo4j.uri=bolt://localhost:7687 -Dadcl.spring.data.neo4j.username=neo4j ...
-```
-with arguments (with prefix) and file:
-```shell script
-mvn adcl:start -Dadcl.configPath=C:/adcl/config.properties -Dadcl.spring.data.neo4j.uri=bolt://localhost:7687 ...
-```
-or as a fat jar via config file:
-```shell script
-java -jar adcl.jar configPath=C:/adcl/config.properties
-```
-or as a fat jar by giving the informations as arguments:
-```shell script
-java -jar adcl.jar spring.data.neo4j.uri=bolt://localhost:7687 spring.data.neo4j.username=neo4j spring.data.neo4j.password=neo4j ...                                                 
-```
-or as a fat jar as a mix of file and arguments:
-```shell script
-java -jar adcl.jar configPath=C:/adcl/config.properties spring.data.neo4j.uri=bolt://localhost:7687 spring.data.neo4j.username=neo4j spring.data.neo4j.password=neo4j                                                
-```
-Priority is (in descending priority) POM/System.properties->CLI-Arguments->File  
+#### Properties file
+ADCL searches for a file specified by the option `configPath` (or default `./config.properties`). If found it loads them as additional options.
 
 #### Notes:
-- The syntax of `.properties` files uses backslashes (`\`) for escaping characters like `\=` or `\n`. This causes invalid parsing with standard windows paths like `C:\Users` (will be read as `C:Users`). Use `C:/Users` or `C:\\Users` instead.
+- Option values can be quoted for the case you want to add spaces into the value
+- The syntax of `.properties` files uses backslashes (`\`) for escaping characters like `\=` or `\n`. This causes invalid parsing with standard Windows paths like `C:\Users` (will be read as `C:Users`). Use `C:/Users` or `C:\\Users` instead.
