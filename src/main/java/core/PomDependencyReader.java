@@ -1,9 +1,6 @@
 package core;
 
-import core.information.Information;
-import core.information.PomDependencyInformation;
-import core.information.ProjectInformation;
-import core.information.VersionInformation;
+import core.information.*;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -24,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Reads all dependencies from the pom.xml
@@ -33,6 +31,8 @@ public class PomDependencyReader {
     private final Path pomPath;
     private Object Information;
     private ArrayList<Information<?>> informationArrayList;
+    private Set<PomDependencyInformation> before, latest;
+    private Set<Information<?>> before2, latest2;
     /**
      * Init PomDependencyReader
      *
@@ -41,6 +41,10 @@ public class PomDependencyReader {
     public PomDependencyReader(@NotNull Path pomPath) {
         this.pomPath = pomPath;
         informationArrayList = new ArrayList<Information<?>>();
+        before = new HashSet<>();
+        latest = new HashSet<>();
+        before2 = new HashSet<>();
+        latest2 = new HashSet<>();
     }
 
     /**
@@ -114,14 +118,27 @@ public class PomDependencyReader {
      * @param versionInformation creates new node in data modell
      */
     public void integrateIntoDataModell(ProjectInformation pj, VersionInformation versionInformation) throws IOException, XmlPullParserException {
+        before2.containsAll(latest2);
         Set<Dependency> set = readDependencies();
         Set<PomDependencyInformation> pomDependencyInformationSet = pj.getPomDependencyInformations(versionInformation);
         set.forEach(dependency -> {
-            Information<?> remote = pj.findOrCreate(pj.getPath(), new VersionInformation(dependency.getArtifactId(), pj),core.information.Information.Type.CLASS); //Anders
+            Information<?> remote = pj.getParent().findOrCreate(dependency.getArtifactId(), new VersionInformation(dependency.getVersion(), pj),core.information.Information.Type.PROJECT); //Anders
+            latest2.add(remote);
             pomDependencyInformationSet.forEach(pomDependencyInformation -> {
                if(pomDependencyInformation.exists(new VersionInformation(dependency.getVersion(), remote.getProject())))
                    pj.addPomDependency(new VersionInformation(dependency.getVersion(), remote.getProject()), versionInformation);
             });
         });
+        before.containsAll(latest);
+        latest = pj.getPomDependencyInformations(versionInformation);
+        removeDeletedPomDependenciesAndNodes(pj);
+    }
+    private void removeDeletedPomDependenciesAndNodes(ProjectInformation pj){
+        if(before.size() != 0 && before2.size() != 0) {
+            Set<PomDependencyInformation> set = before.stream().filter(pomDependencyInformation -> !latest.contains(pomDependencyInformation)).collect(Collectors.toSet());
+            pj.remove(set);
+            Set<Information<?>> informationSet = before2.stream().filter(information -> latest.contains(information)).collect(Collectors.toSet());
+            //Node nicht extra löschen, weil mit findOrCreate am Ende nur als RelationshipInformationen abgespeichert wird, bzw. in directChilds?!?!
+        }
     }
 }

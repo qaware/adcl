@@ -163,7 +163,6 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final Set<ProjectInformation> getAllProjectDependencies(@Nullable VersionInformation at, boolean includeInternal) {
         return getAllChildren(at).stream().flatMap(i -> i.getProjectDependencies(at).stream()).distinct().filter(p -> includeInternal || !p.hasParent(this)).collect(Collectors.toSet());
     }
-
     /**
      * @param at the version to check. If null dependencies at any time are returned
      * @param includeInternal whether dependencies that lead to another child node of this should be included

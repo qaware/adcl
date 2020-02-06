@@ -85,8 +85,12 @@ public class ProjectInformation extends Information<RootInformation> {
         return pomDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.getVersionAt(at)).collect(Collectors.toSet());
     }
 
-    public final Set<PomDependencyInformation> getPomDependencyInformations(@Nullable VersionInformation at){
+    public Set<PomDependencyInformation> getPomDependencyInformations(@Nullable VersionInformation at){
         return pomDependencies.stream().filter(d -> at == null || d.exists(at)).collect(Collectors.toSet());
+    }
+
+    public void remove(Set<PomDependencyInformation> set){
+        set.forEach(pomDependencyInformation -> pomDependencies.remove(pomDependencyInformation));
     }
     /**
      * Adds a new pom dependency at given version.
