@@ -30,6 +30,24 @@ export class TreeItemFlatNode extends BaseTreeItemNode {
   expandable: boolean;
 }
 
+/**
+ * Node for Graph
+ */
+class GraphItem {
+  id: number;
+  name: string;
+  code: string;
+  children: GraphItem[] = [];
+}
+
+class IdGenerator {
+  lastId: number = 0;
+
+  getNextId() {
+    return this.lastId++;
+  }
+}
+
 /** Filter types */
 export enum FilterType {
   Package = 'p',
@@ -137,7 +155,7 @@ export class DependencyTreeDatabase {
     const dependencyClass: any[] = [];
     const dependencyMethod: any[] = [];
 
-// Query fetching all nodes with contain changes
+    // Query fetching all nodes with contain changes
     const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
       'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
       'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
@@ -233,6 +251,8 @@ export class DependencyTreeDatabase {
     await forkJoin(treeResult, dependencyResult).toPromise().then(_ => {
       this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyClass, ...dependencyMethod];
       const data = this.buildDependencyTree(this.treeData, this.root, this.selectedDisplayOption);
+      console.log(this.treeData);
+      console.log(queryTree);
       this.dataChange.next(data);
     });
   }
@@ -328,6 +348,75 @@ export class DependencyTreeDatabase {
       });
     return treeItemNodes;
   }
+
+  buildGraphView(obj: any[], displayOption: DisplayOption) {
+    const idG = new IdGenerator();
+    const nodeMap = new Map<string, GraphItem>();
+    obj.forEach(node => {
+      this.generateNodesFromString(node, idG, nodeMap);
+    });
+
+    const resultData = this.generateGraphData(nodeMap.get("root"));
+    /*const nodeSet = new DataSet(resultData.nodes);
+    const edgeSet = new DataSet(resultData.edges);
+
+    const container = document.getElementById("graph");
+    const options = {
+      edges: {}
+    };
+    const network = new Network(container, {nodes: nodeSet, edges: edgeSet}, options);*/
+  }
+
+  generateNodesFromString(nodeString: String, idG: IdGenerator, nodeMap: Map<string, GraphItem>) {
+    let codeSet = [];
+    nodeString.match(/\w*(\([^)]*\))?/g).forEach(s => {
+      codeSet.push(s);
+    });
+    let s: string = "root";
+    let parent = new GraphItem();
+    parent.id = -1;
+    parent.name = s;
+    parent.code = s;
+
+    for (let i = 0; i < codeSet.length; i++) {
+      s += "." + codeSet[i];
+      if (!nodeMap.has(s)) {
+        if (codeSet[i] === "added") {
+          i++;
+        } else if (codeSet[i] === "deleted") {
+          i++;
+        } else {
+          const node = new GraphItem();
+          node.name = codeSet[i];
+          node.id = idG.getNextId();
+          node.code = s;
+          parent.children.push(node);
+          nodeMap.set(s, node);
+        }
+      } else {
+        parent = nodeMap.get(s);
+      }
+    }
+  }
+
+  generateGraphData(root: GraphItem) {
+    const edgeSet = [];
+    const nodeSet = [];
+
+    root.children.forEach(node => {
+      if (root.id !== -1) {
+        edgeSet.push({from: node.id, to: root.id, label: "Parent"})
+      }
+      const result = this.generateGraphData(node);
+      edgeSet.push(result.edges);
+      nodeSet.push(result.nodes);
+    });
+    if (root.id !== -1) {
+      nodeSet.push({id: root.id, label: root.name});
+    }
+    return {edges: edgeSet, nodes: nodeSet};
+  }
+
 
   public filter(filterText: string) {
     let filteredTreeData;
