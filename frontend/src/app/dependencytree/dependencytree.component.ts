@@ -218,7 +218,9 @@ export class DependencyTreeDatabase {
             dependencyClass.push(obj);
             const cpy = Object.assign({}, obj);
             cpy.code = this.root + '.' + usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.' + status + '.' + name;
-            dependencyClass.push(cpy);
+            if  (dependencyClass.find(o => o.code === cpy.code) === undefined) {
+              dependencyClass.push(cpy);
+            }
             break;
           }
           case 3: {
