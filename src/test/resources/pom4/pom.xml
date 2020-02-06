@@ -10,7 +10,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>de.thbingen</groupId>
+                <groupId>com.github.qaware</groupId>
                 <artifactId>adcl</artifactId>
                 <version>1.0-SNAPSHOT</version>
                 <configuration>
