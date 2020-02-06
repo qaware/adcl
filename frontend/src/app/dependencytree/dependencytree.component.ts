@@ -128,7 +128,7 @@ export class DependencyTreeDatabase {
    * @param version the changelog identifier
    * @param projectName project name
    */
-  loadChangelogFromDatabase(projectName: string, version: string) {
+   async loadChangelogFromDatabase(projectName: string, version: string) {
     const params = {pName: projectName.toString(), version: version.toString()};
 
     const packageInformation: any[] = [{text: '', code: this.root}];
@@ -230,7 +230,7 @@ export class DependencyTreeDatabase {
     });
 
     // wait for all query results before building the tree
-    forkJoin(treeResult, dependencyResult).subscribe(_ => {
+    await forkJoin(treeResult, dependencyResult).toPromise().then(_ => {
       this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyClass, ...dependencyMethod];
       const data = this.buildDependencyTree(this.treeData, this.root, this.selectedDisplayOption);
       this.dataChange.next(data);
@@ -266,6 +266,7 @@ export class DependencyTreeDatabase {
     deleted.code = code + '.deleted';
     return deleted;
   }
+
   createMethodsNode(code: string) {
     const methods: { [k: string]: any } = {};
     methods.label = 'Methods';
@@ -509,7 +510,7 @@ export class DependencytreeComponent implements OnInit {
   }
 
   private loadCookies() {
-
+    let fText = '';
     if (this.cookieService.check('projectName')) {
       const pName = this.cookieService.get('projectName').toString();
       if (pName !== undefined) {
@@ -523,20 +524,21 @@ export class DependencytreeComponent implements OnInit {
         this.db.selectedDisplayOption = dOption;
       }
     }
+    if (this.cookieService.check('filterText')) {
+      fText = this.cookieService.get('filterText');
+      if (fText !== undefined) {
+        this.filterText = fText;
+      }
+    }
     if (this.cookieService.check('projectVersion')) {
       const pVersion = this.cookieService.get('projectVersion');
       if (pVersion !== undefined) {
         this.projectVersion = pVersion;
-        this.changeDependencyTree(this.projectVersion);
+        this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion).
+        then(v => this.searchField.nativeElement.dispatchEvent(new Event('input')));
       }
     }
-    if (this.cookieService.check('filterText')) {
-      const fText = this.cookieService.get('filterText');
-      if (fText !== undefined) {
-        this.filterText = fText;
-        this.database.filter(fText);
-      }
-    }
+
   }
 
   private saveToCookies() {
