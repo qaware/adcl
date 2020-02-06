@@ -131,6 +131,7 @@ public class Utils {
      *
      * @param pomPath          the path to the maven project pom you want to work with
      * @param interactiveInput the input for interactive mode or null for batch mode
+     * @param cliArgs          additional arguments appended to the shell command
      * @param goals            the goals to activate, separated by spaces
      * @param options          key-value pairs as passed options
      * @return the maven console output
