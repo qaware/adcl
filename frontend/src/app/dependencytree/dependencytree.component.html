@@ -1,61 +1,70 @@
-<mat-form-field>
-  <mat-label>Project</mat-label>
-  <mat-select (selectionChange)="loadProjectVersion($event.value)">
-    <mat-option *ngFor="let projectName of database.projectNames" [value]="projectName">
-      {{projectName}}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
-<mat-form-field>
-  <mat-label>Changelog</mat-label>
-  <mat-select (selectionChange)="changeDependencyTree($event.value)">
-    <mat-option *ngFor="let id of database.changelogIds" [value]="id">
-      {{id}}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
+<mat-sidenav-container class="container" >
+  <mat-sidenav mode="side" class="side" opened>
+    <p>
+      <mat-form-field class="sideItem">
+        <mat-label>Project</mat-label>
+        <mat-select [(value)]="selectedProject" (selectionChange)="loadProjectVersion($event.value)">
+          <mat-option *ngFor="let projectName of database.projectNames" [value]="projectName.toString()"> {{projectName}} </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </p>
+    <p>
+    <mat-form-field class="sideItem">
+      <mat-label>Changelog</mat-label>
+      <mat-select [(value)]="projectVersion" (selectionChange)="changeDependencyTree($event.value)">
+        <mat-option *ngFor="let id of database.changelogIds" [value]="id">{{id}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    </p>
+    <p>
+    <mat-form-field class="sideItem">
+      <mat-label>Change View Mode</mat-label>
+      <mat-select [(value)]="db.selectedDisplayOption" (selectionChange)="changeDisplayOption($event.value)">
+        <mat-option [value]="DisplayOption.Standard">{{DisplayOption.Standard}}</mat-option>
+        <mat-option [value]="DisplayOption.CompactMiddlePackages">{{DisplayOption.CompactMiddlePackages}}</mat-option>
+        <mat-option [value]="DisplayOption.FlattenPackages">{{DisplayOption.FlattenPackages}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    </p>
+    <button mat-raised-button class="sideItem" (click)="reset()">RESET</button>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-form-field class="search">
+      <input [(ngModel)]="filterText" #searchField matInput placeholder="Search" (input)="filterChanged($event) ">
+    </mat-form-field>
 
-<mat-form-field>
-  <input #searchField matInput placeholder="Search" (input)="filterChanged($event) ">
-</mat-form-field>
+    <button class="scope" mat-raised-button [matMenuTriggerFor]="searchFilterMenu">Add Search Scope</button>
+    <mat-menu #searchFilterMenu="matMenu">
+      <button mat-menu-item (click)="searchFilterSelected(FilterType.Package)">Package scope</button>
+      <button mat-menu-item (click)="searchFilterSelected(FilterType.Class)">Class scope</button>
+      <button mat-menu-item (click)="searchFilterSelected(FilterType.Method)">Method scope</button>
+      <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
+    </mat-menu>
 
-<button mat-button [matMenuTriggerFor]="searchFilterMenu">Add Search Scope</button>
-<mat-menu #searchFilterMenu="matMenu">
-  <button mat-menu-item (click)="searchFilterSelected(FilterType.Package)">Package scope</button>
-  <button mat-menu-item (click)="searchFilterSelected(FilterType.Class)">Class scope</button>
-  <button mat-menu-item (click)="searchFilterSelected(FilterType.Method)">Method scope</button>
-  <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
-</mat-menu>
-
-<button mat-button [matMenuTriggerFor]="displayOptions">Change View Mode</button>
-<mat-menu #displayOptions="matMenu">
-  <button mat-menu-item (click)="changeDisplayOption(DisplayOption.Standard)">Standard</button>
-  <button mat-menu-item (click)="changeDisplayOption(DisplayOption.CompactMiddlePackages)">Compact Middle Packages
-  </button>
-  <button mat-menu-item (click)="changeDisplayOption(DisplayOption.FlattenPackages)">Flatten Packages</button>
-</mat-menu>
-
-<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
-    <button mat-icon-button disabled></button>
-    <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
-      <strong
-        [ngClass]="{
+    <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+      <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
+        <button mat-icon-button disabled></button>
+        <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
+          <strong
+            [ngClass]="{
           'labelRed': node.label.startsWith('+'),
           'labelGreen': node.label.startsWith('-')
          }"
-      >{{node.label}}: &nbsp; </strong> {{node.name}}
-    </div>
-  </mat-tree-node>
-  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
-    <button mat-icon-button matTreeNodeToggle
-            [attr.aria-label]="'toggle ' + node.filename">
-      <mat-icon class="mat-icon-rtl-mirror">
-        {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-      </mat-icon>
-    </button>
-    <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
-      <strong>{{node.label}}: &nbsp; </strong> {{node.name}}
-    </div>
-  </mat-tree-node>
-</mat-tree>
+          >{{node.label}}: &nbsp; </strong> {{node.name}}
+        </div>
+      </mat-tree-node>
+      <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+        <button mat-icon-button matTreeNodeToggle
+                [attr.aria-label]="'toggle ' + node.filename">
+          <mat-icon class="mat-icon-rtl-mirror">
+            {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+          </mat-icon>
+        </button>
+        <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
+          <strong>{{node.label}}: &nbsp; </strong> {{node.name}}
+        </div>
+      </mat-tree-node>
+    </mat-tree>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+

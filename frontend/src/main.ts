@@ -47,6 +47,8 @@ import {BrowserModule} from '@angular/platform-browser';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {DependencytreeComponent} from './app/dependencytree/dependencytree.component';
+import {AngularNeo4jModule} from 'angular-neo4j';
+import {CookieService} from 'ngx-cookie-service';
 
 @NgModule({
   exports: [
@@ -93,8 +95,6 @@ export class DependencyTreeModule {
 }
 
 
-import {AngularNeo4jModule} from 'angular-neo4j';
-
 @NgModule({
   imports: [
     AngularNeo4jModule,
@@ -109,7 +109,7 @@ import {AngularNeo4jModule} from 'angular-neo4j';
   entryComponents: [DependencytreeComponent],
   declarations: [DependencytreeComponent],
   bootstrap: [DependencytreeComponent],
-  providers: []
+  providers: [CookieService]
 })
 export class AppModule {
 }

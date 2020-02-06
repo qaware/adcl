@@ -1,9 +1,10 @@
 import {FlatTreeControl} from '@angular/cdk/tree';
-import {Component, Injectable, ViewChild} from '@angular/core';
+import {Component, HostListener, Injectable, OnInit, ViewChild} from '@angular/core';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
+import {CookieService} from 'ngx-cookie-service';
 
 /**
  * Base Node for Tree item nodes
@@ -44,7 +45,12 @@ export enum DisplayOption {
   FlattenPackages = 'Flat Packages'
 }
 
-/** Display options */
+const reverseDisplayOption = new Map<string, DisplayOption>();
+reverseDisplayOption.set('Normal', DisplayOption.Standard);
+reverseDisplayOption.set('Compact Middle Packages', DisplayOption.CompactMiddlePackages);
+reverseDisplayOption.set('Flat Packages', DisplayOption.FlattenPackages);
+
+/** Display Label */
 export enum Label {
   Package = 'Package',
   Class = 'Class',
@@ -113,14 +119,7 @@ export class DependencyTreeDatabase {
     const params = {pName: projectName.toString()};
     const queryChangelogId = 'MATCH (n:ProjectInformation{name: {pName}}) return n.versions';
     this.neo4j.run(queryChangelogId, params).then(changelogInformationIds => {
-      this.changelogIds = changelogInformationIds.flat(2);
-    });
-  }
-
-  private loadProjectName() {
-    const queryProjectNames = 'MATCH (p:ProjectInformation) WHERE p.internal=true RETURN p.name;';
-    this.neo4j.run(queryProjectNames).then(projectNames => {
-      this.projectNames = projectNames;
+      this.changelogIds = changelogInformationIds.flat(2).slice(1);
     });
   }
 
@@ -129,7 +128,7 @@ export class DependencyTreeDatabase {
    * @param version the changelog identifier
    * @param projectName project name
    */
-  loadChangelogFromDatabase(projectName: string, version: string) {
+   async loadChangelogFromDatabase(projectName: string, version: string) {
     const params = {pName: projectName.toString(), version: version.toString()};
 
     const packageInformation: any[] = [{text: '', code: this.root}];
@@ -138,24 +137,24 @@ export class DependencyTreeDatabase {
     const dependencyClass: any[] = [];
     const dependencyMethod: any[] = [];
 
-    // Query fetching all nodes with contain changes
+// Query fetching all nodes with contain changes
     const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
-      'where any(x in nodes(p) where exists(x.`versionInfo.' + version + '`)) ' +
-      'or any(x in relationships(p) where exists(x.`versionInfo.' + version + '`))' +
+      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
+      'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
       'return i.path, i.name, labels(i) as labels';
 
     // Query fetching all dependencies
     const queryDependencies = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
       '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
-      'where any(x in nodes(p) where exists(x.`versionInfo.' + version + '`)' +
-      'and  x<>di) or any(x in relationships(p) where exists(x.`versionInfo.' + version + '`))' +
-      'return di.path as path, di.name as name, labels(di) as diLabels, any(x in nodes(p) where x.`versionInfo.' + version + '`) ' +
-      'as Changestatus, i.path as iPath ';
+      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
+      'return di.path as path, di.name as name, labels(di) as diLabels,' +
+      ' any(x in relationships(p) where x["versionInfo.' + version + '"]) ' +
+      'as Changestatus, i.path as iPath, labels(i) as iLabels, i.name as iName';
 
     const treeResult = this.neo4j.run(queryTree, params).then(nodes => {
       nodes.forEach(node => {
-        const path = (node[0] as string).substr((projectName.toString()).length + 1);
-        const name = node[1];
+        const path: string = (node[0] as string).substr((projectName.toString()).length + 1);
+        const name: string = node[1];
         const type = this.resolveType(node[2]);
         const obj: { [k: string]: any } = {};
         obj.text = name;
@@ -172,19 +171,21 @@ export class DependencyTreeDatabase {
             obj.label = Label.Class;
             obj.filterType = FilterType.Class;
             classInformation.push(obj);
+            classInformation.push(this.createMethodsNode(obj.code));
+            classInformation.push(this.createAddedDependenciesNode(obj.code));
+            classInformation.push(this.createDeletedDependenciesNode(obj.code));
             break;
           }
           case 3: {
             obj.label = Label.Method;
             obj.filterType = FilterType.Method;
+            obj.code = obj.code.substr(0, obj.code.length - (name.length + 1)) + '.methods.' + name;
             methodInformation.push(obj);
             methodInformation.push(this.createAddedDependenciesNode(obj.code));
             methodInformation.push(this.createDeletedDependenciesNode(obj.code));
             break;
           }
         }
-
-
       });
     });
 
@@ -193,12 +194,19 @@ export class DependencyTreeDatabase {
         const path = (node[0] as string).substr((projectName.toString()).length + 1);
         const name = node[1];
         const type = this.resolveType(node[2]);
+        const usedByType = this.resolveType(node[5]);
+        const usedByName = node[6];
         const status = (node[3] === true) ? 'added' : 'deleted';
         const usedByPath = (node[4] as string).substr((projectName.toString()).length + 1);
         const obj: { [k: string]: any } = {};
         obj.text = name;
         obj.path = path;
-        obj.code = this.root + '.' + usedByPath + '.' + status + '.' + name;
+        if (usedByType === 3) {
+          obj.code = this.root + '.' +
+            usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.methods.' + usedByName + '.' + status + '.' + name;
+        } else {
+          obj.code = this.root + '.' + usedByPath + '.' + status + '.' + name;
+        }
         obj.filterType = FilterType.Dependency;
         obj.label = (node[3] === true) ? Label.AddedDependency : Label.DeletedDependency;
         switch (type) {
@@ -208,6 +216,9 @@ export class DependencyTreeDatabase {
           }
           case 2: {
             dependencyClass.push(obj);
+            const cpy = Object.assign({}, obj);
+            cpy.code = this.root + '.' + usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.' + status + '.' + name;
+            dependencyClass.push(cpy);
             break;
           }
           case 3: {
@@ -219,7 +230,7 @@ export class DependencyTreeDatabase {
     });
 
     // wait for all query results before building the tree
-    forkJoin(treeResult, dependencyResult).subscribe(_ => {
+    await forkJoin(treeResult, dependencyResult).toPromise().then(_ => {
       this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyClass, ...dependencyMethod];
       const data = this.buildDependencyTree(this.treeData, this.root, this.selectedDisplayOption);
       this.dataChange.next(data);
@@ -254,6 +265,14 @@ export class DependencyTreeDatabase {
     deleted.text = '';
     deleted.code = code + '.deleted';
     return deleted;
+  }
+
+  createMethodsNode(code: string) {
+    const methods: { [k: string]: any } = {};
+    methods.label = 'Methods';
+    methods.text = '';
+    methods.code = code + '.methods';
+    return methods;
   }
 
   /**
@@ -300,6 +319,7 @@ export class DependencyTreeDatabase {
               return;
             }
           }
+          // skip adding branches that dont end on a dependency
           if (node.children.length < 1 && node.filterType !== FilterType.Dependency) {
             return;
           }
@@ -336,6 +356,13 @@ export class DependencyTreeDatabase {
     this.dataChange.next(data);
   }
 
+  private loadProjectName() {
+    const queryProjectNames = 'MATCH (p:ProjectInformation) WHERE p.internal=true RETURN p.name;';
+    this.neo4j.run(queryProjectNames).then(projectNames => {
+      this.projectNames = projectNames;
+    });
+  }
+
   private addParentNodes(filteredTreeData: any[], codeString: string) {
     while (codeString.lastIndexOf('.') > -1) {
       const index = codeString.lastIndexOf('.');
@@ -368,26 +395,26 @@ export class DependencyTreeDatabase {
   selector: 'app-dependencytree',
   templateUrl: 'dependencytree.component.html',
   styleUrls: ['dependencytree.component.css'],
-  providers: [DependencyTreeDatabase]
+  providers: [DependencyTreeDatabase, CookieService]
 })
-export class DependencytreeComponent {
+export class DependencytreeComponent implements OnInit {
+
+
   /** Map from flat node to nested node. This helps us finding the nested node to be modified */
   flatNodeMap = new Map<TreeItemFlatNode, TreeItemNode>();
-
   /** Map from nested node to flattened node. This helps us to keep the same object for selection */
   nestedNodeMap = new Map<TreeItemNode, TreeItemFlatNode>();
-
   treeControl: FlatTreeControl<TreeItemFlatNode>;
-
   treeFlattener: MatTreeFlattener<TreeItemNode, TreeItemFlatNode>;
-
   dataSource: MatTreeFlatDataSource<TreeItemNode, TreeItemFlatNode>;
-
+  @ViewChild('searchField', {static: false}) searchField;
+  selectedProject: string;
+  projectVersion: string;
+  filterText = '';
   private db: DependencyTreeDatabase;
 
-  @ViewChild('searchField', {static: false} ) input;
+  constructor(private database: DependencyTreeDatabase, private cookieService: CookieService) {
 
-  constructor(private database: DependencyTreeDatabase) {
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
       this.isExpandable, this.getChildren);
     this.treeControl = new FlatTreeControl<TreeItemFlatNode>(this.getLevel, this.isExpandable);
@@ -396,6 +423,19 @@ export class DependencytreeComponent {
     database.dataChange.subscribe(data => {
       this.dataSource.data = data;
     });
+
+  }
+
+  get FilterType() {
+    return FilterType;
+  }
+
+  get DisplayOption() {
+    return DisplayOption;
+  }
+
+  ngOnInit() {
+    this.loadCookies();
   }
 
   getLevel = (node: TreeItemFlatNode) => node.level;
@@ -405,14 +445,6 @@ export class DependencytreeComponent {
   getChildren = (node: TreeItemNode): TreeItemNode[] => node.children;
 
   hasChild = (_: number, nodeData: TreeItemFlatNode) => nodeData.expandable;
-
-  get FilterType() {
-    return FilterType;
-  }
-
-  get DisplayOption() {
-    return DisplayOption;
-  }
 
   /** Transformer to convert nested node to flat node. Record the nodes in maps for later use. */
   transformer = (node: TreeItemNode, level: number) => {
@@ -455,21 +487,75 @@ export class DependencytreeComponent {
     const data = this.database.buildDependencyTree(this.database.treeData, this.database.root, displayOption);
     this.database.selectedDisplayOption = displayOption;
     this.database.dataChange.next(data);
-
   }
 
   /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
   searchFilterSelected(selectedFilter: FilterType) {
-    if (this.input.nativeElement.value.match(/^[pcmd]:/) !== null) {
-      this.input.nativeElement.value = selectedFilter + this.input.nativeElement.value.substr(1);
+    if (this.searchField.nativeElement.value.match(/^[pcmd]:/) !== null) {
+      this.searchField.nativeElement.value = selectedFilter + this.searchField.nativeElement.value.substr(1);
     } else {
-      this.input.nativeElement.value = selectedFilter + ':' + this.input.nativeElement.value;
+      this.searchField.nativeElement.value = selectedFilter + ':' + this.searchField.nativeElement.value;
     }
-    this.input.nativeElement.dispatchEvent(new Event('input'));
+    this.searchField.nativeElement.dispatchEvent(new Event('input'));
   }
 
   /** Event-Handler triggered by project selection, loads the available changelog version */
   loadProjectVersion(projectName: string) {
     this.db.loadChangelogIds(projectName);
   }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    this.saveToCookies();
+  }
+
+  private loadCookies() {
+    let fText = '';
+    if (this.cookieService.check('projectName')) {
+      const pName = this.cookieService.get('projectName').toString();
+      if (pName !== undefined) {
+        this.selectedProject = pName;
+        this.loadProjectVersion(this.selectedProject);
+      }
+    }
+    if (this.cookieService.check('displayOption')) {
+      const dOption = reverseDisplayOption.get(this.cookieService.get('displayOption').toString());
+      if (dOption !== undefined) {
+        this.db.selectedDisplayOption = dOption;
+      }
+    }
+    if (this.cookieService.check('filterText')) {
+      fText = this.cookieService.get('filterText');
+      if (fText !== undefined) {
+        this.filterText = fText;
+      }
+    }
+    if (this.cookieService.check('projectVersion')) {
+      const pVersion = this.cookieService.get('projectVersion');
+      if (pVersion !== undefined) {
+        this.projectVersion = pVersion;
+        this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion).
+        then(v => this.searchField.nativeElement.dispatchEvent(new Event('input')));
+      }
+    }
+
+  }
+
+  private saveToCookies() {
+    this.cookieService.set('filterText', this.filterText, 365, '/', '', false, 'Strict');
+    this.cookieService.set('projectVersion', this.projectVersion, 365, '/', '', false, 'Strict');
+    this.cookieService.set('projectName', this.selectedProject, 365, '/', '', false, 'Strict');
+    this.cookieService.set('displayOption', this.db.selectedDisplayOption.toString(), 365, '/', '', false, 'Strict');
+  }
+
+  private reset() {
+    this.selectedProject = '';
+    this.projectVersion = '';
+    this.filterText = '';
+    this.db.selectedDisplayOption = DisplayOption.CompactMiddlePackages;
+    this.db.treeData = [];
+    const data = this.db.buildDependencyTree(this.db.treeData, this.db.root, this.db.selectedDisplayOption);
+    this.db.dataChange.next(data);
+  }
 }
+

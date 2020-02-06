@@ -12,3 +12,16 @@
 .labelRed {
   color: darkred;
 }
+.container {
+  min-height: 800pt;
+}
+.search {
+  margin-left: 15% !important;
+  width:50%;
+}
+.side {
+  padding: 30px;
+}
+.scope {
+  margin-left: 2px;
+}
