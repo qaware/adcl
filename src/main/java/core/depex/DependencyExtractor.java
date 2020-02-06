@@ -1,7 +1,6 @@
 package core.depex;
 
 import core.information.VersionInformation;
-import org.apache.maven.MavenExecutionException;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassReader;
@@ -42,11 +41,7 @@ public class DependencyExtractor {
      */
     public void runAnalysis() throws IOException, MavenInvocationException {
         LOGGER.info("Updating indices...");
-        try {
-            version.getProject().updateIndices(scanLocation);
-        } catch (MavenExecutionException e) {
-            throw new MavenInvocationException("Goal execution failed", e);
-        }
+        version.getProject().updateIndices(scanLocation);
         LOGGER.info("Updated");
         version.getProject().getDirectChildren(version).forEach(c -> c.setExists(version, false));
 
