@@ -1,7 +1,6 @@
 package core;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.maven.MavenExecutionException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -50,25 +49,25 @@ public class PomDependencyReader {
 
     /**
      * @return all compilation-relevant dependencies including transitive dependencies. Use only for personal read access!
-     * @throws MavenInvocationException if mvn is not found on the system
-     * @throws MavenExecutionException  if {@code mvn dependency:list} fails
+     * @throws MavenInvocationException if mvn is not found on the system or on mvn execution error
      * @throws IOException              if {@code ./dependencies.txt} cannot be deleted
      * @apiNote Returned dependencies only have set groupId, artifactId, version, scope and systemPath. Even if scope is
      * compile the system path is given (contrary to the definition of {@link Dependency#getSystemPath()}).
      * @implSpec takes a while (dependent on internet connection and project size) as maven has to download the dependencies
      * <br>uses {@code ./dependencies.txt} for temporary output storage
      */
-    public Set<Dependency> readAllCompilationRelevantDependencies() throws MavenInvocationException, IOException, MavenExecutionException {
+    public Set<Dependency> readAllCompilationRelevantDependencies() throws MavenInvocationException, IOException {
         Path outputPath = Paths.get("dependencies.txt");
         Files.deleteIfExists(outputPath);
 
         try {
-            Utils.callMaven(pomPath, null, null, "dependency:list",
+            Pair<Integer, String> mvnResult = Utils.callMaven(pomPath, null, null, "dependency:list",
                     Pair.of("outputAbsoluteArtifactFilename", "true"),
                     Pair.of("outputFile", "dependencies.txt"),
                     Pair.of("appendOutput", "true"),
                     Pair.of("includeScope", "compile")
             );
+            if (mvnResult.getKey() != 0) throw new MavenInvocationException("mvn exit code != 0");
 
             Matcher matcher = Pattern.compile("(?<group>\\S+?):(?<artifact>\\S+):.+?:(?<version>\\S+?):compile:(?<path>.+?\\.jar)[\\x{1b}\\n\\s]").matcher(new String(Files.readAllBytes(outputPath)));
             Set<Dependency> result = new HashSet<>();

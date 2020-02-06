@@ -1,32 +1,69 @@
 package core;
 
-import org.apache.maven.plugin.testing.AbstractMojoTestCase;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.Test;
+import util.Utils;
 
-public class ApplicationMojoConfigurationTest extends AbstractMojoTestCase {
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-    public void test() throws Exception {
-        ApplicationMojo mojo = (ApplicationMojo) lookupMojo("start", "src/test/resources/pom3/pom.xml");
-        ApplicationMojo mojo2 = (ApplicationMojo) lookupMojo("start", "src/test/resources/pom4/pom.xml");
+import static org.assertj.core.api.Assertions.assertThat;
 
-        try {
-            mojo.execute();
-        } catch (Exception ignored) {
-        }
-        assertEquals(Config.get("spring.data.neo4j.uri", "NA"), "bolt://localhost:7687");
-        assertEquals(Config.get("spring.data.neo4j.username", "NA"), "");
-        assertEquals(Config.get("spring.data.neo4j.password", "NA"), "");
-        assertEquals(Config.get("project.commit.current", "NA"), "test");
-        assertEquals(Config.get("project.uri", "NA"), "src/test/resources/test classfiles3/epro1");
+public class ApplicationMojoConfigurationTest {
+    @Test
+    public void test1() throws MavenInvocationException {
+        Pair<Integer, String> result = Utils.callMaven(Paths.get("src", "test", "resources", "pom3", "pom.xml"), null, null, "adcl:start");
+        assertThat(result.getKey()).isNotZero();
 
-        try {
-            mojo2.execute();
-        } catch (Exception ignored) {
-        }
-        assertEquals(Config.get("spring.data.neo4j.uri", "NA"), "bolt://localhost:7687");
-        assertEquals(Config.get("spring.data.neo4j.username", "NA"), "neo4j\"");
-        assertEquals(Config.get("spring.data.neo4j.password", "NA"), "test");
-        assertEquals(Config.get("project.commit.current", "NA"), "test2");
-        assertEquals(Config.get("project.commit.previous", "NA"), "test");
-        assertEquals(Config.get("project.uri", "NA"), "src\\test\\resources\\testclassfiles3\\epro2");
+        String configString = regexSubstring(result.getValue(), Pattern.compile("Configuration loaded: \\{(.+?)}"));
+        assertThat(configString).isNotNull();
+
+        Map<String, String> configs = parseProperties(configString);
+        assertThat(configs.entrySet()).containsExactlyInAnyOrder(
+                Pair.of("spring.data.neo4j.uri", "bolt://localhost:7687"),
+                Pair.of("spring.data.neo4j.username", ""),
+                Pair.of("spring.data.neo4j.password", ""),
+                Pair.of("project.commit.current", "test"),
+                Pair.of("project.uri", "src/test/resources/test classfiles3/epro1")
+        );
+    }
+
+    @Test
+    public void test2() throws MavenInvocationException {
+        Pair<Integer, String> result = Utils.callMaven(Paths.get("src", "test", "resources", "pom4", "pom.xml"), null, null, "adcl:start");
+        assertThat(result.getKey()).isNotZero();
+
+        String configString = regexSubstring(result.getValue(), Pattern.compile("Configuration loaded: \\{(.+?)}"));
+        assertThat(configString).isNotNull();
+
+        Map<String, String> configs = parseProperties(configString);
+        assertThat(configs.entrySet()).containsExactlyInAnyOrder(
+                Pair.of("spring.data.neo4j.uri", "bolt://localhost:7687"),
+                Pair.of("spring.data.neo4j.username", "neo4j\""),
+                Pair.of("spring.data.neo4j.password", "test"),
+                Pair.of("project.commit.current", "test2"),
+                Pair.of("project.commit.previous", "test"),
+                Pair.of("project.uri", "src\\test\\resources\\testclassfiles3\\epro2")
+        );
+    }
+
+    @Nullable
+    private String regexSubstring(String input, @NotNull Pattern pattern) {
+        Matcher matcher = pattern.matcher(input);
+        if (!matcher.find()) return null;
+        if (matcher.groupCount() < 1) return null;
+        return matcher.group(1);
+    }
+
+    @NotNull
+    private Map<String, String> parseProperties(@NotNull String raw) {
+        return Stream.of(raw.split(",")).map(String::trim).collect(Collectors.toMap(s -> s.substring(0, s.indexOf('=')), s -> s.substring(s.indexOf('=') + 1)));
     }
 }

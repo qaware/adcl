@@ -2,7 +2,6 @@ package util;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.maven.MavenExecutionException;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationResult;
@@ -136,11 +135,10 @@ public class Utils {
      * @param options          key-value pairs as passed options
      * @return the maven console output
      * @throws MavenInvocationException if the maven call itself fails itself or maven is not found
-     * @throws MavenExecutionException  if the executed maven goal(s) fail
      */
     @NotNull
     @SafeVarargs
-    public static String callMaven(@NotNull Path pomPath, @Nullable String interactiveInput, @Nullable String cliArgs, @NotNull String goals, @NotNull Pair<String, String>... options) throws MavenInvocationException, MavenExecutionException {
+    public static Pair<Integer, String> callMaven(@NotNull Path pomPath, @Nullable String interactiveInput, @Nullable String cliArgs, @NotNull String goals, @NotNull Pair<String, String>... options) throws MavenInvocationException {
         Properties properties = new Properties();
         for (Pair<String, String> option : options) properties.setProperty(option.getKey(), option.getValue());
 
@@ -157,10 +155,7 @@ public class Utils {
                         .setInputStream(interactiveInput == null ? null : new ByteArrayInputStream(interactiveInput.getBytes()))
                         .setProperties(properties)
                         .setBuilder(cliArgs));
-        if (mvnResult.getExitCode() != 0)
-            throw new MavenExecutionException("mvn call failed", mvnResult.getExecutionException());
-
-        return sw.toString();
+        return Pair.of(mvnResult.getExitCode(), sw.toString());
     }
 
     /**
@@ -170,8 +165,9 @@ public class Utils {
     @Nullable
     public static String getVersion(Path pom) {
         try {
-            return callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", "project.version"), Pair.of("forceStdout", "true"));
-        } catch (MavenInvocationException | MavenExecutionException e) {
+            Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", "project.version"), Pair.of("forceStdout", "true"));
+            return result.getKey() != 0 ? null : result.getValue();
+        } catch (MavenInvocationException e) {
             return null;
         }
     }

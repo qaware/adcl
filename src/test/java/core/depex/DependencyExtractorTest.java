@@ -1,6 +1,5 @@
-package core;
+package core.depex;
 
-import core.depex.DependencyExtractor;
 import core.information.*;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
