@@ -1,9 +1,11 @@
 package core;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.maven.MavenExecutionException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.shared.invoker.*;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jetbrains.annotations.NotNull;
 import util.Utils;
@@ -12,9 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,37 +50,25 @@ public class PomDependencyReader {
 
     /**
      * @return all compilation-relevant dependencies including transitive dependencies. Use only for personal read access!
-     * @throws MavenInvocationException if {@code mvn dependency:list} fails or mvn is not found on the system
+     * @throws MavenInvocationException if mvn is not found on the system
+     * @throws MavenExecutionException  if {@code mvn dependency:list} fails
      * @throws IOException              if {@code ./dependencies.txt} cannot be deleted
      * @apiNote Returned dependencies only have set groupId, artifactId, version, scope and systemPath. Even if scope is
      * compile the system path is given (contrary to the definition of {@link Dependency#getSystemPath()}).
      * @implSpec takes a while (dependent on internet connection and project size) as maven has to download the dependencies
      * <br>uses {@code ./dependencies.txt} for temporary output storage
      */
-    public Set<Dependency> readAllCompilationRelevantDependencies() throws MavenInvocationException, IOException {
+    public Set<Dependency> readAllCompilationRelevantDependencies() throws MavenInvocationException, IOException, MavenExecutionException {
         Path outputPath = Paths.get("dependencies.txt");
         Files.deleteIfExists(outputPath);
 
-        InvocationRequest request = new DefaultInvocationRequest();
-        request.setBatchMode(true);
-        request.setPomFile(pomPath.toFile());
-        request.setGoals(Collections.singletonList("dependency:list"));
-        Properties properties = new Properties();
-        properties.setProperty("outputAbsoluteArtifactFilename", "true");
-        properties.setProperty("outputFile", "dependencies.txt");
-        properties.setProperty("appendOutput", "true");
-        properties.setProperty("includeScope", "compile");
-        request.setProperties(properties);
-
-        Invoker invoker = new DefaultInvoker();
-        Path mvnPath = Utils.searchInPath("mvn");
-        if (mvnPath != null) invoker.setMavenHome(mvnPath.getParent().getParent().toFile());
-        invoker.setOutputHandler(null);
-
         try {
-            InvocationResult mvnResult = invoker.execute(request);
-            if (mvnResult.getExitCode() != 0)
-                throw new MavenInvocationException("mvn call failed", mvnResult.getExecutionException());
+            Utils.callMaven(pomPath, null, null, "dependency:list",
+                    Pair.of("outputAbsoluteArtifactFilename", "true"),
+                    Pair.of("outputFile", "dependencies.txt"),
+                    Pair.of("appendOutput", "true"),
+                    Pair.of("includeScope", "compile")
+            );
 
             Matcher matcher = Pattern.compile("(?<group>\\S+?):(?<artifact>\\S+):.+?:(?<version>\\S+?):compile:(?<path>.+?\\.jar)[\\x{1b}\\n\\s]").matcher(new String(Files.readAllBytes(outputPath)));
             Set<Dependency> result = new HashSet<>();

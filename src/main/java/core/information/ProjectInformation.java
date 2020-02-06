@@ -2,6 +2,7 @@ package core.information;
 
 import core.IndexBuilder;
 import core.PomDependencyReader;
+import org.apache.maven.MavenExecutionException;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -132,7 +133,7 @@ public class ProjectInformation extends Information<RootInformation> {
         return externalIndices.getOrDefault(className, "null");
     }
 
-    public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException {
+    public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException, MavenExecutionException {
         externalIndices.clear();
         IndexBuilder.indexDirectory(pathToOwnFiles, getName(), externalIndices);
         Path pomFile = Paths.get("pom.xml");

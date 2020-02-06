@@ -141,7 +141,7 @@ public class ApplicationConfig {
                 LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
         }
         if (result == null && localPom != null) {
-            result = localPom.getVersion();
+            result = Utils.getVersion(localPom.getPomFile().toPath());
         }
         if (result == null) throw new ConfigurationException("Option project.commit not specified");
         return result;
