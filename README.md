@@ -17,12 +17,13 @@ If you want to use ADCL as a maven plugin your pom.xml should look like this:
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <repositories>
-        <repository>
+    
+    <pluginRepositories>
+        <pluginRepository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
+        </pluginRepository>
+    </pluginRepositories>
     
     <build>
         <plugins>
