@@ -7,7 +7,7 @@
     <groupId>com.github.qaware</groupId>
     <artifactId>adcl</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>${revision}</version>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -22,6 +22,7 @@
         <sonar.projectKey>ADCL</sonar.projectKey>
         <sonar.organization>thbingen</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <revision>debug</revision>
     </properties>
 
     <dependencies>
@@ -149,6 +150,28 @@
     </dependencies>
 
     <profiles>
+        <profile>
+            <id>jitPack</id>
+            <activation>
+                <property>
+                    <name>env.VERSION</name>
+                </property>
+            </activation>
+            <properties>
+                <revision>${env.VERSION}</revision>
+            </properties>
+        </profile>
+        <profile>
+            <id>travis</id>
+            <activation>
+                <property>
+                    <name>env.TRAVIS_BUILD_NUMBER</name>
+                </property>
+            </activation>
+            <properties>
+                <revision>build${env.TRAVIS_BUILD_NUMBER}</revision>
+            </properties>
+        </profile>
         <profile>
             <id>thin</id>
             <activation>
