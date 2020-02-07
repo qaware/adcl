@@ -26,6 +26,8 @@
     "ngx-cookie-service": "^2.3.0",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
+    "vis-data": "^6.3.5",
+    "vis-network": "^7.3.4",
     "zone.js": "~0.9.1"
   },
   "devDependencies": {

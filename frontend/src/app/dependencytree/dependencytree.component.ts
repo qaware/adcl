@@ -5,6 +5,7 @@ import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
+import {Network} from 'vis-network';
 
 /**
  * Base Node for Tree item nodes
@@ -38,6 +39,8 @@ class GraphItem {
   name: string;
   code: string;
   children: GraphItem[] = [];
+  addedDependency: GraphItem[] = [];
+  deletedDependency: GraphItem[] = [];
 }
 
 class IdGenerator {
@@ -349,6 +352,13 @@ export class DependencyTreeDatabase {
     return treeItemNodes;
   }
 
+//todo
+  /**
+   * Builds the Graph View of obj
+   *
+   * @param obj TreeData which will be displayed as a Graph
+   * @param displayOption
+   */
   buildGraphView(obj: any[], displayOption: DisplayOption) {
     const idG = new IdGenerator();
     const nodeMap = new Map<string, GraphItem>();
@@ -356,64 +366,89 @@ export class DependencyTreeDatabase {
       this.generateNodesFromString(node, idG, nodeMap);
     });
 
-    const resultData = this.generateGraphData(nodeMap.get("root"));
-    /*const nodeSet = new DataSet(resultData.nodes);
-    const edgeSet = new DataSet(resultData.edges);
+    const resultData = this.generateGraphData(nodeMap);
+    //const nodeSet = new DataSet(resultData.nodes);
+    //const edgeSet = new DataSet(resultData.edges);
 
-    const container = document.getElementById("graph");
+    const container = document.getElementById("dataview");
+    container.innerHTML = "";
     const options = {
       edges: {}
     };
-    const network = new Network(container, {nodes: nodeSet, edges: edgeSet}, options);*/
+    const network = new Network(container, resultData, options);
   }
 
+  /**
+   * Process a string to a collection of GraphItems
+   *
+   * @param nodeString sting from which every node is generated
+   * @param idG IDGenerator which provides ids for the nodes
+   * @param nodeMap map in which every generated node is saved
+   */
   generateNodesFromString(nodeString: String, idG: IdGenerator, nodeMap: Map<string, GraphItem>) {
     let codeSet = [];
+    //matches everything that is separated with . which isn't in a ()
     nodeString.match(/\w*(\([^)]*\))?/g).forEach(s => {
       codeSet.push(s);
     });
     let s: string = "root";
-    let parent = new GraphItem();
-    parent.id = -1;
-    parent.name = s;
-    parent.code = s;
+    const root = new GraphItem();
+    root.id = -1;
+    root.name = s;
+    root.code = s;
+
+    let parent = root;
 
     for (let i = 0; i < codeSet.length; i++) {
       s += "." + codeSet[i];
       if (!nodeMap.has(s)) {
         if (codeSet[i] === "added") {
-          i++;
+          parent.addedDependency.push(this.generateNodesFromString(codeSet.slice(i + 1).join("."), idG, nodeMap));
+          return parent;
         } else if (codeSet[i] === "deleted") {
-          i++;
-        } else {
-          const node = new GraphItem();
-          node.name = codeSet[i];
-          node.id = idG.getNextId();
-          node.code = s;
-          parent.children.push(node);
-          nodeMap.set(s, node);
+          parent.deletedDependency.push(this.generateNodesFromString(codeSet.slice(i + 1).join("."), idG, nodeMap));
+          return parent;
         }
+        const node = new GraphItem();
+        node.name = codeSet[i];
+        node.id = idG.getNextId();
+        node.code = s;
+        parent.children.push(node);
+        nodeMap.set(s, node);
+        parent = node;
+
       } else {
         parent = nodeMap.get(s);
       }
     }
+    return parent;
   }
 
-  generateGraphData(root: GraphItem) {
+  /**
+   * Process GraphItems into a vis.js format
+   *
+   * @param nodeMap a Map which contains every node that should be displayed
+   */
+  generateGraphData(nodeMap: Map<string, GraphItem>) {
     const edgeSet = [];
     const nodeSet = [];
+    nodeMap.forEach(node => {
 
-    root.children.forEach(node => {
-      if (root.id !== -1) {
-        edgeSet.push({from: node.id, to: root.id, label: "Parent"})
-      }
-      const result = this.generateGraphData(node);
-      edgeSet.push(result.edges);
-      nodeSet.push(result.nodes);
+      node.children.forEach(node => {
+        edgeSet.push({from: node.id, to: node.id, label: "Parent"})
+      });
+
+      node.addedDependency.forEach(node => {
+        edgeSet.push({from: node.id, to: node.id, label: "Added"})
+      });
+
+      node.deletedDependency.forEach(node => {
+        edgeSet.push({from: node.id, to: node.id, label: "Deleted"})
+      });
+
+      nodeSet.push({id: node.id, label: node.name});
     });
-    if (root.id !== -1) {
-      nodeSet.push({id: root.id, label: root.name});
-    }
+
     return {edges: edgeSet, nodes: nodeSet};
   }
 
@@ -576,6 +611,10 @@ export class DependencytreeComponent implements OnInit {
     const data = this.database.buildDependencyTree(this.database.treeData, this.database.root, displayOption);
     this.database.selectedDisplayOption = displayOption;
     this.database.dataChange.next(data);
+  }
+
+  changeToGraphView(displayOption: DisplayOption) {
+    this.database.buildGraphView(this.database.treeData, displayOption);
   }
 
   /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
