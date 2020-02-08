@@ -367,18 +367,12 @@ export class DependencyTreeDatabase {
   buildGraphView(obj: any[], displayOption: DisplayOption): Network {
     const idG = new IdGenerator();
     const nodeMap = new Map<string, GraphItem>();
-    console.log("graphdata");
-    console.log(obj);
+
     obj.forEach(node => {
       this.generateNodesFromString(node["code"], node["filterType"], idG, nodeMap, node["path"]);
     });
-    console.log(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
-    //const nodeSet = new DataSet(resultData.nodes);
-    //const edgeSet = new DataSet(resultData.edges);
-    console.log(resultData);
     const container = document.getElementById("dataview");
-    //container.innerHTML = "";
     const options = {
       clickToUse: true,
       layout: {
@@ -736,6 +730,12 @@ export class DependencytreeComponent implements OnInit {
     this.db.dataChange.next(data);
   }
 
+  /**
+   * Function for toggling the Graph View on and out
+   *
+   * @param displayOption not implemented
+   * @param on signals if graph should be displayed
+   */
   toggleGraphView(displayOption: DisplayOption, on: boolean) {
     if (on) {
       this.graph = this.database.buildGraphView(this.database.treeData, displayOption);
