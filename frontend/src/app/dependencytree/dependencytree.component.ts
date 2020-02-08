@@ -38,9 +38,11 @@ class GraphItem {
   id: number;
   name: string;
   code: string;
+  tooltip;
   children: GraphItem[] = [];
   addedDependency: GraphItem[] = [];
   deletedDependency: GraphItem[] = [];
+  type: FilterType;
 }
 
 class IdGenerator {
@@ -56,14 +58,16 @@ export enum FilterType {
   Package = 'p',
   Class = 'c',
   Method = 'm',
-  Dependency = 'd'
+  Dependency = 'd',
+  Undefined = 'u'
 }
 
 /** Display options */
 export enum DisplayOption {
   Standard = 'Normal',
   CompactMiddlePackages = 'Compact Middle Packages',
-  FlattenPackages = 'Flat Packages'
+  FlattenPackages = 'Flat Packages',
+  Graph = 'Graph'
 }
 
 const reverseDisplayOption = new Map<string, DisplayOption>();
@@ -149,7 +153,7 @@ export class DependencyTreeDatabase {
    * @param version the changelog identifier
    * @param projectName project name
    */
-   async loadChangelogFromDatabase(projectName: string, version: string) {
+  async loadChangelogFromDatabase(projectName: string, version: string) {
     const params = {pName: projectName.toString(), version: version.toString()};
 
     const packageInformation: any[] = [{text: '', code: this.root}];
@@ -352,46 +356,61 @@ export class DependencyTreeDatabase {
     return treeItemNodes;
   }
 
-//todo
   /**
    * Builds the Graph View of obj
    *
    * @param obj TreeData which will be displayed as a Graph
    * @param displayOption
    */
-  buildGraphView(obj: any[], displayOption: DisplayOption) {
+  buildGraphView(obj: any[], displayOption: DisplayOption): Network {
     const idG = new IdGenerator();
     const nodeMap = new Map<string, GraphItem>();
+    console.log("graphdata");
+    console.log(obj);
     obj.forEach(node => {
-      this.generateNodesFromString(node, idG, nodeMap);
+      this.generateNodesFromString(node["code"], node["filterType"], idG, nodeMap, node["path"]);
     });
-
+    console.log(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
     //const nodeSet = new DataSet(resultData.nodes);
     //const edgeSet = new DataSet(resultData.edges);
-
+    console.log(resultData);
     const container = document.getElementById("dataview");
-    container.innerHTML = "";
+    //container.innerHTML = "";
     const options = {
-      edges: {}
+      clickToUse: true,
+      layout: {
+        improvedLayout: false
+      },
+      interaction: {
+        tooltipDelay: 200
+      },
+      edges: {},
+      nodes: {
+        shape: 'box'
+      }
     };
-    const network = new Network(container, resultData, options);
+    return new Network(container, resultData, options);
   }
 
   /**
    * Process a string to a collection of GraphItems
    *
    * @param nodeString sting from which every node is generated
+   * @param type
    * @param idG IDGenerator which provides ids for the nodes
    * @param nodeMap map in which every generated node is saved
+   * @param tooltip
+   * @param depLabel
    */
-  generateNodesFromString(nodeString: String, idG: IdGenerator, nodeMap: Map<string, GraphItem>) {
+  generateNodesFromString(nodeString: string, type: FilterType, idG: IdGenerator, nodeMap: Map<string, GraphItem>, tooltip: string, depLabel?: string) {
     let codeSet = [];
     //matches everything that is separated with . which isn't in a ()
-    nodeString.match(/\w*(\([^)]*\))?/g).forEach(s => {
-      codeSet.push(s);
+    nodeString.toString().match(/\w*(\([^)]*\))?/g).forEach(s => {
+      if (s !== "")
+        codeSet.push(s);
     });
-    let s: string = "root";
+    let s: string = "";
     const root = new GraphItem();
     root.id = -1;
     root.name = s;
@@ -400,26 +419,44 @@ export class DependencyTreeDatabase {
     let parent = root;
 
     for (let i = 0; i < codeSet.length; i++) {
-      s += "." + codeSet[i];
+      //is needed so that no duplicate nodes are generated
+      if (codeSet[i] === "methods" || (i === 0 && codeSet[i] === "root")) {
+        i++;
+      }
+      if (s !== "")
+        s += ".";
+      s += codeSet[i];
       if (!nodeMap.has(s)) {
         if (codeSet[i] === "added") {
-          parent.addedDependency.push(this.generateNodesFromString(codeSet.slice(i + 1).join("."), idG, nodeMap));
+          const added = this.generateNodesFromString(tooltip !== undefined ? tooltip : codeSet.slice(i + 1).join("."), FilterType.Dependency, idG, nodeMap, tooltip, depLabel);
+          parent.addedDependency.push(added);
           return parent;
         } else if (codeSet[i] === "deleted") {
-          parent.deletedDependency.push(this.generateNodesFromString(codeSet.slice(i + 1).join("."), idG, nodeMap));
+          //console.log(codeSet.slice(i).join("."));
+          parent.deletedDependency.push(this.generateNodesFromString(tooltip !== undefined ? tooltip : codeSet.slice(i + 1).join("."), FilterType.Dependency, idG, nodeMap, tooltip, depLabel));
           return parent;
         }
         const node = new GraphItem();
-        node.name = codeSet[i];
+        node.name = depLabel === undefined ? codeSet[i] : depLabel;
         node.id = idG.getNextId();
         node.code = s;
         parent.children.push(node);
         nodeMap.set(s, node);
         parent = node;
-
       } else {
         parent = nodeMap.get(s);
       }
+      if (i === codeSet.length - 1)
+        if (type === FilterType.Dependency) {
+          if (parent.type === undefined)
+            parent.type = type;
+        } else {
+          parent.type = type;
+        }
+    }
+    if (tooltip !== undefined) {
+      parent.tooltip = s.replace(/^root./g, "").replace(".methods.", ".");
+      console.log(parent);
     }
     return parent;
   }
@@ -433,23 +470,38 @@ export class DependencyTreeDatabase {
     const edgeSet = [];
     const nodeSet = [];
     nodeMap.forEach(node => {
+      if (node.name !== undefined) {
+        node.children.forEach(child => {
+          edgeSet.push({from: child.id, to: node.id, label: "Parent", arrows: 'to'})
+        });
 
-      node.children.forEach(node => {
-        edgeSet.push({from: node.id, to: node.id, label: "Parent"})
-      });
+        node.addedDependency.forEach(dep => {
+          edgeSet.push({from: node.id, to: dep.id, label: "Added", arrows: 'to', color: '#000000'})
+        });
 
-      node.addedDependency.forEach(node => {
-        edgeSet.push({from: node.id, to: node.id, label: "Added"})
-      });
+        node.deletedDependency.forEach(dep => {
+          edgeSet.push({from: node.id, to: dep.id, label: "Deleted", arrows: 'to', color: '#000000'})
+        });
 
-      node.deletedDependency.forEach(node => {
-        edgeSet.push({from: node.id, to: node.id, label: "Deleted"})
-      });
-
-      nodeSet.push({id: node.id, label: node.name});
+        nodeSet.push({id: node.id, label: node.name, title: node.tooltip, color: this.colorForType(node.type)});
+      }
     });
 
     return {edges: edgeSet, nodes: nodeSet};
+  }
+
+  colorForType(type: FilterType) {
+    switch (type) {
+      case FilterType.Package:
+        return "#57c7e3";
+      case FilterType.Class:
+        return "#f16667";
+      case FilterType.Method:
+        return "#d9c8ae";
+      case FilterType.Dependency:
+        return "#6dcf9e";
+    }
+    return "#c990c0";
   }
 
 
@@ -536,6 +588,7 @@ export class DependencytreeComponent implements OnInit {
   projectVersion: string;
   filterText = '';
   private db: DependencyTreeDatabase;
+  graph: Network;
 
   constructor(private database: DependencyTreeDatabase, private cookieService: CookieService) {
 
@@ -587,7 +640,7 @@ export class DependencytreeComponent implements OnInit {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  }
+  };
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
@@ -611,10 +664,6 @@ export class DependencytreeComponent implements OnInit {
     const data = this.database.buildDependencyTree(this.database.treeData, this.database.root, displayOption);
     this.database.selectedDisplayOption = displayOption;
     this.database.dataChange.next(data);
-  }
-
-  changeToGraphView(displayOption: DisplayOption) {
-    this.database.buildGraphView(this.database.treeData, displayOption);
   }
 
   /** Event-Handler triggered by Filter selection, adds the selected FilterType into the search field */
@@ -662,8 +711,7 @@ export class DependencytreeComponent implements OnInit {
       const pVersion = this.cookieService.get('projectVersion');
       if (pVersion !== undefined) {
         this.projectVersion = pVersion;
-        this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion).
-        then(v => this.searchField.nativeElement.dispatchEvent(new Event('input')));
+        this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion).then(v => this.searchField.nativeElement.dispatchEvent(new Event('input')));
       }
     }
 
@@ -685,5 +733,14 @@ export class DependencytreeComponent implements OnInit {
     const data = this.db.buildDependencyTree(this.db.treeData, this.db.root, this.db.selectedDisplayOption);
     this.db.dataChange.next(data);
   }
+
+  toggleGraphView(displayOption: DisplayOption, on: boolean) {
+    if (on) {
+      this.graph = this.database.buildGraphView(this.database.treeData, displayOption);
+    } else {
+      this.graph.destroy();
+    }
+  }
+
 }
 

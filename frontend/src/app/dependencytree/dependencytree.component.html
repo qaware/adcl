@@ -1,30 +1,36 @@
-<mat-sidenav-container class="container" >
+<mat-sidenav-container class="container">
   <mat-sidenav mode="side" class="side" opened>
     <p>
       <mat-form-field class="sideItem">
         <mat-label>Project</mat-label>
         <mat-select [(value)]="selectedProject" (selectionChange)="loadProjectVersion($event.value)">
-          <mat-option *ngFor="let projectName of database.projectNames" [value]="projectName.toString()"> {{projectName}} </mat-option>
+          <mat-option *ngFor="let projectName of database.projectNames"
+                      [value]="projectName.toString()"> {{projectName}} </mat-option>
         </mat-select>
       </mat-form-field>
     </p>
     <p>
-    <mat-form-field class="sideItem">
-      <mat-label>Changelog</mat-label>
-      <mat-select [(value)]="projectVersion" (selectionChange)="changeDependencyTree($event.value)">
-        <mat-option *ngFor="let id of database.changelogIds" [value]="id">{{id}}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field class="sideItem">
+        <mat-label>Changelog</mat-label>
+        <mat-select [(value)]="projectVersion" (selectionChange)="changeDependencyTree($event.value)">
+          <mat-option *ngFor="let id of database.changelogIds" [value]="id">{{id}}</mat-option>
+        </mat-select>
+      </mat-form-field>
     </p>
     <p>
-    <mat-form-field class="sideItem">
-      <mat-label>Change View Mode</mat-label>
-      <mat-select [(value)]="db.selectedDisplayOption" (selectionChange)="changeDisplayOption($event.value)">
-        <mat-option [value]="DisplayOption.Standard">{{DisplayOption.Standard}}</mat-option>
-        <mat-option [value]="DisplayOption.CompactMiddlePackages">{{DisplayOption.CompactMiddlePackages}}</mat-option>
-        <mat-option [value]="DisplayOption.FlattenPackages">{{DisplayOption.FlattenPackages}}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field class="sideItem">
+        <mat-label>Change View Mode</mat-label>
+        <mat-select [(value)]="db.selectedDisplayOption" (selectionChange)="changeDisplayOption($event.value)">
+          <mat-option [value]="DisplayOption.Standard">{{DisplayOption.Standard}}</mat-option>
+          <mat-option [value]="DisplayOption.CompactMiddlePackages">{{DisplayOption.CompactMiddlePackages}}</mat-option>
+          <mat-option [value]="DisplayOption.FlattenPackages">{{DisplayOption.FlattenPackages}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </p>
+    <p>
+      <mat-checkbox class="sideItem" (change)="toggleGraphView(db.selectedDisplayOption,$event.checked)">
+        GraphView
+      </mat-checkbox>
     </p>
     <button mat-raised-button class="sideItem" (click)="reset()">RESET</button>
   </mat-sidenav>
@@ -40,6 +46,7 @@
       <button mat-menu-item (click)="searchFilterSelected(FilterType.Method)">Method scope</button>
       <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
     </mat-menu>
+
 
     <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
       <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
@@ -65,6 +72,8 @@
         </div>
       </mat-tree-node>
     </mat-tree>
+    <div id="dataview">
+    </div>
   </mat-sidenav-content>
 </mat-sidenav-container>
 
