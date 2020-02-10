@@ -2,7 +2,6 @@ package util;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.maven.shared.invoker.MavenInvocationException;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.support.FileUtils;
 import org.slf4j.Logger;
@@ -13,29 +12,32 @@ import java.nio.file.Paths;
 
 public class MojoTestUtil implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(MojoTestUtil.class);
+    private final Path adclPom;
     private final Path localRepo;
 
-    private MojoTestUtil(Path localRepo) {
-        this.localRepo = localRepo;
+    public MojoTestUtil(@NotNull Path adclPom, @NotNull Path localRepo) throws MavenInvocationException {
+        this.adclPom = adclPom;
+        this.localRepo = localRepo.toAbsolutePath();
+        installLocal();
     }
 
-    @NotNull
-    @Contract("_, _ -> new")
-    public static MojoTestUtil installLocal(@NotNull Path pom, @NotNull Path localRepo) throws MavenInvocationException {
-        localRepo = localRepo.toAbsolutePath();
+    private void installLocal() throws MavenInvocationException {
+        logger.info("Re-versioning as debug for test");
+        Utils.callMaven(adclPom, null, null, "versions:set", Pair.of("newVersion", "debug"));
         logger.info("Building adcl jar");
-        Utils.callMaven(pom, null, "-P junit,!thin", "install");
+        Utils.callMaven(adclPom, null, "-P junit,!thin", "install");
         logger.info("Installing jar to local repo");
-        Utils.callMaven(pom, null, null, "install:install-file",
+        Utils.callMaven(adclPom, null, null, "install:install-file",
                 Pair.of("file", Paths.get("target", "adcl-debug.jar").toString()),
-                Pair.of("pomFile", pom.toString()),
+                Pair.of("pomFile", adclPom.toString()),
                 Pair.of("localRepositoryPath", localRepo.toString())
         );
-        return new MojoTestUtil(localRepo);
     }
 
     @Override
     public void close() throws Exception {
+        logger.info("Reverting version");
+        Utils.callMaven(adclPom, null, null, "versions:revert");
         FileUtils.deleteDirectory(localRepo);
     }
 
