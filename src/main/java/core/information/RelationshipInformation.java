@@ -71,7 +71,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      */
     @PostLoad
     void postLoad() {
-        new MapTool<>(Utils.resolveNestedMaps(Boolean.class, null, versionInfoInternal)).mapKeys(n -> new VersionInformation(n, getOwner().getProject())).overrideTo(versionInfoBacking);
+        new MapTool<>(Utils.resolveNestedMaps(Boolean.class, null, versionInfoInternal)).mapKeys(n -> new VersionInformation(n, getFrom().getProject())).overrideTo(versionInfoBacking);
     }
 
     /**
@@ -116,7 +116,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      * @see Information#exists(VersionInformation)
      */
     public final boolean exists(@NotNull VersionInformation version) {
-        List<VersionInformation> versions = getOwner().getProject().getVersions();
+        List<VersionInformation> versions = getFrom().getProject().getVersions();
         if (versions.isEmpty()) return false;
         Pair<VersionInformation, Boolean> latestChange = getLatestChangeInPath(versions.get(0), version);
         return latestChange == null || latestChange.getValue();
@@ -128,7 +128,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      */
     @NotNull
     public VersionInformation firstExistence() {
-        return getOwner().getProject().getVersions().stream().filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
+        return getFrom().getProject().getVersions().stream().filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
     }
 
     /**
@@ -137,7 +137,7 @@ public abstract class RelationshipInformation<T extends Information<?>> {
      */
     @NotNull
     public VersionInformation lastExistence() {
-        return Utils.reverseStream(getOwner().getProject().getVersions()).filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
+        return Utils.reverseStream(getFrom().getProject().getVersions()).filter(this::exists).findFirst().orElseThrow(() -> new IllegalStateException("Node doesn't exist anywhere"));
     }
 
     /**
