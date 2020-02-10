@@ -15,6 +15,7 @@ git:
   depth: false
 
 script:
+  - mvn versions:set -DnewVersion=${VERSION:-${TRAVIS_BUILD_NUMBER:-debugci}} -DgenerateBackupPoms=false
   # generate fat jar, tests, sonar
   - mvn clean install sonar:sonar -P fat,!thin
   # rename fat jar accordingly

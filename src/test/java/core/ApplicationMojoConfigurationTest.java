@@ -1,11 +1,10 @@
 package core;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import util.Utils;
+import util.MojoTestUtil;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -18,40 +17,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ApplicationMojoConfigurationTest {
     @Test
-    public void test1() throws MavenInvocationException {
-        Pair<Integer, String> result = Utils.callMaven(Paths.get("src", "test", "resources", "pom3", "pom.xml"), null, null, "adcl:start");
-        assertThat(result.getKey()).isNotZero();
+    public void test1() throws Exception {
+        try (MojoTestUtil testUtil = MojoTestUtil.installLocal(Paths.get("pom.xml"), Paths.get("localRepo"))) {
+            Pair<Integer, String> result = testUtil.runAdclOnPom(Paths.get("src", "test", "resources", "pom3", "pom.xml"));
+            assertThat(result.getKey()).isNotZero();
 
-        String configString = regexSubstring(result.getValue(), Pattern.compile("Configuration loaded: \\{(.+?)}"));
-        assertThat(configString).isNotNull();
+            String configString = regexSubstring(result.getValue(), Pattern.compile("Configuration loaded: \\{(.+?)}"));
+            assertThat(configString).isNotNull();
 
-        Map<String, String> configs = parseProperties(configString);
-        assertThat(configs.entrySet()).containsExactlyInAnyOrder(
-                Pair.of("spring.data.neo4j.uri", "bolt://localhost:7687"),
-                Pair.of("spring.data.neo4j.username", ""),
-                Pair.of("spring.data.neo4j.password", ""),
-                Pair.of("project.commit.current", "test"),
-                Pair.of("project.uri", "src/test/resources/test classfiles3/epro1")
-        );
+            Map<String, String> configs = parseProperties(configString);
+            assertThat(configs.entrySet()).containsExactlyInAnyOrder(
+                    Pair.of("spring.data.neo4j.uri", "bolt://localhost:7687"),
+                    Pair.of("spring.data.neo4j.username", ""),
+                    Pair.of("spring.data.neo4j.password", ""),
+                    Pair.of("project.commit.current", "test"),
+                    Pair.of("project.uri", "src/test/resources/test classfiles3/epro1")
+            );
+        }
     }
 
     @Test
-    public void test2() throws MavenInvocationException {
-        Pair<Integer, String> result = Utils.callMaven(Paths.get("src", "test", "resources", "pom4", "pom.xml"), null, null, "adcl:start");
-        assertThat(result.getKey()).isNotZero();
+    public void test2() throws Exception {
+        try (MojoTestUtil testUtil = MojoTestUtil.installLocal(Paths.get("pom.xml"), Paths.get("localRepo"))) {
+            Pair<Integer, String> result = testUtil.runAdclOnPom(Paths.get("src", "test", "resources", "pom4", "pom.xml"));
+            assertThat(result.getKey()).isNotZero();
 
-        String configString = regexSubstring(result.getValue(), Pattern.compile("Configuration loaded: \\{(.+?)}"));
-        assertThat(configString).isNotNull();
+            String configString = regexSubstring(result.getValue(), Pattern.compile("Configuration loaded: \\{(.+?)}"));
+            assertThat(configString).isNotNull();
 
-        Map<String, String> configs = parseProperties(configString);
-        assertThat(configs.entrySet()).containsExactlyInAnyOrder(
-                Pair.of("spring.data.neo4j.uri", "bolt://localhost:7687"),
-                Pair.of("spring.data.neo4j.username", "neo4j\""),
-                Pair.of("spring.data.neo4j.password", "test"),
-                Pair.of("project.commit.current", "test2"),
-                Pair.of("project.commit.previous", "test"),
-                Pair.of("project.uri", "src\\test\\resources\\testclassfiles3\\epro2")
-        );
+            Map<String, String> configs = parseProperties(configString);
+            assertThat(configs.entrySet()).containsExactlyInAnyOrder(
+                    Pair.of("spring.data.neo4j.uri", "bolt://localhost:7687"),
+                    Pair.of("spring.data.neo4j.username", "neo4j\""),
+                    Pair.of("spring.data.neo4j.password", "test"),
+                    Pair.of("project.commit.current", "test2"),
+                    Pair.of("project.commit.previous", "test"),
+                    Pair.of("project.uri", "src\\test\\resources\\testclassfiles3\\epro2")
+            );
+        }
     }
 
     @Nullable
