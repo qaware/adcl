@@ -1,15 +1,9 @@
-package util;
+package util.log;
 
 import org.jetbrains.annotations.NotNull;
-import org.springframework.boot.test.system.CapturedOutput;
 
-public class LogInspector {
-    private final CapturedOutput capture;
+public abstract class LogInspector {
     private int allPos, outPos, errPos;
-
-    public LogInspector(CapturedOutput capturedOutput) {
-        this.capture = capturedOutput;
-    }
 
     public String getAll() {
         return get(Type.ALL);
@@ -38,8 +32,14 @@ public class LogInspector {
         return getOut().substring(pos);
     }
 
+    protected abstract String getAll0();
+
+    protected abstract String getOut0();
+
+    protected abstract String getErr0();
+
     private String get(@NotNull Type type) {
-        String all = capture.getAll(), out = capture.getOut(), err = capture.getErr();
+        String all = getAll0(), out = getOut0(), err = getErr0();
         allPos = all.length();
         outPos = out.length();
         errPos = err.length();
@@ -54,7 +54,7 @@ public class LogInspector {
         throw new IllegalStateException();
     }
 
-    private enum Type {
+    enum Type {
         ALL, OUT, ERR
     }
 }

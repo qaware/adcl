@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import util.LogInspector;
+import util.log.CapturedOutputLogInspector;
+import util.log.LogInspector;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -192,7 +193,7 @@ public class ConfigTest {
 
     @Test
     void testInputPathFailing(@NotNull CapturedOutput output) throws IOException {
-        LogInspector log = new LogInspector(output);
+        LogInspector log = new CapturedOutputLogInspector(output);
         Path path = Paths.get("config.properties");
 
         try {
