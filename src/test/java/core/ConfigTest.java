@@ -123,7 +123,7 @@ public class ConfigTest {
             System.setProperty("adcl.e", "a b");
             System.getProperties().put("adcl.x", new Object());
             System.getProperties().put(new Object(), "x");
-            Config.load(new String[0]);
+            Config.load();
 
             assertThat(Config.get("a", 0)).isEqualTo(1);
             assertThat(Config.get("b", false)).isTrue();
@@ -148,7 +148,7 @@ public class ConfigTest {
                     "g=\""
             ));
 
-            Config.load(new String[]{"configPath=myconf.properties"});
+            Config.load("configPath=myconf.properties");
 
             assertThat(Config.get("a", 0)).isEqualTo(1);
             assertThat(Config.get("b", false)).isTrue();
@@ -176,7 +176,7 @@ public class ConfigTest {
                     "g=\""
             ));
 
-            Config.load(new String[0]);
+            Config.load();
 
             assertThat(Config.get("a", 0)).isEqualTo(1);
             assertThat(Config.get("b", false)).isTrue();
@@ -197,14 +197,14 @@ public class ConfigTest {
 
         try {
             Files.deleteIfExists(path);
-            Config.load(new String[]{"configPath=config.properties"});
+            Config.load("configPath=config.properties");
             assertThat(log.getNewErr()).contains("configPath points to a non-existent file");
-            Config.load(new String[]{"configPath=\0"});
+            Config.load("configPath=\0");
             assertThat(log.getNewErr()).contains("configPath is present but invalid");
             Files.createDirectory(path);
-            Config.load(new String[0]); // load default config while config is folder
+            Config.load(); // load default config while config is folder
             assertThat(log.getNewOut()).contains("Configuration loaded");
-            Config.load(new String[]{"configPath=config.properties"});
+            Config.load("configPath=config.properties");
             assertThat(log.getNewErr()).contains("configPath points to a directory");
         } finally {
             Files.deleteIfExists(path);
@@ -213,7 +213,7 @@ public class ConfigTest {
 
     @Test
     void testOther() {
-        Config.load(new String[0]);
+        Config.load();
         assertThat(Config.get(null, 5)).isEqualTo(5);
     }
 
