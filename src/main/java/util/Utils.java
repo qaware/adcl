@@ -168,7 +168,9 @@ public class Utils {
     public static String getMavenVar(@NotNull Path pom, String var) {
         try {
             Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", var), Pair.of("forceStdout", "true"));
-            return result.getKey() != 0 ? null : result.getValue();
+            if (result.getKey() != 0) return null;
+            String val = result.getValue();
+            return val.substring(0, val.length() - 2);
         } catch (MavenInvocationException e) {
             return null;
         }
