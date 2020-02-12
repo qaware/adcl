@@ -113,7 +113,7 @@ class DependencyExtractorTest {
         RootInformation root = new RootInformation();
         ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
 
-        new DependencyExtractor(TESTCLASS_FOLDER, proj.getLatestVersion()).runAnalysis();
+        new DependencyExtractor(TESTCLASS_FOLDER, proj.getLatestVersion(), null).runAnalysis();
         assertThat(root.deepEquals(dm)).overridingErrorMessage("Not deep equal!\nExpected:\n%s\n\nActual:\n%s", dm, root).isTrue();
     }
 }

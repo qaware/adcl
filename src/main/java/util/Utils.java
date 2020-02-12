@@ -161,12 +161,13 @@ public class Utils {
 
     /**
      * @param pom a maven pom.xml
-     * @return the resolved version specified in pom
+     * @param var the variable to evaluate
+     * @return the resolved value in pom
      */
     @Nullable
-    public static String getVersion(Path pom) {
+    public static String getMavenVar(@NotNull Path pom, String var) {
         try {
-            Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", "project.version"), Pair.of("forceStdout", "true"));
+            Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", var), Pair.of("forceStdout", "true"));
             return result.getKey() != 0 ? null : result.getValue();
         } catch (MavenInvocationException e) {
             return null;

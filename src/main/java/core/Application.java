@@ -96,17 +96,19 @@ public class Application {
             currentVersion = project.addVersion(appConfig.currentVersionName);
         }
 
-        LOGGER.info("Analysing pom dependencies");
-        try {
-            new PomDependencyReader(Paths.get("pom.xml")).updatePomDependencies(currentVersion);
-        } catch (IOException | XmlPullParserException e) {
-            LOGGER.error("Could not analyse current pom dependencies", e);
-            return 1;
+        if (appConfig.projectPom != null) {
+            LOGGER.info("Analysing pom dependencies");
+            try {
+                new PomDependencyReader(appConfig.projectPom).updatePomDependencies(currentVersion);
+            } catch (IOException | XmlPullParserException e) {
+                LOGGER.error("Could not analyse current pom dependencies", e);
+                return 1;
+            }
         }
 
         LOGGER.info("Analysing code dependencies");
         try {
-            new DependencyExtractor(appConfig.scanLocation, currentVersion).runAnalysis();
+            new DependencyExtractor(appConfig.scanLocation, currentVersion, appConfig.projectPom).runAnalysis();
         } catch (IOException | MavenInvocationException e) {
             LOGGER.error("Could not analyse current class structure", e);
             return 1;

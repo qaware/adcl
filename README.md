@@ -13,10 +13,7 @@ This tool generates changelogs between two java project versions.
 ### As maven plugin (recommended)
 If you want to use ADCL as a maven plugin your pom.xml should look like this:
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project>
     
     <pluginRepositories>
         <pluginRepository>
@@ -67,9 +64,10 @@ Download the fat jar from the releases page. You need to specify more startup op
 | spring.data.neo4j.password | password for the neo4j database                                  |                                                                    | X        |                    |          |
 | project.name               | the project name to persist in database                          | the artifactId specified in your pom                               |          | X                  |          |
 | project.uri                | root folder for the class files                                  | the classes output specified in your pom (default: target/classes) |          | X                  |          |
+| project.pom                | location of the project pom.xml if using maven                   | ./pom.xml                                                          |          |                    | X        |
 | project.commit.previous    | the version name of the latest version in the database           | the latest version in the database                                 |          |                    | X        |
 | project.commit.current     | the version name of the current data set that should be analysed | the version specified in your pom                                  |          | X                  |          |
-| configPath                 | a path to a .properties file to load further options from        | ./config.properties                                                  |          |                    | X        |
+| configPath                 | a path to a .properties file to load further options from        | ./config.properties                                                |          |                    | X        |
 | nomaven                    | disable maven pom analysis even if a pom is found                | false                                                              |          |                    | X        |
 ### Configuration methods
 **Note**: Configuration methods shown below are ordered in priority

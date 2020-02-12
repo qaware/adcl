@@ -1,9 +1,5 @@
 package core;
 
-import org.apache.maven.model.Build;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.config.Configuration;
@@ -35,10 +31,11 @@ public class ApplicationConfig {
     @NotNull
     public final Configuration neo4jConfig = getNeo4jConfig();
     /**
-     * The data of the local pom.xml of the project, if present
+     * The location of the project's pom.xml, existence ensured, else null
      */
     @Nullable
-    private final Model localPom = getLocalPom();
+    public final Path projectPom = getProjectPom();
+
     /**
      * The location of the class files to analyse
      * Ensured that it is an existing directory with class files and correct package headers in it (random sample)
@@ -65,17 +62,20 @@ public class ApplicationConfig {
     // GETTERS ONLY
 
     @Nullable
-    private Model getLocalPom() throws ConfigurationException {
-        try {
-            MavenXpp3Reader reader = new MavenXpp3Reader();
-            return reader.read(Files.newBufferedReader(Paths.get("pom.xml")));
-        } catch (IOException | XmlPullParserException e) {
-            if (Config.get("nomaven", false)) {
-                return null;
+    private Path getProjectPom() throws ConfigurationException {
+        Path result = Config.getPath("project.pom", null);
+        if (result == null) {
+            String raw = Config.get("project.pom", null);
+            if (raw == null) {
+                result = Paths.get("pom.xml");
             } else {
-                throw new ConfigurationException("Could not open project pom.xml! Working directory has to be root of project to be analyzed. If your are not using maven, skip this error with nomaven flag.", e);
+                throw new ConfigurationException("project.pom not valid. Is: {}", raw);
             }
         }
+        if (!Files.exists(result)) return null;
+        if (!Files.isRegularFile(result))
+            throw new ConfigurationException("project.uri does not point to a file. Is: {}", result);
+        return result;
     }
 
     @NotNull
@@ -118,16 +118,16 @@ public class ApplicationConfig {
 
     @NotNull
     private Path tryGetScanLocationByPom() throws ConfigurationException {
-        if (localPom == null) throw new ConfigurationException("Option project.uri not specified");
-        Build build = localPom.getBuild();
-        String output = build == null ? null : build.getOutputDirectory();
-        if (output == null) output = "target/classes"; // as stated in jdoc of Build#getOutputDirectory()
+        if (projectPom == null) throw new ConfigurationException("Option project.uri not specified");
+        String output = Utils.getMavenVar(projectPom, "project.build.outputDirectory");
+        if (output == null) output = "target/classes";
         return Paths.get(output);
     }
 
     @NotNull
     private String getProjectName() throws ConfigurationException {
-        String result = Config.get("project.name", localPom == null ? null : localPom.getArtifactId());
+        String result = Config.get("project.name", null);
+        if (result == null && projectPom != null) result = Utils.getMavenVar(projectPom, "project.artifactId");
         if (result == null) throw new ConfigurationException("Option project.name not specified");
         return result;
     }
@@ -140,8 +140,8 @@ public class ApplicationConfig {
             if (result != null)
                 LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
         }
-        if (result == null && localPom != null) {
-            result = Utils.getVersion(localPom.getPomFile().toPath());
+        if (result == null && projectPom != null) {
+            result = Utils.getMavenVar(projectPom, "project.version");
         }
         if (result == null) throw new ConfigurationException("Option project.commit not specified");
         return result;
@@ -184,7 +184,7 @@ public class ApplicationConfig {
         return new StringJoiner(", ", ApplicationConfig.class.getSimpleName() + "[", "]")
                 .add("previousVersionName='" + previousVersionName + "'")
                 .add("neo4jConfig=" + neo4jConfig)
-                .add("localPom=" + localPom)
+                .add("projectPom=" + projectPom)
                 .add("scanLocation=" + scanLocation)
                 .add("projectName='" + projectName + "'")
                 .add("currentVersionName='" + currentVersionName + "'")
@@ -198,10 +198,6 @@ public class ApplicationConfig {
     static class ConfigurationException extends Exception {
         private ConfigurationException(String message, Object... format) {
             LOGGER.error(message, format);
-        }
-
-        private ConfigurationException(String message, Throwable ex) {
-            LOGGER.error(message, ex);
         }
     }
 }

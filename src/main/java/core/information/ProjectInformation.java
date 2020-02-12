@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 import util.CompareHelper;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -146,18 +144,18 @@ public class ProjectInformation extends Information<RootInformation> {
         return externalIndices.getOrDefault(className, "null");
     }
 
-    public void updateIndices(Path pathToOwnFiles) throws MavenInvocationException, IOException {
+    public void updateIndices(Path projectOutput, Path projectPom) throws MavenInvocationException, IOException {
         externalIndices.clear();
-        IndexBuilder.indexDirectory(pathToOwnFiles, getName(), externalIndices);
-        Path pomFile = Paths.get("pom.xml");
-        if (Files.exists(pomFile))
-            new PomDependencyReader(pomFile).readAllCompilationRelevantDependencies().forEach(d -> {
+        IndexBuilder.indexDirectory(projectOutput, getName(), externalIndices);
+        if (projectPom != null) {
+            new PomDependencyReader(projectPom).readAllCompilationRelevantDependencies().forEach(d -> {
                 try {
                     IndexBuilder.index(d, externalIndices);
                 } catch (IOException e) {
                     LOGGER.error("Could not index dependency {}", d, e);
                 }
             });
+        }
     }
 
     // Overrides

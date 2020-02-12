@@ -3,6 +3,7 @@ package core.depex;
 import core.information.VersionInformation;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,16 +22,20 @@ public class DependencyExtractor {
     private final Path scanLocation;
     @NotNull
     private final VersionInformation version;
+    @Nullable
+    private final Path projectPom;
 
     /**
      * Instantiate a new Extractor. Does nothing except field init. Start analysis with {@link DependencyExtractor#runAnalysis()}
      *
      * @param scanLocation the root directory where the class files are located.
      * @param version      the version the to-be-analysed class files correspond to
+     * @param projectPom   the location of the project pom.xml
      */
-    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version) {
+    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version, @Nullable Path projectPom) {
         this.scanLocation = scanLocation;
         this.version = version;
+        this.projectPom = projectPom;
     }
 
     /**
@@ -41,7 +46,7 @@ public class DependencyExtractor {
      */
     public void runAnalysis() throws IOException, MavenInvocationException {
         LOGGER.info("Updating indices...");
-        version.getProject().updateIndices(scanLocation);
+        version.getProject().updateIndices(scanLocation, projectPom);
         LOGGER.info("Updated");
         version.getProject().getDirectChildren(version).forEach(c -> c.setExists(version, false));
 
