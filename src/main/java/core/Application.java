@@ -22,6 +22,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import util.Utils;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 /**
  * Application is a SpringBootApplication and the main Class for ADCL, which configures itself and handles everything from configuration loading to database accessing.
@@ -58,6 +59,7 @@ public class Application {
      */
     @SuppressWarnings({"RedundantThrows", "java:S112"} /* enforce caller to catch any potential exception */)
     public static int launch(String[] args) throws Exception {
+        LOGGER.info("Working Directory: {}", Paths.get(".").toAbsolutePath());
         //Loading config
         Config.load(args);
 

@@ -12,7 +12,7 @@
             <plugin>
                 <groupId>com.github.qaware</groupId>
                 <artifactId>adcl</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>debug</version>
             </plugin>
         </plugins>
     </build>
