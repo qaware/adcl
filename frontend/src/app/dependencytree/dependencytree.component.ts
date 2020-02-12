@@ -243,7 +243,7 @@ export class DependencyTreeDatabase {
             dependencyClass.push(obj);
             const cpy = Object.assign({}, obj);
             cpy.code = this.root + '.' + usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.' + status + '.' + name;
-            if  (dependencyClass.find(o => o.code === cpy.code) === undefined) {
+            if (dependencyClass.find(o => o.code === cpy.code) === undefined) {
               dependencyClass.push(cpy);
             }
             break;
@@ -260,8 +260,6 @@ export class DependencyTreeDatabase {
     await forkJoin(treeResult, dependencyResult).toPromise().then(_ => {
       this.treeData = [...packageInformation, ...classInformation, ...methodInformation, ...dependencyClass, ...dependencyMethod];
       const data = this.buildDependencyTree(this.treeData, this.root, this.selectedDisplayOption);
-      console.log(this.treeData);
-      console.log(queryTree);
       this.dataChange.next(data);
     });
   }
@@ -364,7 +362,7 @@ export class DependencyTreeDatabase {
    * @param obj TreeData which will be displayed as a Graph
    * @param displayOption
    */
-  buildGraphView(obj: any[], displayOption: DisplayOption): Network {
+  async buildGraphView(obj: any[], displayOption: DisplayOption): Promise<Network> {
     const idG = new IdGenerator();
     const nodeMap = new Map<string, GraphItem>();
 
@@ -386,7 +384,13 @@ export class DependencyTreeDatabase {
         shape: 'box'
       }
     };
-    return new Network(container, resultData, options);
+    return new Promise((resolve, reject) => {
+      const net = new Network(container, resultData, options);
+      net.on("afterDrawing", () => {
+        document.body.style.cursor = "default";
+      });
+      return net;
+    });
   }
 
   /**
@@ -402,7 +406,7 @@ export class DependencyTreeDatabase {
   generateNodesFromString(nodeString: string, type: FilterType, idG: IdGenerator, nodeMap: Map<string, GraphItem>, tooltip: string, depLabel?: string) {
     let codeSet = [];
     //matches everything that is separated with . which isn't in a ()
-    nodeString.toString().match(/\w*(\([^)]*\))?/g).forEach(s => {
+    nodeString.toString().match(/[^(.)]*(\([^)]*\))?/g).forEach(s => {
       if (s !== "")
         codeSet.push(s);
     });
@@ -452,7 +456,7 @@ export class DependencyTreeDatabase {
     }
     if (tooltip !== undefined) {
       parent.tooltip = s.replace(/^root./g, "").replace(".methods.", ".");
-      console.log(parent);
+
     }
     return parent;
   }
@@ -736,11 +740,13 @@ export class DependencytreeComponent implements OnInit {
    * @param displayOption not implemented
    * @param on signals if graph should be displayed
    */
-  toggleGraphView(displayOption: DisplayOption, on: boolean) {
-    if (on) {
-      this.graph = this.database.buildGraphView(this.database.treeData, displayOption);
-    } else {
-      this.graph.destroy();
+  async toggleGraphView(displayOption: DisplayOption) {
+    console.log(this.graph);
+    if (this.graph === undefined) {
+      document.body.style.cursor = "wait";
+      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption);
+      console.log("changed");
+
     }
   }
 
