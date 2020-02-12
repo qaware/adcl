@@ -2,6 +2,7 @@ package core.information;
 
 import core.IndexBuilder;
 import core.PomDependencyReader;
+import core.database.Purgeable;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A Information about a project with Root as parent
@@ -61,48 +63,41 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     /**
-     * Add a new version for the project to the end of the version history
-     *
-     * @param name the name of the new version
-     * @return the newly added version
-     */
-    @NotNull
-    public VersionInformation addVersion(@NotNull String name) {
-        if (getVersion(name) != null) throw new IllegalArgumentException("Version " + name + " already exists");
-        VersionInformation result = new VersionInformation(name, this);
-        versions.add(result);
-        return result;
-    }
-
-    /**
-     * Returns all *own* Pom Dependencies at a given version.
-     * @param at The version to check. If null dependencies at any time are returned.
-     * @return the pom dependencies at given version
-     */
-    @NotNull
-    public final Set<VersionInformation> getPomDependencies(@Nullable VersionInformation at) {
-        //noinspection ConstantConditions TODO work on PomDependencyInformation so verionInfo and remoteVersionMap are in sync (@1.5.2)
-        return pomDependencies.stream().filter(d -> at == null || d.exists(at)).map(d -> d.getVersionAt(at)).collect(Collectors.toSet());
-    }
-
-    /**
-     * Adds a new pom dependency at given version.
-     * @param at the version at which the dependency is to be added. If null existence will be ensured for latest version
-     * @param to the version the new dependency should point to
-     */
-    public final void addPomDependency(@NotNull VersionInformation to, @Nullable VersionInformation at) {
-        if (at == null) at = getProject().getLatestVersion();
-        PomDependencyInformation dep = new PomDependencyInformation(this, to.getProject());
-        dep.setExists(at, true);
-        dep.addVersionMarker(at, to);
-        pomDependencies.add(dep);
-    }
-
-    /**
      * @return whether a Project is an internal project (a project analysed by adcl)
      */
     public boolean isInternal() {
         return isInternal;
+    }
+
+    /**
+     * Returns all *own* Pom Dependencies at a given version.
+     *
+     * @param at The version to check.
+     * @return the pom dependencies at given version
+     */
+    @NotNull
+    public final Set<@NotNull VersionInformation> getPomDependencies(@NotNull VersionInformation at) {
+        return pomDependencies.stream().map(d -> d.getVersionAt(at)).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    public final Set<PomDependencyInformation> getPomDependenciesRaw() {
+        return pomDependencies;
+    }
+
+    /**
+     * Adds a new pom dependency at given version.
+     *
+     * @param at the version at which the dependency is to be added. If null existence will be ensured for latest version
+     * @param to the version the new dependency should point to
+     */
+    public final void addPomDependency(@NotNull VersionInformation to, @Nullable VersionInformation at) {
+        VersionInformation fAt = at == null ? getProject().getLatestVersion() : at;
+        PomDependencyInformation dep = pomDependencies.stream().filter(d -> d.getTo().equals(to.getProject())).findAny().orElseGet(() -> {
+            PomDependencyInformation result = new PomDependencyInformation(this, to);
+            pomDependencies.add(result);
+            return result;
+        });
+        dep.setVersionAt(fAt, to);
     }
 
     @NotNull
@@ -125,6 +120,25 @@ public class ProjectInformation extends Information<RootInformation> {
     @Nullable
     public VersionInformation getVersion(String name) {
         return versions.stream().filter(v -> v.getName().equals(name)).findAny().orElse(null);
+    }
+
+    /**
+     * Add a new version for the project to the end of the version history
+     *
+     * @param name the name of the new version
+     * @return the newly added version
+     */
+    @NotNull
+    public VersionInformation addVersion(@NotNull String name) {
+        if (getVersion(name) != null) throw new IllegalArgumentException("Version " + name + " already exists");
+        VersionInformation result = new VersionInformation(name, this);
+        versions.add(result);
+        return result;
+    }
+
+    public VersionInformation getOrCreateVersion(String name) {
+        VersionInformation result = getVersion(name);
+        return result == null ? addVersion(name) : result;
     }
 
     @Nullable
@@ -164,5 +178,16 @@ public class ProjectInformation extends Information<RootInformation> {
         super.compareElements(cmp);
         cmp.casted(ProjectInformation.class).add(ProjectInformation::isInternal)
                 .add(ProjectInformation::getVersions, CompareHelper.collectionComparator());
+    }
+
+    @Override
+    public void purgeIds() {
+        super.purgeIds();
+        pomDependencies.forEach(Purgeable::purgeIds);
+    }
+
+    @Override
+    public Stream<?> getOutgoingRelations() {
+        return Stream.concat(super.getOutgoingRelations(), pomDependencies.stream());
     }
 }

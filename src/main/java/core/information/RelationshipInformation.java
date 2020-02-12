@@ -1,5 +1,6 @@
 package core.information;
 
+import core.database.Purgeable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @RelationshipEntity
 @SuppressWarnings("java:S1452" /* Wildcards are needed */)
-public abstract class RelationshipInformation<T extends Information<?>> {
+public abstract class RelationshipInformation<T extends Information<?>> implements Purgeable {
     @SuppressWarnings("rawtypes" /* Compatibility for neo4j */)
     @StartNode
     @NotNull
@@ -219,10 +220,10 @@ public abstract class RelationshipInformation<T extends Information<?>> {
     }
 
     /**
-     * For use by {@link core.database.Neo4jService only}
-     * deletes the id so the object gets stored in db as new object
+     * {@inheritDoc}
      */
-    public void purgeId() {
+    @Override
+    public void purgeIds() {
         id = null;
     }
 }

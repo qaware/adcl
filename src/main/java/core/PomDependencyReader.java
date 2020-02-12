@@ -1,5 +1,8 @@
 package core;
 
+import core.information.Information;
+import core.information.ProjectInformation;
+import core.information.VersionInformation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
@@ -84,5 +87,15 @@ public class PomDependencyReader {
         } finally {
             Files.deleteIfExists(outputPath);
         }
+    }
+
+    public void updatePomDependencies(@NotNull VersionInformation currentVersion) throws IOException, XmlPullParserException {
+        ProjectInformation project = currentVersion.getProject();
+        project.getPomDependenciesRaw().forEach(d -> d.setVersionAt(currentVersion, null));
+        readDependencies().forEach(d -> {
+            ProjectInformation remote = (ProjectInformation) project.getRoot().findOrCreate(d.getArtifactId(), null, Information.Type.PROJECT);
+            VersionInformation remoteVersion = remote.getOrCreateVersion(d.getVersion());
+            project.addPomDependency(remoteVersion, currentVersion);
+        });
     }
 }

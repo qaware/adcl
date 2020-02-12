@@ -6,6 +6,7 @@ import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;
 import org.apache.maven.shared.invoker.MavenInvocationException;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.ogm.config.Configuration;
@@ -95,7 +96,15 @@ public class Application {
             currentVersion = project.addVersion(appConfig.currentVersionName);
         }
 
-        LOGGER.info("Analysing new dependencies");
+        LOGGER.info("Analysing pom dependencies");
+        try {
+            new PomDependencyReader(Paths.get("pom.xml")).updatePomDependencies(currentVersion);
+        } catch (IOException | XmlPullParserException e) {
+            LOGGER.error("Could not analyse current pom dependencies", e);
+            return 1;
+        }
+
+        LOGGER.info("Analysing code dependencies");
         try {
             new DependencyExtractor(appConfig.scanLocation, currentVersion).runAnalysis();
         } catch (IOException | MavenInvocationException e) {
