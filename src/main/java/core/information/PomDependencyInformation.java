@@ -9,6 +9,7 @@ import util.MapWithListeners;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Like {@link ProjectDependency}, but also stores remote version names for each version
@@ -125,5 +126,15 @@ public final class PomDependencyInformation implements Purgeable {
     @Override
     public void purgeIds() {
         id = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NotNull
+    @Override
+    public String toString() {
+        String vi = remoteVersionMap.entrySet().stream().map(e -> e.getKey().getName() + "->" + (e.getValue() == null ? "removed" : e.getValue().getName())).collect(Collectors.joining(","));
+        return "(" + from.getPath() + ")->[" + vi + "]->(" + to.getPath() + ")";
     }
 }

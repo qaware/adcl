@@ -101,7 +101,7 @@ public class VersionInformation implements Comparable<VersionInformation> {
     public boolean equals(Object o) {
         if (!(o instanceof VersionInformation)) return false;
         VersionInformation vi = (VersionInformation) o;
-        return name.equals(vi.name);
+        return name.equals(vi.name) && Objects.equals(project == null ? null : project.getName(), vi.project == null ? null : vi.project.getName());
     }
 
     /**
@@ -109,7 +109,7 @@ public class VersionInformation implements Comparable<VersionInformation> {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(name, project == null ? 0 : project.getName());
     }
 
     /**
