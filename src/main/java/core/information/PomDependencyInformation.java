@@ -28,10 +28,10 @@ public final class PomDependencyInformation implements Purgeable {
     private final Map<String, String> remoteVersionMapInternal = new HashMap<>();
 
     @Transient
-    private final Map<VersionInformation, @Nullable VersionInformation> remoteVersionMapBacking = new HashMap<>();
+    private final Map<VersionInformation, VersionInformation> remoteVersionMapBacking = new HashMap<>();
 
     @Transient
-    private final MapWithListeners<VersionInformation, @Nullable VersionInformation> remoteVersionMap = new MapWithListeners<>(remoteVersionMapBacking,
+    private final MapWithListeners<VersionInformation, VersionInformation> remoteVersionMap = new MapWithListeners<>(remoteVersionMapBacking,
             (k, v) -> remoteVersionMapInternal.put(k.getName(), v == null ? "null" : v.getName()),
             (k, v) -> remoteVersionMapInternal.remove(k.getName())
     );
