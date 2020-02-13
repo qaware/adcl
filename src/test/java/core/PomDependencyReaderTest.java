@@ -2,11 +2,11 @@ package core;
 
 
 public class PomDependencyReaderTest {
-    /*private static PomDependencyReader reader;
+    /*private static PomDependencyExtractor reader;
 
     @BeforeAll
     static void setup() {
-        reader = new PomDependencyReader(Paths.get("src", "test", "resources", "pom", "pom.xml"));
+        reader = new PomDependencyExtractor(Paths.get("src", "test", "resources", "pom", "pom.xml"));
     }
 
     @Test

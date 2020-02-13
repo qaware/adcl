@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import util.Utils;
 import util.log.CapturedOutputLogInspector;
 import util.log.LogInspector;
 
@@ -159,7 +160,7 @@ public class ConfigTest {
             assertThat(Config.get("f", null)).isEqualTo("=\"");
             assertThat(Config.get("g", null)).isEqualTo("\"");
         } finally {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
         }
     }
 
@@ -187,7 +188,7 @@ public class ConfigTest {
             assertThat(Config.get("f", null)).isEqualTo("=\"");
             assertThat(Config.get("g", null)).isEqualTo("\"");
         } finally {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
         }
     }
 
@@ -197,7 +198,7 @@ public class ConfigTest {
         Path path = Paths.get("config.properties");
 
         try {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
             Config.load("configPath=config.properties");
             assertThat(log.getNewErr()).contains("configPath points to a non-existent file");
             Config.load("configPath=\0");
@@ -208,7 +209,7 @@ public class ConfigTest {
             Config.load("configPath=config.properties");
             assertThat(log.getNewErr()).contains("configPath points to a directory");
         } finally {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
         }
     }
 

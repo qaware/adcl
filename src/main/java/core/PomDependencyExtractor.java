@@ -4,17 +4,14 @@ import core.information.Information;
 import core.information.ProjectInformation;
 import core.information.VersionInformation;
 import core.pm.ProjectManager;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
+public class PomDependencyExtractor {
+    private PomDependencyExtractor() {
 
-/**
- * Reads all dependencies from the pom.xml
- */
-public class PomDependencyReader { //TODO delete class
+    }
 
-    public void updatePomDependencies(ProjectManager projectManager, @NotNull VersionInformation currentVersion) throws IOException, XmlPullParserException {
+    public static void updatePomDependencies(@NotNull ProjectManager projectManager, @NotNull VersionInformation currentVersion) {
         ProjectInformation project = currentVersion.getProject();
         project.getPomDependenciesRaw().forEach(d -> d.setVersionAt(currentVersion, null));
         projectManager.getDependencies().forEach(d -> {

@@ -5,7 +5,6 @@ import core.depex.DependencyExtractor;
 import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.ogm.config.Configuration;
@@ -97,12 +96,7 @@ public class Application {
 
         if (appConfig.projectManager != null) {
             LOGGER.info("Analysing pom dependencies");
-            try {
-                new PomDependencyReader().updatePomDependencies(appConfig.projectManager, currentVersion);
-            } catch (IOException | XmlPullParserException e) {
-                LOGGER.error("Could not analyse current pom dependencies", e);
-                return 1;
-            }
+            PomDependencyExtractor.updatePomDependencies(appConfig.projectManager, currentVersion);
         }
 
         LOGGER.info("Analysing code dependencies");

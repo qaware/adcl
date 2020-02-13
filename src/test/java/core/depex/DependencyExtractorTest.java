@@ -74,16 +74,18 @@ class DependencyExtractorTest {
                 project("null", false, "<unknown>",
                         ce = cir("ExternalClass", false,
                                 ceEm = mi("extMethod()")
+                        ),
+                        pir("org",
+                                pis("springframework",
+                                        pis("stereotype", service = cio("Service", false)),
+                                        pis("context", ex = cio("NoSuchMessageException", false))
+                                ),
+                                pis("jetbrains", pis("annotations",
+                                        jnn = cio("NotNull", false),
+                                        jn = cio("Nullable", false)
+                                ))
                         )
-                ),
-                project("spring-context", false, "<unknown>", pir("org", pis("springframework",
-                        pis("stereotype", service = cio("Service", false)),
-                        pis("context", ex = cio("NoSuchMessageException", false))
-                ))),
-                project("annotations", false, "<unknown>", pir("org", pis("jetbrains", pis("annotations",
-                        jnn = cio("NotNull", false),
-                        jn = cio("Nullable", false)
-                ))))
+                )
         );
 
         p(ca, cabase, jn, jnn, cmya);

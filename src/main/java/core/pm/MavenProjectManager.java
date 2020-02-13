@@ -34,7 +34,7 @@ public class MavenProjectManager implements ProjectManager {
     public MavenProjectManager(@NotNull Path pomFile) throws MavenInvocationException {
         this.pomFile = pomFile;
         String[] vars = getVars("project.groupId", "project.artifactId", "project.version", "project.build.outputDirectory");
-        projectName = vars[0] + ':' + vars[1];
+        projectName = vars[0].replace('.', '-') + ':' + vars[1];
         projectVersion = vars[2];
         classesOutput = Paths.get(vars[3]);
         dependencies = getDependencies0();

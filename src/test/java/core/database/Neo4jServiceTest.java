@@ -21,12 +21,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.FileSystemUtils;
 import util.DataGenerationUtil;
+import util.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,9 +65,9 @@ public class Neo4jServiceTest {
     @AfterAll
     static void cleanup() throws IOException {
         if (dbService != null) dbService.shutdown();
-        FileSystemUtils.deleteRecursively(new File("neo4j"));
-        FileSystemUtils.deleteRecursively(new File("certificates"));
-        Files.deleteIfExists(Paths.get("store_lock"));
+        Utils.delete(Paths.get("neo4j"));
+        Utils.delete(Paths.get("certificates"));
+        Utils.delete(Paths.get("store_lock"));
     }
 
     @BeforeEach
