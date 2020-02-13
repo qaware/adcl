@@ -1,21 +1,8 @@
 package core;
 
 
-import org.apache.maven.model.Dependency;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class PomDependencyReaderTest {
-    private static PomDependencyReader reader;
+    /*private static PomDependencyReader reader;
 
     @BeforeAll
     static void setup() {
@@ -51,5 +38,5 @@ public class PomDependencyReaderTest {
         dependency.setVersion(version);
         dependency.setType("jar");
         return dependency;
-    }
+    }*///TODO re-implement
 }

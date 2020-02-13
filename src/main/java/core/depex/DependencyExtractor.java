@@ -1,7 +1,7 @@
 package core.depex;
 
 import core.information.VersionInformation;
-import org.apache.maven.shared.invoker.MavenInvocationException;
+import core.pm.ProjectManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
@@ -23,30 +23,29 @@ public class DependencyExtractor {
     @NotNull
     private final VersionInformation version;
     @Nullable
-    private final Path projectPom;
+    private final ProjectManager projectManager;
 
     /**
      * Instantiate a new Extractor. Does nothing except field init. Start analysis with {@link DependencyExtractor#runAnalysis()}
      *
-     * @param scanLocation the root directory where the class files are located.
-     * @param version      the version the to-be-analysed class files correspond to
-     * @param projectPom   the location of the project pom.xml
+     * @param scanLocation   the root directory where the class files are located.
+     * @param version        the version the to-be-analysed class files correspond to
+     * @param projectManager the location of the project pom.xml
      */
-    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version, @Nullable Path projectPom) {
+    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version, @Nullable ProjectManager projectManager) {
         this.scanLocation = scanLocation;
         this.version = version;
-        this.projectPom = projectPom;
+        this.projectManager = projectManager;
     }
 
     /**
      * Analyse classes given by scanLocation. Inserts the results into given project tree, but might also create new entries on root level
      *
-     * @throws IOException              if scanLocation is invalid or project pom exists but is invalid
-     * @throws MavenInvocationException if maven fails to read dependencies of project pom
+     * @throws IOException if scanLocation is invalid or project pom exists but is invalid
      */
-    public void runAnalysis() throws IOException, MavenInvocationException {
+    public void runAnalysis() throws IOException {
         LOGGER.info("Updating indices...");
-        version.getProject().updateIndices(scanLocation, projectPom);
+        version.getProject().updateIndices(scanLocation, projectManager);
         LOGGER.info("Updated");
         version.getProject().getDirectChildren(version).forEach(c -> c.setExists(version, false));
 

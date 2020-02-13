@@ -1,9 +1,8 @@
 package core.information;
 
 import core.IndexBuilder;
-import core.PomDependencyReader;
 import core.database.Purgeable;
-import org.apache.maven.shared.invoker.MavenInvocationException;
+import core.pm.ProjectManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.Properties;
@@ -144,13 +143,13 @@ public class ProjectInformation extends Information<RootInformation> {
         return externalIndices.getOrDefault(className, "null");
     }
 
-    public void updateIndices(Path projectOutput, Path projectPom) throws MavenInvocationException, IOException {
+    public void updateIndices(Path projectOutput, ProjectManager projectManager) throws IOException {
         externalIndices.clear();
         IndexBuilder.indexDirectory(projectOutput, getName(), externalIndices);
-        if (projectPom != null) {
-            new PomDependencyReader(projectPom).readAllCompilationRelevantDependencies().forEach(d -> {
+        if (projectManager != null) {
+            projectManager.getCompileDependencies().forEach((d, p) -> {
                 try {
-                    IndexBuilder.index(d, externalIndices);
+                    IndexBuilder.index(d, p, externalIndices);
                 } catch (IOException e) {
                     LOGGER.error("Could not index dependency {}", d, e);
                 }

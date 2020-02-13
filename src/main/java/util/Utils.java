@@ -158,21 +158,4 @@ public class Utils {
                         .setBuilder(cliArgs));
         return Pair.of(mvnResult.getExitCode(), sw.toString());
     }
-
-    /**
-     * @param pom a maven pom.xml
-     * @param var the variable to evaluate
-     * @return the resolved value in pom
-     */
-    @Nullable
-    public static String getMavenVar(@NotNull Path pom, String var) {
-        try {
-            Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", var), Pair.of("forceStdout", "true"));
-            if (result.getKey() != 0) return null;
-            String val = result.getValue();
-            return val.substring(0, val.length() - 2);
-        } catch (MavenInvocationException e) {
-            return null;
-        }
-    }
 }

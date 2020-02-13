@@ -5,7 +5,6 @@ import core.depex.DependencyExtractor;
 import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
@@ -96,10 +95,10 @@ public class Application {
             currentVersion = project.addVersion(appConfig.currentVersionName);
         }
 
-        if (appConfig.projectPom != null) {
+        if (appConfig.projectManager != null) {
             LOGGER.info("Analysing pom dependencies");
             try {
-                new PomDependencyReader(appConfig.projectPom).updatePomDependencies(currentVersion);
+                new PomDependencyReader().updatePomDependencies(appConfig.projectManager, currentVersion);
             } catch (IOException | XmlPullParserException e) {
                 LOGGER.error("Could not analyse current pom dependencies", e);
                 return 1;
@@ -108,8 +107,8 @@ public class Application {
 
         LOGGER.info("Analysing code dependencies");
         try {
-            new DependencyExtractor(appConfig.scanLocation, currentVersion, appConfig.projectPom).runAnalysis();
-        } catch (IOException | MavenInvocationException e) {
+            new DependencyExtractor(appConfig.scanLocation, currentVersion, appConfig.projectManager).runAnalysis();
+        } catch (IOException e) {
             LOGGER.error("Could not analyse current class structure", e);
             return 1;
         }
