@@ -184,7 +184,7 @@ public class ProjectInformation extends Information<RootInformation> {
     }
 
     @Override
-    public Stream<?> getOutgoingRelations() {
+    public Stream<Purgeable> getOutgoingRelations() {
         return Stream.concat(super.getOutgoingRelations(), pomDependencies.stream());
     }
 }
