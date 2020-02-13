@@ -26,14 +26,14 @@ public interface ProjectManager {
      * @return all direct (non-transitive) dependencies defined by project configuration
      */
     @NotNull
-    Set<@NotNull Dependency> getDependencies();
+    Set<Dependency> getDependencies();
 
     /**
      * @return all (including transitive) compile-time dependencies of the project. These are dependencies which classes can be referred to in the project's code.
      * Additionally this method has to provide a path to an existing jar of that dependency as value (downloading from remote repository if needed)
      */
     @NotNull
-    Map<@NotNull Dependency, @NotNull Path> getCompileDependencies();
+    Map<Dependency, Path> getCompileDependencies();
 
     /**
      * @return the folder location of the output classes

@@ -73,7 +73,7 @@ public class ProjectInformation extends Information<RootInformation> {
      * @return the pom dependencies at given version
      */
     @NotNull
-    public final Set<@NotNull VersionInformation> getPomDependencies(@NotNull VersionInformation at) {
+    public final Set<VersionInformation> getPomDependencies(@NotNull VersionInformation at) {
         return pomDependencies.stream().map(d -> d.getVersionAt(at)).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 

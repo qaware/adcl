@@ -75,7 +75,7 @@ public class MavenProjectManager implements ProjectManager {
      * {@inheritDoc}
      */
     @Override
-    public @NotNull Set<@NotNull Dependency> getDependencies() {
+    public @NotNull Set<Dependency> getDependencies() {
         return dependencies;
     }
 
@@ -83,7 +83,7 @@ public class MavenProjectManager implements ProjectManager {
      * {@inheritDoc}
      */
     @Override
-    public @NotNull Map<@NotNull Dependency, @NotNull Path> getCompileDependencies() {
+    public @NotNull Map<Dependency, Path> getCompileDependencies() {
         return compileDependencies;
     }
 
