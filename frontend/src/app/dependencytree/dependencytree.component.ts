@@ -361,6 +361,8 @@ export class DependencyTreeDatabase {
    *
    * @param obj TreeData which will be displayed as a Graph
    * @param displayOption
+   *
+   * @return a Promise that builds the graph
    */
   async buildGraphView(obj: any[], displayOption: DisplayOption): Promise<Network> {
     const idG = new IdGenerator();
@@ -384,24 +386,26 @@ export class DependencyTreeDatabase {
         shape: 'box'
       }
     };
-    return new Promise((resolve, reject) => {
+    return new Promise<Network>((resolve) => {
       const net = new Network(container, resultData, options);
       net.on("afterDrawing", () => {
         document.body.style.cursor = "default";
       });
-      return net;
+      resolve(net);
     });
   }
 
   /**
    * Process a string to a collection of GraphItems
    *
-   * @param nodeString sting from which every node is generated
-   * @param type
+   * @param nodeString string from which every node is generated
+   * @param type what type of node it is
    * @param idG IDGenerator which provides ids for the nodes
    * @param nodeMap map in which every generated node is saved
-   * @param tooltip
-   * @param depLabel
+   * @param tooltip tooltip to be shown when hovering over the node
+   * @param depLabel name that should be shown when a dependency node shall be created
+   *
+   * @return returns the last node that has been created e.g. for java.lang.init() the node for init() is returned
    */
   generateNodesFromString(nodeString: string, type: FilterType, idG: IdGenerator, nodeMap: Map<string, GraphItem>, tooltip: string, depLabel?: string) {
     let codeSet = [];
@@ -465,6 +469,8 @@ export class DependencyTreeDatabase {
    * Process GraphItems into a vis.js format
    *
    * @param nodeMap a Map which contains every node that should be displayed
+   *
+   * @return Data which vis.js can display (DataSet format)
    */
   generateGraphData(nodeMap: Map<string, GraphItem>) {
     const edgeSet = [];
@@ -490,6 +496,13 @@ export class DependencyTreeDatabase {
     return {edges: edgeSet, nodes: nodeSet};
   }
 
+  /**
+   * Gets the corresponding color to a node type
+   *
+   * @param type node type
+   *
+   * @return Color to be displayed
+   */
   colorForType(type: FilterType) {
     switch (type) {
       case FilterType.Package:
@@ -735,18 +748,16 @@ export class DependencytreeComponent implements OnInit {
   }
 
   /**
-   * Function for toggling the Graph View on and out
+   * Function for generating the Graph View
    *
    * @param displayOption not implemented
-   * @param on signals if graph should be displayed
    */
-  async toggleGraphView(displayOption: DisplayOption) {
-    console.log(this.graph);
-    if (this.graph === undefined) {
+  async generateGraphView(displayOption: DisplayOption) {
+    if (this.graph === undefined || this.graph === null) {
       document.body.style.cursor = "wait";
-      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption);
-      console.log("changed");
-
+      this.database.buildGraphView(this.database.treeData, displayOption).then(value => {
+        this.graph = value;
+      });
     }
   }
 

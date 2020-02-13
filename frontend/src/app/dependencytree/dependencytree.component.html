@@ -13,7 +13,7 @@
       <mat-form-field class="sideItem">
         <mat-label>Changelog</mat-label>
         <mat-select [(value)]="projectVersion"
-                    (selectionChange)="changeDependencyTree($event.value)">
+                    (selectionChange)="changeDependencyTree($event.value); this.graph = null;">
           <mat-option *ngFor="let id of database.changelogIds" [value]="id">{{id}}</mat-option>
         </mat-select>
       </mat-form-field>
@@ -43,7 +43,7 @@
       <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
     </mat-menu>
 
-    <mat-tab-group (selectedTabChange)="$event.tab.textLabel==='GraphView'?toggleGraphView(DisplayOption.Graph):''">
+    <mat-tab-group (selectedTabChange)="$event.tab.textLabel==='GraphView'?generateGraphView(DisplayOption.Graph):''">
       <mat-tab label="ListView">
         <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
           <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
