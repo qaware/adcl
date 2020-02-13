@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Implementation of {@link ProjectManager} for Maven
+ */
 public class MavenProjectManager implements ProjectManager {
     @NotNull
     private final Path pomFile;
@@ -41,29 +44,44 @@ public class MavenProjectManager implements ProjectManager {
         compileDependencies = getCompileDependencies0();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public String getProjectName() {
         return projectName;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public String getProjectVersion() {
         return projectVersion;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NotNull
     @Override
     public Path getClassesOutput() {
         return classesOutput;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull Set<@NotNull Dependency> getDependencies() {
         return dependencies;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @NotNull Map<@NotNull Dependency, @NotNull Path> getCompileDependencies() {
         return compileDependencies;

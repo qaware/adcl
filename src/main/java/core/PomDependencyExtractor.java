@@ -11,6 +11,12 @@ public class PomDependencyExtractor {
 
     }
 
+    /**
+     * Integrates the dependencies listed by the projectManager into the Project at given version
+     *
+     * @param projectManager the ProjectManager whose dependencies to read from
+     * @param currentVersion the project and version to add the dependencies to
+     */
     public static void updatePomDependencies(@NotNull ProjectManager projectManager, @NotNull VersionInformation currentVersion) {
         ProjectInformation project = currentVersion.getProject();
         project.getPomDependenciesRaw().forEach(d -> d.setVersionAt(currentVersion, null));

@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+/**
+ * Represents a classpath dependency of one project to another as defined in a project configuration file
+ */
 public class Dependency {
     @NotNull
     private final String name;

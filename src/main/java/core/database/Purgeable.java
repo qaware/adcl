@@ -1,5 +1,9 @@
 package core.database;
 
+/**
+ * This interface is for OGM entities to be able to reset their {@link org.neo4j.ogm.annotation.Id} field
+ * This is a temporary solution and has connection to B1.0.14
+ */
 public interface Purgeable {
     /**
      * For use by {@link Neo4jService only}

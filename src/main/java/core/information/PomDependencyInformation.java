@@ -50,7 +50,7 @@ public final class PomDependencyInformation implements Purgeable {
     }
 
     /**
-     * Creates a new pom dependency.
+     * Creates a new pom dependency. This dependency has to be added to a project
      *
      * @param from the node which has the dependency
      * @param to   the dependency
@@ -62,11 +62,19 @@ public final class PomDependencyInformation implements Purgeable {
         this.to = to.getProject();
     }
 
+    /**
+     * @return the edge start
+     * @see PomDependencyInformation#getTo()
+     */
     @NotNull
     public ProjectInformation getFrom() {
         return from;
     }
 
+    /**
+     * @return the edge end
+     * @see PomDependencyInformation#getFrom()
+     */
     @NotNull
     public ProjectInformation getTo() {
         return to;
@@ -80,6 +88,13 @@ public final class PomDependencyInformation implements Purgeable {
         remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, from.getProject()), r.equals("null") ? null : new VersionInformation(r, to.getProject())));
     }
 
+    /**
+     * ensured that at a given version the dependency points to parameter 'aim', setting a marker if needed
+     *
+     * @param version the version to potentially set the aim if needed
+     * @param aim     the aimed remote version
+     * @see RelationshipInformation#setExists(VersionInformation, boolean) same logic
+     */
     public void setVersionAt(@NotNull VersionInformation version, @Nullable VersionInformation aim) {
         if (!Objects.equals(getVersionAt(version), aim)) remoteVersionMap.put(version, aim);
     }
