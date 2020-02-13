@@ -677,8 +677,11 @@ public abstract class Information<P extends Information<?>> implements Comparabl
         if (parent != null) parent.purgeIds();
     }
 
-    public Stream<?> getOutgoingRelations() {
-        Stream<RelationshipInformation<?>> result = Utils.concatStreams(projectDependencies.stream(), packageDependencies.stream(), classDependencies.stream(), methodDependencies.stream());
+    /**
+     * @return all edges that start from this object
+     */
+    public Stream<Purgeable> getOutgoingRelations() {
+        Stream<Purgeable> result = Utils.concatStreams(projectDependencies.stream(), packageDependencies.stream(), classDependencies.stream(), methodDependencies.stream());
         if (parent != null) result = Stream.concat(Stream.of(parent), result);
         return result;
     }

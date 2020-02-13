@@ -33,7 +33,7 @@ public class ApplicationConfig {
     @NotNull
     public final Configuration neo4jConfig = getNeo4jConfig();
     /**
-     * The location of the project's pom.xml, existence ensured, else null
+     * The selected project manager or null if none selected or none available
      */
     @Nullable
     public final ProjectManager projectManager = getProjectManager();
