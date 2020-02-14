@@ -1,21 +1,21 @@
 package util;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -124,5 +124,52 @@ public class Utils {
         Stream<T> result = Stream.empty();
         for (Stream<? extends T> stream : streams) result = Stream.concat(result, stream);
         return result;
+    }
+
+    /**
+     * Executes a call to maven
+     *
+     * @param pomPath          the path to the maven project pom you want to work with
+     * @param interactiveInput the input for interactive mode or null for batch mode
+     * @param cliArgs          additional arguments appended to the shell command
+     * @param goals            the goals to activate, separated by spaces
+     * @param options          key-value pairs as passed options
+     * @return the maven console output
+     * @throws MavenInvocationException if the maven call itself fails itself or maven is not found
+     */
+    @NotNull
+    @SafeVarargs
+    public static Pair<Integer, String> callMaven(@NotNull Path pomPath, @Nullable String interactiveInput, @Nullable String cliArgs, @NotNull String goals, @NotNull Pair<String, String>... options) throws MavenInvocationException {
+        Properties properties = new Properties();
+        for (Pair<String, String> option : options) properties.setProperty(option.getKey(), option.getValue());
+
+        Path mvnPath = Utils.searchInPath("mvn");
+        StringWriter sw = new StringWriter();
+
+        InvocationResult mvnResult = new DefaultInvoker()
+                .setMavenHome(mvnPath == null ? null : mvnPath.getParent().getParent().toFile())
+                .setOutputHandler(new PrintWriter(sw)::println)
+                .execute(new DefaultInvocationRequest()
+                        .setPomFile(pomPath.toFile())
+                        .setGoals(Arrays.asList(goals.split(" ")))
+                        .setBatchMode(interactiveInput == null)
+                        .setInputStream(interactiveInput == null ? null : new ByteArrayInputStream(interactiveInput.getBytes()))
+                        .setProperties(properties)
+                        .setBuilder(cliArgs));
+        return Pair.of(mvnResult.getExitCode(), sw.toString());
+    }
+
+    /**
+     * @param pom a maven pom.xml
+     * @return the resolved version specified in pom
+     */
+    @Nullable
+    public static String getVersion(Path pom) {
+        try {
+            Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", "project.version"), Pair.of("forceStdout", "true"));
+            return result.getKey() != 0 ? null : result.getValue();
+        } catch (MavenInvocationException e) {
+            return null;
+        }
     }
 }
