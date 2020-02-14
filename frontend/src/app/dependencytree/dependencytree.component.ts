@@ -6,6 +6,7 @@ import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
 import {Network} from 'vis-network';
+import {MatSnackBar, MatSnackBarConfig, MatSnackBarRef, SimpleSnackBar} from "@angular/material/snack-bar";
 
 /**
  * Base Node for Tree item nodes
@@ -503,7 +504,7 @@ export class DependencyTreeDatabase {
    *
    * @return Color to be displayed
    */
-  colorForType(type: FilterType) {
+  colorForType(type: FilterType): string {
     switch (type) {
       case FilterType.Package:
         return "#57c7e3";
@@ -602,8 +603,10 @@ export class DependencytreeComponent implements OnInit {
   filterText = '';
   private db: DependencyTreeDatabase;
   graph: Network;
+  graphVisible = false;
+  graphWarning: MatSnackBarRef<SimpleSnackBar>;
 
-  constructor(private database: DependencyTreeDatabase, private cookieService: CookieService) {
+  constructor(public snackbar: MatSnackBar, private database: DependencyTreeDatabase, private cookieService: CookieService) {
 
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
       this.isExpandable, this.getChildren);
@@ -755,11 +758,23 @@ export class DependencytreeComponent implements OnInit {
   async generateGraphView(displayOption: DisplayOption) {
     if (this.graph === undefined || this.graph === null) {
       document.body.style.cursor = "wait";
-      this.database.buildGraphView(this.database.treeData, displayOption).then(value => {
-        this.graph = value;
-      });
+      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption);
     }
+
+    const options = new MatSnackBarConfig();
+    options.horizontalPosition = "end";
+    this.graph.once("click", () => {
+      this.graphWarning = this.snackbar.open("to end the focus on the graph press ESC or click into the menu pane", undefined, options)
+    });
+    this.graphVisible = true;
   }
 
+  /**
+   * Delete Snackbar and Legend when changing to ListView
+   */
+  changeToList() {
+    this.graphVisible = false;
+    this.graphWarning.dismiss();
+  }
 }
 

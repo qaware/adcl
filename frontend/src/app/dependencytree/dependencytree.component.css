@@ -30,6 +30,12 @@
   margin-left: 2px;
 }
 
+.colorBox {
+  height: 20px;
+  width: 20px;
+  margin-right: 5px;
+}
+
 #dataview {
   height: 90vmax;
 }

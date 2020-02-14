@@ -29,6 +29,24 @@
       </mat-form-field>
     </p>
     <button mat-raised-button class="sideItem" (click)="reset()">RESET</button>
+
+    <mat-list *ngIf="this.graphVisible;">
+      <mat-list-item>
+        <div style="background-color: #57c7e3" class="colorBox"></div>
+        <p>Package</p></mat-list-item>
+      <mat-list-item>
+        <div style="background-color: #f16667" class="colorBox"></div>
+        Class
+      </mat-list-item>
+      <mat-list-item>
+        <div style="background-color: #d9c8ae" class="colorBox"></div>
+        Method
+      </mat-list-item>
+      <mat-list-item>
+        <div style="background-color: #6dcf9e" class="colorBox"></div>
+        Dependency
+      </mat-list-item>
+    </mat-list>
   </mat-sidenav>
   <mat-sidenav-content>
     <mat-form-field class="search">
@@ -43,7 +61,8 @@
       <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
     </mat-menu>
 
-    <mat-tab-group (selectedTabChange)="$event.tab.textLabel==='GraphView'?generateGraphView(DisplayOption.Graph):''">
+    <mat-tab-group
+      (selectedTabChange)="$event.tab.textLabel==='GraphView'?generateGraphView(DisplayOption.Graph):changeToList()">
       <mat-tab label="ListView">
         <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
           <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
