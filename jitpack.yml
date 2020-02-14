@@ -1,0 +1,6 @@
+jdk:
+  - openjdk8
+before_install:
+  - mvn versions:set -DnewVersion=${VERSION:-build${TRAVIS_BUILD_NUMBER:-xxx}} -DgenerateBackupPoms=false
+install:
+  - mvn install -DskipTests
