@@ -30,16 +30,19 @@ public class MavenProjectManager implements ProjectManager {
     @NotNull
     private final Path classesOutput;
     @NotNull
+    private final Path artifactOutput;
+    @NotNull
     private final Map<Dependency, Path> compileDependencies;
     @NotNull
     private final Set<Dependency> dependencies;
 
     public MavenProjectManager(@NotNull Path pomFile) throws MavenInvocationException {
         this.pomFile = pomFile;
-        String[] vars = getVars("project.groupId", "project.artifactId", "project.version", "project.build.outputDirectory");
+        String[] vars = getVars("project.groupId", "project.artifactId", "project.version", "project.build.outputDirectory", "project.build.directory");
         projectName = vars[0].replace('.', '-') + ':' + vars[1];
         projectVersion = vars[2];
         classesOutput = Paths.get(vars[3]);
+        artifactOutput = Paths.get(vars[4]);
         dependencies = getDependencies0();
         compileDependencies = getCompileDependencies0();
     }
@@ -69,6 +72,14 @@ public class MavenProjectManager implements ProjectManager {
     @Override
     public Path getClassesOutput() {
         return classesOutput;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public @NotNull Path getArtifactOutput() {
+        return artifactOutput;
     }
 
     /**
@@ -141,6 +152,13 @@ public class MavenProjectManager implements ProjectManager {
     private String[] getVars(@NotNull String... vars) throws MavenInvocationException {
         String input = Stream.of(vars).map(var -> String.format("${%s}", var)).collect(Collectors.joining("\uFEFF", "", "\n0\n"));
         String output = callMaven(input, "-q", "help:evaluate", Pair.of("forceStdout", "true"));
-        return output.substring(0, output.length() - 2).split("\uFEFF");
+        return trimEndingNewline(output).split("\uFEFF");
+    }
+
+    @NotNull
+    private String trimEndingNewline(@NotNull String s) {
+        if (s.endsWith("\r\n")) return s.substring(0, s.length() - 2);
+        if (s.endsWith("\n")) return s.substring(0, s.length() - 1);
+        return s;
     }
 }

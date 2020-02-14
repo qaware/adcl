@@ -66,7 +66,8 @@ public class ApplicationTest {
     }
 
     @BeforeAll
-    static void setUpDatabase() {
+    static void setUpDatabase() throws IOException {
+        cleanup();
         try {
             BoltConnector bolt = new BoltConnector("0");
             dbService = new GraphDatabaseFactory()

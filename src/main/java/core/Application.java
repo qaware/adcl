@@ -1,10 +1,13 @@
 package core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import core.database.Neo4jService;
 import core.depex.DependencyExtractor;
 import core.information.ProjectInformation;
 import core.information.RootInformation;
 import core.information.VersionInformation;
+import core.report.DiffExtractor;
+import core.report.HTMLReporter;
 import org.neo4j.driver.exceptions.AuthenticationException;
 import org.neo4j.driver.exceptions.ServiceUnavailableException;
 import org.neo4j.ogm.config.Configuration;
@@ -107,8 +110,17 @@ public class Application {
             return 1;
         }
 
-        LOGGER.info("Saving collected data");
-        neo4jService.saveRoot();
+        try {
+            VersionInformation previousVersion = appConfig.previousVersionName == null ? currentVersion.previous() : project.getOrCreateVersion(appConfig.previousVersionName);
+            HTMLReporter.generate(new DiffExtractor(previousVersion, currentVersion).generateJson(), appConfig.reportPath);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Could not generate static report", e);
+        }
+
+        if (!appConfig.localOnly) {
+            LOGGER.info("Saving collected data");
+            neo4jService.saveRoot();
+        }
 
         ctx.close();
         return 0;

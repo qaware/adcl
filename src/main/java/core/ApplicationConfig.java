@@ -57,11 +57,36 @@ public class ApplicationConfig {
     @NotNull
     public final String currentVersionName = getCurrentVersionName();
 
+    /**
+     * Whether to create only a diff artifact for local use
+     */
+    public final boolean localOnly = Config.get("local", false);
+
+    /**
+     * Where to place the static report. Existing directory ensured
+     */
+    public final Path reportPath = getReportPath();
+
     @SuppressWarnings("java:S1130" /* wrong, ConfigurationException can be thrown in field initialization */)
     ApplicationConfig() throws ConfigurationException {
     }
 
     // GETTERS ONLY
+
+    private Path getReportPath() throws ConfigurationException {
+        Path result = Config.getPath("report.path", null);
+        if (result == null) {
+            String raw = Config.get("report.path", null);
+            if (raw == null) {
+                result = projectManager == null ? Paths.get(".") : projectManager.getArtifactOutput();
+            } else {
+                throw new ConfigurationException("report.path not valid. Is: {}", raw);
+            }
+        } else if (!Files.isDirectory(result)) {
+            throw new ConfigurationException("report.path does not point to a directory. Is: {}", result);
+        }
+        return result;
+    }
 
     @NotNull
     private static String readPackageOfClass(Path classPath) throws IOException {

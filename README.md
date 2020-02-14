@@ -69,6 +69,7 @@ Download the fat jar from the releases page. You need to specify more startup op
 | project.commit.current     | the version name of the current data set that should be analysed | the version specified in your pom                                  |          | X                  |          |
 | configPath                 | a path to a .properties file to load further options from        | ./config.properties                                                |          |                    | X        |
 | nomaven                    | disable maven pom analysis even if a pom is found                | false                                                              |          |                    | X        |
+| local                      | only generate a changelog artifact, don't create a new version   | false                                                              |          |                    | X        |
 ### Configuration methods
 **Note**: Configuration methods shown below are ordered in priority
 #### (Maven) pom.xml

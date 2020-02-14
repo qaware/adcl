@@ -194,7 +194,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final Set<ProjectInformation> getAllProjectDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
         return Stream.concat(
                 getAllProjectDependencies(at, includeInternal).stream(),
-                getAllPackageDependencies(at, includeInternal).stream().map(mi -> mi.getParent(ProjectInformation.class))
+                getAllPackageDependenciesAggregated(at, includeInternal).stream().map(mi -> mi.getParent(ProjectInformation.class))
         ).distinct().filter(Objects::nonNull).collect(Collectors.toSet());
     }
 

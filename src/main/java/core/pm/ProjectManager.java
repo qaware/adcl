@@ -40,4 +40,10 @@ public interface ProjectManager {
      */
     @NotNull
     Path getClassesOutput();
+
+    /**
+     * @return the folder location for artifacts to be placed
+     */
+    @NotNull
+    Path getArtifactOutput();
 }
