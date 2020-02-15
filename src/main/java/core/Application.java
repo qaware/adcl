@@ -93,7 +93,7 @@ public class Application {
         ProjectInformation project = (ProjectInformation) root.find(appConfig.projectName, null);
         if (project == null) {
             LOGGER.warn("Project {} not found. Creating new project", appConfig.projectName);
-            project = new ProjectInformation(root, appConfig.projectName, true, appConfig.currentVersionName);
+            project = new ProjectInformation(root, appConfig.projectName, true, "<unknown>");
         }
         VersionInformation currentVersion = project.getVersion(appConfig.currentVersionName);
         boolean runAnalysis = currentVersion == null;
