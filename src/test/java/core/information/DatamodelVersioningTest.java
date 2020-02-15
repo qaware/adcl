@@ -1,7 +1,13 @@
 package core.information;
 
+import core.depex.DependencyExtractor;
+import core.report.DiffExtractor;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
@@ -74,6 +80,38 @@ public class DatamodelVersioningTest {
         assertThat(v1.next()).isEqualTo(v2);
         assertThat(v2.previous()).isEqualTo(v1);
         assertThat(v2.next()).isNull();
+    }
+
+    @Test
+    void test() throws IOException {
+        RootInformation root = new RootInformation();
+        ProjectInformation project = new ProjectInformation(root, "proj", true, "<unknown>");
+        VersionInformation v1 = runDepEx(project, "testproject", "0.0.1");
+        VersionInformation v2 = runDepEx(project, "testproject2", "0.0.2");
+        VersionInformation v3 = runDepEx(project, "testproject3", "0.0.3");
+
+        assertThat(new DiffExtractor(v1, v2).generateChangelist(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
+                "proj.packageB.ClassB->null.org.springframework.stereotype.Service",
+                "proj.packageA.MyAnnotation.notNullRef()->null.org.jetbrains.annotations.NotNull",
+                "proj.packageA.ClassA->proj.packageA.MyAnnotation",
+                "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->proj.packageA.ClassA.$$$reportNull$$$0(int)",
+                "proj.packageA.ClassA->null.org.jetbrains.annotations.Nullable",
+                "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->null.org.springframework.context.NoSuchMessageException",
+                "proj.packageA.ClassA->null.org.jetbrains.annotations.NotNull",
+                "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->null.org.jetbrains.annotations.NotNull",
+                "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->proj.packageA.ClassA.methodA()"
+        );
+
+        assertThat(new DiffExtractor(v2, v3).generateChangelist(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
+                "proj.packageA.ClassA.newMethod()+>proj.packageA.ClassABase"
+        );
+    }
+
+    @NotNull
+    private VersionInformation runDepEx(@NotNull ProjectInformation project, String folderName, String versionName) throws IOException {
+        VersionInformation result = project.addVersion(versionName);
+        new DependencyExtractor(Paths.get("src", "test", "resources", "testclassfiles2", folderName, "target", "classes"), result, null).runAnalysis();
+        return result;
     }
 
     //TODO all (@1.0.17)

@@ -153,7 +153,7 @@ public class Application {
         LOGGER.info("Generating static report artifact");
         try {
             VersionInformation previousVersion = appConfig.previousVersionName == null ? currentVersion.previous() : currentVersion.getProject().getOrCreateVersion(appConfig.previousVersionName);
-            HTMLReporter.generate(new DiffExtractor(previousVersion, currentVersion).generateJson(), appConfig.reportPath);
+            HTMLReporter.generate(new DiffExtractor(previousVersion, currentVersion).generateJson(true, true), appConfig.reportPath);
             LOGGER.info("Generated static report artifact");
         } catch (JsonProcessingException e) {
             LOGGER.error("Could not generate static report", e);

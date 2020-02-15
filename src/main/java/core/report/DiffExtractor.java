@@ -28,19 +28,22 @@ public class DiffExtractor {
     }
 
     @NotNull
-    private Stream<DependencyEntry> generateDependencySet(VersionInformation at, @NotNull Information<?> info) {
+    private Stream<DependencyEntry> generateDependencySet(VersionInformation at, @NotNull Information<?> info, boolean aggregateDepStart, boolean aggregateDepEnd) {
         Set<Information<?>> deps = Utils.concatStreams(
                 info.getMethodDependencies(at).stream(),
                 info.getClassDependencies(at).stream(),
                 info.getPackageDependencies(at).stream(),
                 info.getProjectDependencies(at).stream()
         ).collect(Collectors.toSet());
-        return Utils.concatStreams(
-                Utils.concatStreams(
-                        deps.stream().map(i -> new DependencyEntry(false, info, i)), // original dependencies
-                        deps.stream().flatMap(this::allParents).map(i -> new DependencyEntry(true, info, i)), // aggregated end notes
-                        info.getDirectChildren(at).stream().flatMap(i -> generateDependencySet(at, i)).flatMap(e -> Stream.of(e, new DependencyEntry(info, e))) // children plus children with aggregated start nodes
-                ));
+
+        Stream<DependencyEntry> ownEntries = deps.stream().map(i -> new DependencyEntry(false, info, i)); // original dependencies
+        if (aggregateDepEnd)
+            ownEntries = Stream.concat(ownEntries, deps.stream().flatMap(this::allParents).map(i -> new DependencyEntry(true, info, i))); // aggregated end notes
+        Stream<DependencyEntry> childEntries = info.getDirectChildren(at).stream().flatMap(i -> generateDependencySet(at, i, aggregateDepStart, aggregateDepEnd)); // children
+        if (aggregateDepStart)
+            childEntries = childEntries.flatMap(e -> Stream.of(e, new DependencyEntry(info, e))); // children with aggregated start nodes
+
+        return Stream.concat(ownEntries, childEntries);
     }
 
     private Stream<Information<?>> allParents(@NotNull Information<?> info) {
@@ -48,9 +51,9 @@ public class DiffExtractor {
     }
 
     @NotNull
-    private Set<DependencyEntry> generateChangelist() {
-        Set<DependencyEntry> before = from == null ? Collections.emptySet() : generateDependencySet(from, to.getProject()).collect(Collectors.toSet());
-        Set<DependencyEntry> after = generateDependencySet(to, to.getProject()).collect(Collectors.toSet());
+    public Set<DependencyEntry> generateChangelist(boolean aggregateDepStart, boolean aggregateDepEnd) {
+        Set<DependencyEntry> before = from == null ? Collections.emptySet() : generateDependencySet(from, to.getProject(), aggregateDepStart, aggregateDepEnd).collect(Collectors.toSet());
+        Set<DependencyEntry> after = generateDependencySet(to, to.getProject(), aggregateDepStart, aggregateDepEnd).collect(Collectors.toSet());
         Set<DependencyEntry> removed = new HashSet<>(before);
         removed.removeAll(after);
         Set<DependencyEntry> added = new HashSet<>(after);
@@ -60,35 +63,35 @@ public class DiffExtractor {
         return removed;
     }
 
-    public String generateJson() throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(generateChangelist());
+    public String generateJson(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
+        return new ObjectMapper().writeValueAsString(generateChangelist(aggregateDepStart, aggregateDepEnd));
     }
 
     public static class DependencyEntry {
         @JsonProperty("syntheticStart")
-        final boolean syntheticStart;
+        public final boolean syntheticStart;
         @JsonProperty("syntheticEnd")
-        final boolean syntheticEnd;
+        public final boolean syntheticEnd;
         @JsonProperty("usedByType")
         @NotNull
-        final Information.Type startType;
+        public final Information.Type startType;
         @JsonProperty("usedByPath")
         @NotNull
-        final String startPath;
+        public final String startPath;
         @JsonProperty("usedByName")
         @NotNull
-        final String startName;
+        public final String startName;
         @JsonProperty("dependencyType")
         @NotNull
-        final Information.Type endType;
+        public final Information.Type endType;
         @JsonProperty("dependencyPath")
         @NotNull
-        final String endPath;
+        public final String endPath;
         @JsonProperty("dependencyName")
         @NotNull
-        final String endName;
+        public final String endName;
         @JsonProperty("changeStatus")
-        boolean change;
+        public boolean change;
 
         private DependencyEntry(boolean syntheticEnd, @NotNull Information<?> from, @NotNull Information<?> to) {
             this.syntheticStart = false;
@@ -128,7 +131,7 @@ public class DiffExtractor {
 
         @Override
         public String toString() {
-            return startPath + "->" + endPath;
+            return startPath + (change ? '+' : '-') + '>' + endPath;
         }
     }
 }

@@ -1,7 +1,6 @@
 package core.depex;
 
 import core.information.*;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
 
 class DependencyExtractorTest {
-    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
+    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2", "testproject", "target", "classes");
 
     Ref<ProjectInformation, RootInformation> proj;
     Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
@@ -111,7 +110,7 @@ class DependencyExtractorTest {
     }
 
     @Test
-    void analyseClasses() throws IOException, MavenInvocationException {
+    void analyseClasses() throws IOException {
         RootInformation root = new RootInformation();
         ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
 
