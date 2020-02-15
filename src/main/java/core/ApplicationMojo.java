@@ -29,12 +29,7 @@ public class ApplicationMojo extends AbstractMojo {
             if (properties != null) {
                 properties.forEach((key, value) -> System.setProperty("adcl." + key.toString(), value.toString()));
             }
-            int exitCode;
-            try {
-                exitCode = Application.launch(new String[0]);
-            } catch (Exception e) {
-                exitCode = 1;
-            }
+            int exitCode = Application.launch(new String[0]);
             if (exitCode != 0) throw new MojoExecutionException("Application terminated with exit code " + exitCode);
         } finally {
             System.setProperties(propertiesBackup);

@@ -9,6 +9,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.kernel.configuration.BoltConnector;
 import org.neo4j.ogm.config.Configuration;
+import org.neo4j.ogm.session.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.neo4j.Neo4jProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest(classes = {Application.class, ApplicationTest.TestConfig.class})
 @ActiveProfiles("test")
@@ -32,6 +32,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 public class ApplicationTest {
     @Autowired
     Neo4jService neo4jService;
+    @Autowired
+    SessionFactory SF;
 
     private static GraphDatabaseService dbService;
 
@@ -44,13 +46,13 @@ public class ApplicationTest {
                 "project.commit.current=test",
                 "project.uri=src/test/resources/testclassfiles3/epro1"
         };
-        assertThatCode(() -> assertThat(Application.launch(args)).isZero()).doesNotThrowAnyException();
+        assertThat(Application.launch(args)).isZero();
 
         String[] args2 = Arrays.append(args, "project.commit.previous=test");
         args2[3] = "project.commit.current=test2";
         args2[4] = "project.uri=src/test/resources/testclassfiles3/epro2";
 
-        assertThatCode(() -> assertThat(Application.launch(args2)).isZero()).doesNotThrowAnyException();
+        assertThat(Application.launch(args2)).isZero();
 
         //TODO re-implement (@1.0.17)
         /*VersionInformation before = neo4jService.getVersion("test");
