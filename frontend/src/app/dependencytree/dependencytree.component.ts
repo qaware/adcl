@@ -5,6 +5,8 @@ import {BehaviorSubject, forkJoin} from 'rxjs';
 import {AngularNeo4jService} from 'angular-neo4j';
 import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
+import {Network} from 'vis-network';
+import {MatSnackBar, MatSnackBarConfig, MatSnackBarRef, SimpleSnackBar} from '@angular/material/snack-bar';
 
 /**
  * Base Node for Tree item nodes
@@ -30,19 +32,51 @@ export class TreeItemFlatNode extends BaseTreeItemNode {
   expandable: boolean;
 }
 
+/**
+ * Node for Graph
+ */
+class GraphItem {
+  id: number;
+  name: string;
+  code: string;
+  tooltip;
+  children: GraphItem[] = [];
+  addedDependency: GraphItem[] = [];
+  deletedDependency: GraphItem[] = [];
+  type: FilterType;
+  isDependency: boolean;
+
+  shouldBeDisplayed(): boolean {
+    if (this.addedDependency.length > 1 || this.deletedDependency.length > 1 || this.isDependency) {
+      return true;
+    }
+    return this.children.some(child => child.shouldBeDisplayed());
+  }
+}
+
+class IdGenerator {
+  lastId = 0;
+
+  getNextId() {
+    return this.lastId++;
+  }
+}
+
 /** Filter types */
 export enum FilterType {
   Package = 'p',
   Class = 'c',
   Method = 'm',
-  Dependency = 'd'
+  Dependency = 'd',
+  Undefined = 'u'
 }
 
 /** Display options */
 export enum DisplayOption {
   Standard = 'Normal',
   CompactMiddlePackages = 'Compact Middle Packages',
-  FlattenPackages = 'Flat Packages'
+  FlattenPackages = 'Flat Packages',
+  Graph = 'Graph'
 }
 
 const reverseDisplayOption = new Map<string, DisplayOption>();
@@ -128,7 +162,7 @@ export class DependencyTreeDatabase {
    * @param version the changelog identifier
    * @param projectName project name
    */
-   async loadChangelogFromDatabase(projectName: string, version: string) {
+  async loadChangelogFromDatabase(projectName: string, version: string) {
     const params = {pName: projectName.toString(), version: version.toString()};
 
     const packageInformation: any[] = [{text: '', code: this.root}];
@@ -137,7 +171,7 @@ export class DependencyTreeDatabase {
     const dependencyClass: any[] = [];
     const dependencyMethod: any[] = [];
 
-// Query fetching all nodes with contain changes
+    // Query fetching all nodes with contain changes
     const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
       'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
       'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
@@ -218,7 +252,7 @@ export class DependencyTreeDatabase {
             dependencyClass.push(obj);
             const cpy = Object.assign({}, obj);
             cpy.code = this.root + '.' + usedByPath.substr(0, usedByPath.length - (usedByName.length + 1)) + '.' + status + '.' + name;
-            if  (dependencyClass.find(o => o.code === cpy.code) === undefined) {
+            if (dependencyClass.find(o => o.code === cpy.code) === undefined) {
               dependencyClass.push(cpy);
             }
             break;
@@ -331,6 +365,178 @@ export class DependencyTreeDatabase {
     return treeItemNodes;
   }
 
+  /**
+   * Builds the Graph View of obj
+   *
+   * @param obj TreeData which will be displayed as a Graph
+   * @param displayOption how the graph should be generated
+   *
+   * @return a Promise that builds the graph
+   */
+  async buildGraphView(obj: any[], displayOption: DisplayOption): Promise<Network> {
+    const idG = new IdGenerator();
+    const nodeMap = new Map<string, GraphItem>();
+    obj.forEach(node => {
+      this.generateNodesFromString(node.code, node.filterType, idG, nodeMap, node.path);
+    });
+    const resultData = this.generateGraphData(nodeMap);
+    const container = document.getElementById('dataview');
+    const options = {
+      clickToUse: true,
+      layout: {
+        improvedLayout: false
+      },
+      interaction: {
+        tooltipDelay: 200
+      },
+      edges: {},
+      nodes: {
+        shape: 'box'
+      }
+    };
+    return new Promise<Network>((resolve) => {
+      const net = new Network(container, resultData, options);
+      net.on('afterDrawing', () => {
+        document.body.style.cursor = 'default';
+      });
+      resolve(net);
+    });
+  }
+
+  /**
+   * Process a string to a collection of GraphItems
+   *
+   * @param nodeString string from which every node is generated
+   * @param type what type of node it is
+   * @param idG IDGenerator which provides ids for the nodes
+   * @param nodeMap map in which every generated node is saved
+   * @param tooltip tooltip to be shown when hovering over the node
+   * @param depLabel name that should be shown when a dependency node shall be created
+   *
+   * @return returns the last node that has been created e.g. for java.lang.init() the node for init() is returned
+   */
+  generateNodesFromString(nodeString: string, type: FilterType, idG: IdGenerator,
+                          nodeMap: Map<string, GraphItem>, tooltip: string, depLabel?: string) {
+    const codeSet = [];
+    // matches everything that is separated with . which isn't in a ()
+    nodeString.toString().match(/[^(.)]*(\([^)]*\))?/g).forEach(sub => {
+      if (sub !== '' && sub !== undefined) {
+        codeSet.push(sub);
+      }
+    });
+    let s = '';
+    const root = new GraphItem();
+    root.id = -1;
+    root.name = s;
+    root.code = s;
+
+    let parent = root;
+
+    for (let i = 0; i < codeSet.length; i++) {
+      // is needed so that no duplicate nodes are generated
+      if (codeSet[i] === 'methods' || (i === 0 && codeSet[i] === 'root')) {
+        i++;
+      }
+      if (s !== '') {
+        s += '.';
+      }
+      s += codeSet[i];
+      if (!nodeMap.has(s)) {
+        if (codeSet[i] === 'added') {
+          const added = this.generateNodesFromString(tooltip !== undefined ? tooltip : codeSet.slice(i + 1).join('.'),
+            FilterType.Dependency, idG, nodeMap, tooltip, depLabel);
+          added.isDependency = true;
+          parent.addedDependency.push(added);
+          return parent;
+        } else if (codeSet[i] === 'deleted') {
+          const deleted = this.generateNodesFromString(tooltip !== undefined ? tooltip : codeSet.slice(i + 1).join('.'),
+            FilterType.Dependency, idG, nodeMap, tooltip, depLabel);
+          parent.deletedDependency.push(deleted);
+          deleted.isDependency = true;
+          return parent;
+        }
+
+        if (codeSet[i] !== undefined) {
+          const node = new GraphItem();
+          node.name = depLabel === undefined ? codeSet[i] : depLabel;
+          node.id = idG.getNextId();
+          node.code = s;
+          parent.children.push(node);
+          nodeMap.set(s, node);
+          parent = node;
+        }
+      } else {
+        parent = nodeMap.get(s);
+      }
+      if (i === codeSet.length - 1) {
+        if (type === FilterType.Dependency) {
+          if (parent.type === undefined) {
+            parent.type = type;
+          }
+        } else {
+          parent.type = type;
+        }
+      }
+    }
+    if (tooltip !== undefined) {
+      parent.tooltip = s.replace(/^root./g, '').replace('.methods.', '.');
+    }
+    return parent;
+  }
+
+  /**
+   * Process GraphItems into a vis.js format
+   *
+   * @param nodeMap a Map which contains every node that should be displayed
+   *
+   * @return Data which vis.js can display (DataSet format)
+   */
+  generateGraphData(nodeMap: Map<string, GraphItem>) {
+    const edgeSet = [];
+    const nodeSet = [];
+    nodeMap.forEach(node => {
+      if (node.name !== undefined && node.shouldBeDisplayed()) {
+        node.children.forEach(child => {
+          edgeSet.push({from: child.id, to: node.id, label: 'Parent', arrows: 'to'});
+        });
+
+        node.addedDependency.forEach(dep => {
+          edgeSet.push({from: node.id, to: dep.id, label: 'Added', arrows: 'to', color: '#000000', width: 3});
+        });
+
+        node.deletedDependency.forEach(dep => {
+          edgeSet.push({from: node.id, to: dep.id, label: 'Deleted', arrows: 'to', color: '#000000', width: 3});
+        });
+
+        nodeSet.push({id: node.id, label: node.name, title: node.tooltip, color: this.colorForType(node.type)});
+      }
+    });
+
+    return {edges: edgeSet, nodes: nodeSet};
+  }
+
+  /**
+   * Gets the corresponding color to a node type
+   *
+   * @param type node type
+   *
+   * @return Color to be displayed
+   */
+  colorForType(type: FilterType): string {
+    switch (type) {
+      case FilterType.Package:
+        return '#57c7e3';
+      case FilterType.Class:
+        return '#d9c8ae';
+      case FilterType.Method:
+        return '#f79767';
+      case FilterType.Dependency:
+        return '#6dcf9e';
+    }
+    return '#c990c0';
+  }
+
+
   public filter(filterText: string) {
     let filteredTreeData;
     const splitFilterText = filterText.split(':');
@@ -414,8 +620,11 @@ export class DependencytreeComponent implements OnInit {
   projectVersion: string;
   filterText = '';
   private db: DependencyTreeDatabase;
+  graph: Network;
+  graphVisible = false;
+  graphWarning: MatSnackBarRef<SimpleSnackBar>;
 
-  constructor(private database: DependencyTreeDatabase, private cookieService: CookieService) {
+  constructor(public snackbar: MatSnackBar, private database: DependencyTreeDatabase, private cookieService: CookieService) {
 
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
       this.isExpandable, this.getChildren);
@@ -536,8 +745,8 @@ export class DependencytreeComponent implements OnInit {
       const pVersion = this.cookieService.get('projectVersion');
       if (pVersion !== undefined) {
         this.projectVersion = pVersion;
-        this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion).
-        then(v => this.searchField.nativeElement.dispatchEvent(new Event('input')));
+        this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion)
+          .then(() => this.searchField.nativeElement.dispatchEvent(new Event('input')));
       }
     }
 
@@ -558,6 +767,35 @@ export class DependencytreeComponent implements OnInit {
     this.db.treeData = [];
     const data = this.db.buildDependencyTree(this.db.treeData, this.db.root, this.db.selectedDisplayOption);
     this.db.dataChange.next(data);
+  }
+
+  /**
+   * Function for generating the Graph View
+   *
+   * @param displayOption not implemented
+   */
+  async generateGraphView(displayOption: DisplayOption) {
+    if (this.graph === undefined || this.graph === null) {
+      document.body.style.cursor = 'wait';
+      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption);
+    }
+
+    const options = new MatSnackBarConfig();
+    options.horizontalPosition = 'end';
+    this.graph.once('click', () => {
+      this.graphWarning = this.snackbar.open('to end the focus on the graph press ESC or click into the menu pane', undefined, options);
+    });
+    this.graphVisible = true;
+  }
+
+  /**
+   * Delete Snackbar and Legend when changing to ListView
+   */
+  changeToList() {
+    this.graphVisible = false;
+    if (this.graphWarning !== undefined) {
+      this.graphWarning.dismiss();
+    }
   }
 }
 
