@@ -93,7 +93,7 @@ public class Utils {
         map.forEach((k, v) -> {
             String key = prefix == null ? k : (prefix + '.' + k);
             if (valueType.isInstance(v)) result.put(key, (T) v);
-            else if (v instanceof Map) resolveNestedMaps(valueType, key, (Map<String, Object>) v);
+            else if (v instanceof Map) result.putAll(resolveNestedMaps(valueType, key, (Map<String, Object>) v));
             else
                 throw new IllegalStateException("versionInfoInternal contains invalid element of type " + (v == null ? Void.class : v.getClass()));
         });
