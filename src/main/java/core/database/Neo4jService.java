@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -71,7 +70,7 @@ public class Neo4jService {
         session.purgeDatabase();
         Transaction transaction = session.beginTransaction();
         session.save(all, 0);
-        session.save(all.stream().flatMap(Information::getOutgoingRelations).collect(Collectors.toList()), 0);
+        all.stream().flatMap(Information::getOutgoingRelations).forEach(r -> session.save(r, 0));
         transaction.commit();
         transaction.close();
     }
