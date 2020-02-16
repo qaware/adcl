@@ -1,32 +1,52 @@
-<mat-sidenav-container class="container" >
+<mat-sidenav-container class="container">
   <mat-sidenav mode="side" class="side" opened>
     <p>
       <mat-form-field class="sideItem">
         <mat-label>Project</mat-label>
         <mat-select [(value)]="selectedProject" (selectionChange)="loadProjectVersion($event.value)">
-          <mat-option *ngFor="let projectName of database.projectNames" [value]="projectName.toString()"> {{projectName}} </mat-option>
+          <mat-option *ngFor="let projectName of database.projectNames"
+                      [value]="projectName.toString()"> {{projectName}} </mat-option>
         </mat-select>
       </mat-form-field>
     </p>
     <p>
-    <mat-form-field class="sideItem">
-      <mat-label>Changelog</mat-label>
-      <mat-select [(value)]="projectVersion" (selectionChange)="changeDependencyTree($event.value)">
-        <mat-option *ngFor="let id of database.changelogIds" [value]="id">{{id}}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field class="sideItem">
+        <mat-label>Changelog</mat-label>
+        <mat-select [(value)]="projectVersion"
+                    (selectionChange)="changeDependencyTree($event.value); this.graph = null;">
+          <mat-option *ngFor="let id of database.changelogIds" [value]="id">{{id}}</mat-option>
+        </mat-select>
+      </mat-form-field>
     </p>
     <p>
-    <mat-form-field class="sideItem">
-      <mat-label>Change View Mode</mat-label>
-      <mat-select [(value)]="db.selectedDisplayOption" (selectionChange)="changeDisplayOption($event.value)">
-        <mat-option [value]="DisplayOption.Standard">{{DisplayOption.Standard}}</mat-option>
-        <mat-option [value]="DisplayOption.CompactMiddlePackages">{{DisplayOption.CompactMiddlePackages}}</mat-option>
-        <mat-option [value]="DisplayOption.FlattenPackages">{{DisplayOption.FlattenPackages}}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field class="sideItem">
+        <mat-label>Change View Mode</mat-label>
+        <mat-select [(value)]="db.selectedDisplayOption" (selectionChange)="changeDisplayOption($event.value)">
+          <mat-option [value]="DisplayOption.Standard">{{DisplayOption.Standard}}</mat-option>
+          <mat-option [value]="DisplayOption.CompactMiddlePackages">{{DisplayOption.CompactMiddlePackages}}</mat-option>
+          <mat-option [value]="DisplayOption.FlattenPackages">{{DisplayOption.FlattenPackages}}</mat-option>
+        </mat-select>
+      </mat-form-field>
     </p>
     <button mat-raised-button class="sideItem" (click)="reset()">RESET</button>
+
+    <mat-list *ngIf="this.graphVisible;">
+      <mat-list-item>
+        <div style="background-color: #57c7e3" class="colorBox"></div>
+        <p>Package</p></mat-list-item>
+      <mat-list-item>
+        <div style="background-color: #f16667" class="colorBox"></div>
+        Class
+      </mat-list-item>
+      <mat-list-item>
+        <div style="background-color: #d9c8ae" class="colorBox"></div>
+        Method
+      </mat-list-item>
+      <mat-list-item>
+        <div style="background-color: #6dcf9e" class="colorBox"></div>
+        Dependency
+      </mat-list-item>
+    </mat-list>
   </mat-sidenav>
   <mat-sidenav-content>
     <mat-form-field class="search">
@@ -41,30 +61,39 @@
       <button mat-menu-item (click)="searchFilterSelected(FilterType.Dependency)">Dependency scope</button>
     </mat-menu>
 
-    <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-      <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
-        <button mat-icon-button disabled></button>
-        <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
-          <strong
-            [ngClass]="{
+    <mat-tab-group
+      (selectedTabChange)="$event.tab.textLabel==='GraphView'?generateGraphView(DisplayOption.Graph):changeToList()">
+      <mat-tab label="ListView">
+        <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+          <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
+            <button mat-icon-button disabled></button>
+            <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
+              <strong
+                [ngClass]="{
           'labelRed': node.label.startsWith('+'),
           'labelGreen': node.label.startsWith('-')
          }"
-          >{{node.label}}: &nbsp; </strong> {{node.name}}
+              >{{node.label}}: &nbsp; </strong> {{node.name}}
+            </div>
+          </mat-tree-node>
+          <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+            <button mat-icon-button matTreeNodeToggle
+                    [attr.aria-label]="'toggle ' + node.filename">
+              <mat-icon class="mat-icon-rtl-mirror">
+                {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+              </mat-icon>
+            </button>
+            <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
+              <strong>{{node.label}}: &nbsp; </strong> {{node.name}}
+            </div>
+          </mat-tree-node>
+        </mat-tree>
+      </mat-tab>
+      <mat-tab label="GraphView">
+        <div id="dataview">
         </div>
-      </mat-tree-node>
-      <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
-        <button mat-icon-button matTreeNodeToggle
-                [attr.aria-label]="'toggle ' + node.filename">
-          <mat-icon class="mat-icon-rtl-mirror">
-            {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-          </mat-icon>
-        </button>
-        <div matTooltipClass="tooltip" matTooltip="{{node.path}}" class="nodeItem">
-          <strong>{{node.label}}: &nbsp; </strong> {{node.name}}
-        </div>
-      </mat-tree-node>
-    </mat-tree>
+      </mat-tab>
+    </mat-tab-group>
   </mat-sidenav-content>
 </mat-sidenav-container>
 

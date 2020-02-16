@@ -1,9 +1,15 @@
 @import '~@angular/material/prebuilt-themes/deeppurple-amber.css';
+@import "~vis-network/dist/vis-network.min.css";
+
+body.waiting {
+  cursor: wait;
+}
 
 body {
   font-family: Roboto, Arial, sans-serif;
   margin: auto;
 }
+
 h2 {
   margin-left: 3%;
 }
