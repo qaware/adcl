@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ADCL-REPORT</title>
+    <style>
+
+
+        #center {
+            margin-left: 20%;
+            margin-right: 25%;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        #inputField {
+            width: 85%;
+            font-size: 16px;
+            padding: 12px 20px 12px 40px;
+            border: 1px solid #ddd;
+            margin-bottom: 12px;
+        }
+
+        #dependencyList {
+            width: 100%;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #dependencyList li fieldset {
+            background-color: #f6f6f6;
+            font-size: 14px;
+            color: black;
+            display: block;
+        }
+
+        #dependencyList li fieldset:hover:not(.header) {
+            background-color: #eee;
+        }
+
+        #content {
+            cursor: pointer;
+            word-break: break-all;
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 100ch;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+
+        }
+
+        fieldset {
+            min-width: 0;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        legend {
+            min-width: 0;
+            max-width: 100%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        #highlight {
+            font-family: monospace;
+            background-color: lightgray;
+        }
+
+        #content:hover {
+            overflow: visible;
+            white-space: normal;
+            height: auto; /* just added this line */
+        }
+
+        b {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #f6f6f6;
+            height: 100%;
+        }
+        #search {
+            display: flex;
+        }
+
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 70px;
+            font-size: 6pt;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 2px;
+        }
+        td {
+            text-align: center;
+        }
+        .greenBackground {
+            background-color: lightgreen;
+        }
+
+        th {
+            background-color: #dddddd;
+        }
+
+        th.diagonalFalling
+        {
+            background: linear-gradient(to right top, #ffffff 0%,#ffffff 49.9%,#000000 50%,#000000 51%,#ffffff 51.1%,#ffffff 100%);
+        }
+        #thLowLeft {
+            font-size:5pt;
+            margin-bottom:-2px;
+        }
+        #thHighRight {
+            font-size:5pt;
+            margin-top:-2px;
+            text-align:right;
+        }
+    </style>
+    <script>
+        var scope = [
+            [true, false, false],
+            [false, true, false],
+            [false, false, true]
+        ];
+        const PACKAGE = "PACKAGE";
+        const CLASS = "CLASS";
+        const METHOD = "METHOD";
+
+        function search() {
+            // Declare variables
+            var input, filter, ul, li, fieldSet, i, txtValue, spanDep, spanUsedBy;
+            input = document.getElementById('inputField');
+            filter = input.value.toUpperCase();
+            ul = document.getElementById("dependencyList");
+            li = ul.getElementsByTagName('LI');
+
+            // Loop through all list items, and hide those who don't match the search query
+            for (i = 0; i < li.length; i++) {
+                fieldSet = li[i].getElementsByTagName("FIELDSET")[0];
+                spanDep = fieldSet.getElementsByTagName("DIV")[0].getElementsByTagName("SPAN")[0];
+                spanUsedBy = fieldSet.getElementsByTagName("DIV")[1].getElementsByTagName("SPAN")[0];
+                if (
+                    li[i].usedByType === PACKAGE && li[i].dependencyType === PACKAGE && scope[0][0] ||
+                    li[i].usedByType === PACKAGE && li[i].dependencyType === CLASS && scope[0][1] ||
+                    li[i].usedByType === PACKAGE && li[i].dependencyType === METHOD && scope[0][2] ||
+                    li[i].usedByType === CLASS && li[i].dependencyType === PACKAGE && scope[1][0] ||
+                    li[i].usedByType === CLASS && li[i].dependencyType === CLASS && scope[1][1] ||
+                    li[i].usedByType === CLASS && li[i].dependencyType === METHOD && scope[1][2] ||
+                    li[i].usedByType === METHOD && li[i].dependencyType === PACKAGE && scope[2][0] ||
+                    li[i].usedByType === METHOD && li[i].dependencyType === CLASS && scope[2][1] ||
+                    li[i].usedByType === METHOD && li[i].dependencyType === METHOD && scope[2][2]
+                ) {
+                    txtValue = spanDep.textContent + " " + spanUsedBy.textContent;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        li[i].style.display = "";
+                    } else {
+                        li[i].style.display = "none";
+                    }
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        }
+
+        function toggleScope(element, row, col) {
+            scope[row][col] = !scope[row][col];
+            if(scope[row][col]) {
+                element.setAttribute("CLASS", "greenBackground");
+                element.innerHTML = "🗸";
+            } else {
+                element.setAttribute("CLASS", "");
+                element.innerHTML = "";
+            }
+            search();
+        }
+
+        <!--INSERT_DEPENDENCY_DATA_HERE-->
+
+        <!--INSERT_POM_DATA_HERE-->
+
+    </script>
+</head>
+<body>
+<div id="center">
+    <!--INSERT_PROJECT_AND_VERSION_HERE-->
+    <div id="search">
+        <input type="text" id="inputField" onkeyup="search()"
+               placeholder="Search for Packages, Classes, Methods or Dependencies">
+        <div style="margin-bottom: 12px">
+                <table>
+                    <tr>
+                        <th class="diagonalFalling" ><div id="thHighRight">to</div><div id="thLowLeft" >from</div> </th>
+                        <th>Package</th>
+                        <th>Class</th>
+                        <th>Method</th>
+                    </tr>
+                    <tr>
+                        <th>Package</th>
+                        <td onclick="toggleScope(this,0,0)" class="greenBackground"> 🗸</td>
+                        <td onclick="toggleScope(this,0,1)"></td>
+                        <td onclick="toggleScope(this,0,2)"></td>
+                    </tr>
+                    <tr>
+                        <th>Class</th>
+                        <td onclick="toggleScope(this,1,0)" ></td>
+                        <td onclick="toggleScope(this,1,1)" class="greenBackground">🗸</td>
+                        <td onclick="toggleScope(this,1,2)"></td>
+                    </tr>
+                    <tr>
+                        <th>Method</th>
+                        <td onclick="toggleScope(this,2,0)"></td>
+                        <td onclick="toggleScope(this,2,1)"></td>
+                        <td onclick="toggleScope(this,2,2)" class="greenBackground">🗸</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <ul id="dependencyList"></ul>
+    </div>
+
+    <script>
+        var dependencyList = document.getElementById("dependencyList");
+        var li;
+
+        data_dependencies.forEach(dep => {
+            li = document.createElement("LI");
+
+            if (dep.changeStatus === true) {
+                li.appendChild(createListEntry("Added dependency on ", " to ", dep.dependencyPath, dep.usedByPath, dep.usedByType.toLowerCase(), dep.dependencyType.toLowerCase()));
+
+            } else {
+                li.appendChild(createListEntry("Removed dependency on ", " from ", dep.dependencyPath, dep.usedByPath, dep.usedByType.toLowerCase(), dep.dependencyType.toLowerCase()));
+            }
+            li.usedByType = dep.usedByType;
+            li.dependencyType = dep.dependencyType;
+            dependencyList.appendChild(li);
+        });
+
+        // to apply initial scope selection
+        search();
+
+        function createListEntry(firstText, secondText, dependencyPath, usedByPath, usedByType, dependencyType) {
+            var fieldSet = document.createElement("FIELDSET");
+            var b;
+            var divDep = document.createElement("DIV");
+            var divUsedBy = document.createElement("DIV");
+            var span;
+            var legend = document.createElement("LEGEND");
+
+            legend.innerHTML = usedByType + " >>>>> " + dependencyType;
+            fieldSet.appendChild(legend);
+            divDep.setAttribute("ID", "content");
+            divUsedBy.setAttribute("ID", "content");
+
+            b = document.createElement("B");
+            b.innerHTML = firstText;
+
+            divDep.appendChild(b);
+            span = document.createElement("SPAN");
+            span.setAttribute("id", "highlight");
+            span.innerHTML = dependencyPath;
+            divDep.appendChild(span);
+            fieldSet.appendChild(divDep);
+
+            b = document.createElement("B");
+            b.innerHTML = secondText;
+
+            divUsedBy.appendChild(b);
+            span = document.createElement("SPAN");
+            span.setAttribute("id", "highlight");
+            span.innerHTML = usedByPath;
+            divUsedBy.appendChild(span);
+            fieldSet.appendChild(divUsedBy);
+            return fieldSet;
+        }
+    </script>
+</body>
+</html>
