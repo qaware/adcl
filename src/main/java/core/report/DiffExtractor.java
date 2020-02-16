@@ -9,10 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import util.Utils;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,36 +80,76 @@ public class DiffExtractor {
     }
 
     /**
-     * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
-     * @param aggregateDepEnd   whether a dependency ending at a level should be displayed for higher levels
-     * @return a set describing the differences between the specified versions in constructor
+     * Utility method to intersect two sets
+     *
+     * @param before elements present before
+     * @param after  elements present after
+     * @param <T>    element type
+     * @return a map with added elements having value true, removed elements having value false and same elements not present
      */
     @NotNull
-    public Set<DependencyEntry> generateChangelist(boolean aggregateDepStart, boolean aggregateDepEnd) {
-        Set<DependencyEntry> before = from == null ? Collections.emptySet() : generateDependencySet(to.getProject(), from, aggregateDepStart, aggregateDepEnd).collect(Collectors.toSet());
-        Set<DependencyEntry> after = generateDependencySet(to.getProject(), to, aggregateDepStart, aggregateDepEnd).collect(Collectors.toSet());
-        Set<DependencyEntry> removed = new HashSet<>(before);
+    private static <T> Map<T, Boolean> generateDiff(Set<T> before, Set<T> after) {
+        Map<T, Boolean> result = new HashMap<>();
+
+        Set<T> removed = new HashSet<>(before);
         removed.removeAll(after);
-        Set<DependencyEntry> added = new HashSet<>(after);
+        removed.forEach(r -> result.put(r, false));
+
+        Set<T> added = new HashSet<>(after);
         added.removeAll(before);
-        added.forEach(de -> de.change = true);
-        removed.addAll(added);
-        return removed;
+        added.forEach(a -> result.put(a, true));
+        return result;
     }
 
     /**
      * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
      * @param aggregateDepEnd   whether a dependency ending at a level should be displayed for higher levels
-     * @return a json serialized form of {@link DiffExtractor#generateChangelist(boolean, boolean)}
-     * @throws JsonProcessingException on json generation failure
-     * @see DiffExtractor#generateChangelist(boolean, boolean)
+     * @return a set describing the code differences between the specified versions in constructor
      */
-    public String generateJson(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(generateChangelist(aggregateDepStart, aggregateDepEnd));
+    @NotNull
+    public Set<DependencyEntry> generateDependencyDiff(boolean aggregateDepStart, boolean aggregateDepEnd) {
+        Map<DependencyEntry, Boolean> result = generateDiff(
+                from == null ? Collections.emptySet() : generateDependencySet(from.getProject(), from, aggregateDepStart, aggregateDepEnd).collect(Collectors.toSet()),
+                generateDependencySet(to.getProject(), to, aggregateDepStart, aggregateDepEnd).collect(Collectors.toSet())
+        );
+        result.entrySet().stream().filter(Map.Entry::getValue).forEach(e -> e.getKey().change = true);
+        return result.keySet();
     }
 
     /**
-     * Serialization class
+     * @return a set describing the pom differences between the specified versions in constructor
+     */
+    @NotNull
+    public Set<PomDependencyEntry> generatePomDiff() {
+        return new HashSet<>(generateDiff(
+                from == null ? Collections.emptySet() : from.getProject().getPomDependencies(from),
+                to.getProject().getPomDependencies(to)
+        ).entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getProject().getName(),
+                Collectors.reducing(null, e -> new PomDependencyEntry(e.getKey(), e.getValue()), (c, n) -> c != null && n.newVersion == null ? c : n))).values());
+    }
+
+    /**
+     * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
+     * @param aggregateDepEnd   whether a dependency starting at a level should be displayed for higher levels
+     * @return a diff describing the differences between the specified versions in constructor
+     */
+    public Diff generateDiff(boolean aggregateDepStart, boolean aggregateDepEnd) {
+        return new Diff(generateDependencyDiff(aggregateDepStart, aggregateDepEnd), generatePomDiff());
+    }
+
+    /**
+     * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
+     * @param aggregateDepEnd   whether a dependency ending at a level should be displayed for higher levels
+     * @return a json serialized form of {@link DiffExtractor#generateDiff(boolean, boolean)}
+     * @throws JsonProcessingException on json generation failure
+     * @see DiffExtractor#generateDiff(boolean, boolean)
+     */
+    public String generateJson(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
+        return new ObjectMapper().writeValueAsString(generateDiff(aggregateDepStart, aggregateDepEnd));
+    }
+
+    /**
+     * Serialization class. Represents a change in code dependencies
      * syntheticStart / syntheticEnd describe whether this dependency entry's start / end node represents the actual dependency or represents an aggregated version of another dependency entry
      */
     public static class DependencyEntry {
@@ -212,6 +249,58 @@ public class DiffExtractor {
             public String getName() {
                 return name;
             }
+        }
+    }
+
+    /**
+     * Serialization class. Represents a change in pom dependencies
+     */
+    public static class PomDependencyEntry {
+        @JsonProperty("newVersion")
+        @Nullable
+        public final String newVersion;
+        @JsonProperty("toProject")
+        @NotNull
+        public final String toProject;
+
+        public PomDependencyEntry(@Nullable String newVersion, @NotNull String toProject) {
+            this.newVersion = newVersion;
+            this.toProject = toProject;
+        }
+
+        public PomDependencyEntry(@NotNull VersionInformation version, boolean added) {
+            this(added ? version.getName() : null, version.getProject().getName());
+        }
+
+        @Override
+        public String toString() {
+            return "-> " + newVersion + '@' + toProject;
+        }
+    }
+
+    /**
+     * Serialization class. Represents a diff containing A diff of DependencyEntries and a diff of PomDependencyEntries
+     */
+    public static class Diff {
+        @JsonProperty("dependencies")
+        @NotNull
+        public final Set<DependencyEntry> changedDependencies;
+
+        @JsonProperty("pomDependencies")
+        @NotNull
+        public final Set<PomDependencyEntry> changedPomDependencies;
+
+        public Diff(@NotNull Set<DependencyEntry> changedDependencies, @NotNull Set<PomDependencyEntry> changedPomDependencies) {
+            this.changedDependencies = changedDependencies;
+            this.changedPomDependencies = changedPomDependencies;
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", Diff.class.getSimpleName() + "[", "]")
+                    .add("changedDependencies=" + changedDependencies)
+                    .add("changedPomDependencies=" + changedPomDependencies)
+                    .toString();
         }
     }
 }

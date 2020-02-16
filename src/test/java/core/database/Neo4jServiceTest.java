@@ -171,7 +171,7 @@ public class Neo4jServiceTest {
             VersionInformation v3 = proj.getVersion("0.0.3");
             assertThat(v3).isNotNull();
 
-            assertThat(new DiffExtractor(v1, v2).generateChangelist(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
+            assertThat(new DiffExtractor(v1, v2).generateDependencyDiff(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
                     "proj.packageB.ClassB->null.org.springframework.stereotype.Service",
                     "proj.packageA.MyAnnotation.notNullRef()->null.org.jetbrains.annotations.NotNull",
                     "proj.packageA.ClassA->proj.packageA.MyAnnotation",
@@ -183,7 +183,7 @@ public class Neo4jServiceTest {
                     "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->proj.packageA.ClassA.methodA()"
             );
 
-            assertThat(new DiffExtractor(v2, v3).generateChangelist(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
+            assertThat(new DiffExtractor(v2, v3).generateDependencyDiff(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
                     "proj.packageA.ClassA.newMethod()+>proj.packageA.ClassABase"
             );
         }
