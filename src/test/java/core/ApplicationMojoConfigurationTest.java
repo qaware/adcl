@@ -17,8 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ApplicationMojoConfigurationTest {
     @Test
-    public void test1() throws Exception {
-        try (MojoTestUtil testUtil = new MojoTestUtil(Paths.get("pom.xml"), Paths.get("localRepo"))) {
+    public void integrationTest1() throws Exception {
+        try (MojoTestUtil testUtil = new MojoTestUtil(Paths.get("pom.xml"))) {
             Pair<Integer, String> result = testUtil.runAdclOnPom(Paths.get("src", "test", "resources", "pom3", "pom.xml"));
             assertThat(result.getKey()).isNotZero();
 
@@ -37,8 +37,8 @@ public class ApplicationMojoConfigurationTest {
     }
 
     @Test
-    public void test2() throws Exception {
-        try (MojoTestUtil testUtil = new MojoTestUtil(Paths.get("pom.xml"), Paths.get("localRepo"))) {
+    public void integrationTest2() throws Exception {
+        try (MojoTestUtil testUtil = new MojoTestUtil(Paths.get("pom.xml"))) {
             Pair<Integer, String> result = testUtil.runAdclOnPom(Paths.get("src", "test", "resources", "pom4", "pom.xml"));
             assertThat(result.getKey()).isNotZero();
 

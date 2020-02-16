@@ -1,9 +1,7 @@
 package core;
 
-import org.apache.maven.model.Build;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import core.pm.MavenProjectManager;
+import core.pm.ProjectManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.config.Configuration;
@@ -35,10 +33,11 @@ public class ApplicationConfig {
     @NotNull
     public final Configuration neo4jConfig = getNeo4jConfig();
     /**
-     * The data of the local pom.xml of the project, if present
+     * The selected project manager or null if none selected or none available
      */
     @Nullable
-    private final Model localPom = getLocalPom();
+    public final ProjectManager projectManager = getProjectManager();
+
     /**
      * The location of the class files to analyse
      * Ensured that it is an existing directory with class files and correct package headers in it (random sample)
@@ -58,41 +57,75 @@ public class ApplicationConfig {
     @NotNull
     public final String currentVersionName = getCurrentVersionName();
 
+    /**
+     * Whether to create only a diff artifact for local use
+     */
+    public final boolean localOnly = Config.get("local", false);
+
+    /**
+     * Where to place the static report. Existing directory ensured
+     */
+    public final Path reportPath = getReportPath();
+
     @SuppressWarnings("java:S1130" /* wrong, ConfigurationException can be thrown in field initialization */)
     ApplicationConfig() throws ConfigurationException {
     }
 
     // GETTERS ONLY
 
-    @Nullable
-    private Model getLocalPom() throws ConfigurationException {
-        try {
-            MavenXpp3Reader reader = new MavenXpp3Reader();
-            return reader.read(Files.newBufferedReader(Paths.get("pom.xml")));
-        } catch (IOException | XmlPullParserException e) {
-            if (Config.get("nomaven", false)) {
-                return null;
+    private Path getReportPath() throws ConfigurationException {
+        Path result = Config.getPath("report.path", null);
+        if (result == null) {
+            String raw = Config.get("report.path", null);
+            if (raw == null) {
+                result = projectManager == null ? Paths.get(".") : projectManager.getArtifactOutput();
             } else {
-                throw new ConfigurationException("Could not open project pom.xml! Working directory has to be root of project to be analyzed. If your are not using maven, skip this error with nomaven flag.", e);
+                throw new ConfigurationException("report.path not valid. Is: {}", raw);
             }
+        } else if (!Files.isDirectory(result)) {
+            throw new ConfigurationException("report.path does not point to a directory. Is: {}", result);
         }
+        return result;
     }
 
     @NotNull
-    private Path getScanLocation() throws ConfigurationException {
-        Path result = Config.getPath("project.uri", null);
+    private static String readPackageOfClass(Path classPath) throws IOException {
+        ClassNode classNode = new ClassNode();
+        new ClassReader(Files.newInputStream(classPath)).accept(classNode, 0);
+        int index = classNode.name.lastIndexOf('/');
+        return (index < 0 ? "" : classNode.name.substring(0, index)).replace('/', '.');
+    }
+
+    @Nullable
+    private Path getProjectPom() throws ConfigurationException {
+        Path result = Config.getPath("project.pom", null);
         if (result == null) {
-            String raw = Config.get("project.uri", null);
+            String raw = Config.get("project.pom", null);
             if (raw == null) {
-                result = tryGetScanLocationByPom();
+                result = Paths.get("pom.xml");
             } else {
-                throw new ConfigurationException("project.uri not valid. Is: {}", raw);
+                throw new ConfigurationException("project.pom not valid. Is: {}", raw);
             }
-        } else if (!Files.isDirectory(result)) {
-            throw new ConfigurationException("project.uri does not point to a directory. Is: {}", result);
         }
-        validateScanLocation(result);
+        if (!Files.exists(result)) return null;
+        if (!Files.isRegularFile(result))
+            throw new ConfigurationException("project.uri does not point to a file. Is: {}", result);
         return result;
+    }
+
+    @Nullable
+    private ProjectManager getProjectManager() throws ConfigurationException {
+        Path pomPath = getProjectPom();
+        if (pomPath != null) {
+            LOGGER.info("Loading maven project data...");
+            try {
+                MavenProjectManager result = new MavenProjectManager(pomPath);
+                LOGGER.info("Done");
+                return result;
+            } catch (Exception e /* generalized to catch RuntimeException like InvalidPathException */) {
+                throw new ConfigurationException("Could not create maven project manager", e);
+            }
+        } else return null;
     }
 
     private void validateScanLocation(@NotNull Path scanLocation) throws ConfigurationException {
@@ -109,26 +142,30 @@ public class ApplicationConfig {
     }
 
     @NotNull
-    private String readPackageOfClass(Path classPath) throws IOException {
-        ClassNode classNode = new ClassNode();
-        new ClassReader(Files.newInputStream(classPath)).accept(classNode, 0);
-        int index = classNode.name.lastIndexOf('/');
-        return (index < 0 ? "" : classNode.name.substring(0, index)).replace('/', '.');
-    }
-
-    @NotNull
-    private Path tryGetScanLocationByPom() throws ConfigurationException {
-        if (localPom == null) throw new ConfigurationException("Option project.uri not specified");
-        Build build = localPom.getBuild();
-        String output = build == null ? null : build.getOutputDirectory();
-        if (output == null) output = "target/classes"; // as stated in jdoc of Build#getOutputDirectory()
-        return Paths.get(output);
+    private Path getScanLocation() throws ConfigurationException {
+        Path result = Config.getPath("project.uri", null);
+        if (result == null) {
+            String raw = Config.get("project.uri", null);
+            if (raw == null) {
+                if (projectManager == null) throw new ConfigurationException("Option project.uri not specified");
+                result = projectManager.getClassesOutput();
+            } else {
+                throw new ConfigurationException("project.uri not valid. Is: {}", raw);
+            }
+        } else if (!Files.isDirectory(result)) {
+            throw new ConfigurationException("project.uri does not point to a directory. Is: {}", result);
+        }
+        validateScanLocation(result);
+        return result;
     }
 
     @NotNull
     private String getProjectName() throws ConfigurationException {
-        String result = Config.get("project.name", localPom == null ? null : localPom.getArtifactId());
-        if (result == null) throw new ConfigurationException("Option project.name not specified");
+        String result = Config.get("project.name", null);
+        if (result == null) {
+            if (projectManager == null) throw new ConfigurationException("Option project.name not specified");
+            result = projectManager.getProjectName();
+        }
         return result;
     }
 
@@ -140,10 +177,10 @@ public class ApplicationConfig {
             if (result != null)
                 LOGGER.warn("Option project.commit is deprecated and should not be used anymore. Use project.commit.current instead.");
         }
-        if (result == null && localPom != null) {
-            result = Utils.getVersion(localPom.getPomFile().toPath());
+        if (result == null) {
+            if (projectManager == null) throw new ConfigurationException("Option project.commit not specified");
+            result = projectManager.getProjectVersion();
         }
-        if (result == null) throw new ConfigurationException("Option project.commit not specified");
         return result;
     }
 
@@ -184,7 +221,7 @@ public class ApplicationConfig {
         return new StringJoiner(", ", ApplicationConfig.class.getSimpleName() + "[", "]")
                 .add("previousVersionName='" + previousVersionName + "'")
                 .add("neo4jConfig=" + neo4jConfig)
-                .add("localPom=" + localPom)
+                .add("projectPom=" + projectManager)
                 .add("scanLocation=" + scanLocation)
                 .add("projectName='" + projectName + "'")
                 .add("currentVersionName='" + currentVersionName + "'")
@@ -198,10 +235,6 @@ public class ApplicationConfig {
     static class ConfigurationException extends Exception {
         private ConfigurationException(String message, Object... format) {
             LOGGER.error(message, format);
-        }
-
-        private ConfigurationException(String message, Throwable ex) {
-            LOGGER.error(message, ex);
         }
     }
 }

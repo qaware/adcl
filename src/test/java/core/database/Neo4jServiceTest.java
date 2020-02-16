@@ -1,7 +1,10 @@
 package core.database;
 
 import core.Application;
+import core.depex.DependencyExtractor;
 import core.information.*;
+import core.report.DiffExtractor;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,12 +24,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.FileSystemUtils;
 import util.DataGenerationUtil;
+import util.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,9 +68,9 @@ public class Neo4jServiceTest {
     @AfterAll
     static void cleanup() throws IOException {
         if (dbService != null) dbService.shutdown();
-        FileSystemUtils.deleteRecursively(new File("neo4j"));
-        FileSystemUtils.deleteRecursively(new File("certificates"));
-        Files.deleteIfExists(Paths.get("store_lock"));
+        Utils.delete(Paths.get("neo4j"));
+        Utils.delete(Paths.get("certificates"));
+        Utils.delete(Paths.get("store_lock"));
     }
 
     @BeforeEach
@@ -124,13 +126,15 @@ public class Neo4jServiceTest {
     }
 
     @Test
-    public void test() {
+    public void nodesTest() {
+        SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
+        Session newSession = sessionFactory.openSession();
+        newSession.purgeDatabase();
+
         neo4jService.overrideRoot(dm);
         RootInformation r = neo4jService.getRoot();
         assertThat(r).isSameAs(dm);
 
-        SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
-        Session newSession = sessionFactory.openSession();
         try (Transaction ignored = newSession.beginTransaction()) {
             newSession.loadAll(Information.class);
             RootInformation loaded = newSession.loadAll(RootInformation.class).iterator().next();
@@ -138,6 +142,58 @@ public class Neo4jServiceTest {
             assertThat(loaded).isEqualTo(dm);
             assertThat(loaded.deepEquals(dm)).isTrue();
         }
+    }
+
+    @Test
+    public void versionsTest() throws IOException {
+        SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
+        Session newSession = sessionFactory.openSession();
+        newSession.purgeDatabase();
+
+        RootInformation root = new RootInformation();
+        ProjectInformation project = new ProjectInformation(root, "proj", true, "<unknown>");
+        runDepEx(project, "testproject", "0.0.1");
+        runDepEx(project, "testproject2", "0.0.2");
+        runDepEx(project, "testproject3", "0.0.3");
+
+        neo4jService.overrideRoot(root);
+
+        try (Transaction ignored = newSession.beginTransaction()) {
+            newSession.loadAll(Information.class);
+            RootInformation loaded = newSession.loadAll(RootInformation.class).iterator().next();
+
+            ProjectInformation proj = (ProjectInformation) loaded.find("proj", null);
+            assertThat(proj).isNotNull();
+            VersionInformation v1 = proj.getVersion("0.0.1");
+            assertThat(v1).isNotNull();
+            VersionInformation v2 = proj.getVersion("0.0.2");
+            assertThat(v2).isNotNull();
+            VersionInformation v3 = proj.getVersion("0.0.3");
+            assertThat(v3).isNotNull();
+
+            assertThat(new DiffExtractor(v1, v2).generateDependencyDiff(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
+                    "proj.packageB.ClassB->null.org.springframework.stereotype.Service",
+                    "proj.packageA.MyAnnotation.notNullRef()->null.org.jetbrains.annotations.NotNull",
+                    "proj.packageA.ClassA->proj.packageA.MyAnnotation",
+                    "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->proj.packageA.ClassA.$$$reportNull$$$0(int)",
+                    "proj.packageA.ClassA->null.org.jetbrains.annotations.Nullable",
+                    "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->null.org.springframework.context.NoSuchMessageException",
+                    "proj.packageA.ClassA->null.org.jetbrains.annotations.NotNull",
+                    "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->null.org.jetbrains.annotations.NotNull",
+                    "proj.packageA.ClassA.methodC(boolean, byte, char, short, int, long, float, double, java.lang.String)->proj.packageA.ClassA.methodA()"
+            );
+
+            assertThat(new DiffExtractor(v2, v3).generateDependencyDiff(false, false).stream().map(Object::toString)).containsExactlyInAnyOrder(
+                    "proj.packageA.ClassA.newMethod()+>proj.packageA.ClassABase"
+            );
+        }
+    }
+
+    @NotNull
+    private VersionInformation runDepEx(@NotNull ProjectInformation project, String folderName, String versionName) throws IOException {
+        VersionInformation result = project.addVersion(versionName);
+        new DependencyExtractor(Paths.get("src", "test", "resources", "testclassfiles2", folderName, "target", "classes"), result, null).runAnalysis();
+        return result;
     }
 
     @TestConfiguration

@@ -1,8 +1,9 @@
 package core.depex;
 
 import core.information.VersionInformation;
-import org.apache.maven.shared.invoker.MavenInvocationException;
+import core.pm.ProjectManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,27 +22,30 @@ public class DependencyExtractor {
     private final Path scanLocation;
     @NotNull
     private final VersionInformation version;
+    @Nullable
+    private final ProjectManager projectManager;
 
     /**
      * Instantiate a new Extractor. Does nothing except field init. Start analysis with {@link DependencyExtractor#runAnalysis()}
      *
-     * @param scanLocation the root directory where the class files are located.
-     * @param version      the version the to-be-analysed class files correspond to
+     * @param scanLocation   the root directory where the class files are located.
+     * @param version        the version the to-be-analysed class files correspond to
+     * @param projectManager the location of the project pom.xml
      */
-    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version) {
+    public DependencyExtractor(@NotNull Path scanLocation, @NotNull VersionInformation version, @Nullable ProjectManager projectManager) {
         this.scanLocation = scanLocation;
         this.version = version;
+        this.projectManager = projectManager;
     }
 
     /**
      * Analyse classes given by scanLocation. Inserts the results into given project tree, but might also create new entries on root level
      *
-     * @throws IOException              if scanLocation is invalid or project pom exists but is invalid
-     * @throws MavenInvocationException if maven fails to read dependencies of project pom
+     * @throws IOException if scanLocation is invalid or project pom exists but is invalid
      */
-    public void runAnalysis() throws IOException, MavenInvocationException {
+    public void runAnalysis() throws IOException {
         LOGGER.info("Updating indices...");
-        version.getProject().updateIndices(scanLocation);
+        version.getProject().updateIndices(scanLocation, projectManager);
         LOGGER.info("Updated");
         version.getProject().getDirectChildren(version).forEach(c -> c.setExists(version, false));
 

@@ -1,7 +1,6 @@
 package core.depex;
 
 import core.information.*;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static util.DataGenerationUtil.*;
 
 class DependencyExtractorTest {
-    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2");
+    private static final Path TESTCLASS_FOLDER = Paths.get("src", "test", "resources", "testclassfiles2", "testproject", "target", "classes");
 
     Ref<ProjectInformation, RootInformation> proj;
     Ref<PackageInformation<ProjectInformation>, ProjectInformation> pa, pb;
@@ -74,16 +73,18 @@ class DependencyExtractorTest {
                 project("null", false, "<unknown>",
                         ce = cir("ExternalClass", false,
                                 ceEm = mi("extMethod()")
+                        ),
+                        pir("org",
+                                pis("springframework",
+                                        pis("stereotype", service = cio("Service", false)),
+                                        pis("context", ex = cio("NoSuchMessageException", false))
+                                ),
+                                pis("jetbrains", pis("annotations",
+                                        jnn = cio("NotNull", false),
+                                        jn = cio("Nullable", false)
+                                ))
                         )
-                ),
-                project("spring-context", false, "<unknown>", pir("org", pis("springframework",
-                        pis("stereotype", service = cio("Service", false)),
-                        pis("context", ex = cio("NoSuchMessageException", false))
-                ))),
-                project("annotations", false, "<unknown>", pir("org", pis("jetbrains", pis("annotations",
-                        jnn = cio("NotNull", false),
-                        jn = cio("Nullable", false)
-                ))))
+                )
         );
 
         p(ca, cabase, jn, jnn, cmya);
@@ -109,11 +110,11 @@ class DependencyExtractorTest {
     }
 
     @Test
-    void analyseClasses() throws IOException, MavenInvocationException {
+    void analyseClasses() throws IOException {
         RootInformation root = new RootInformation();
         ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1.0.0");
 
-        new DependencyExtractor(TESTCLASS_FOLDER, proj.getLatestVersion()).runAnalysis();
+        new DependencyExtractor(TESTCLASS_FOLDER, proj.getLatestVersion(), null).runAnalysis();
         assertThat(root.deepEquals(dm)).overridingErrorMessage("Not deep equal!\nExpected:\n%s\n\nActual:\n%s", dm, root).isTrue();
     }
 }

@@ -1,23 +1,29 @@
 package core.information;
 
-import org.jetbrains.annotations.Contract;
+import core.database.Purgeable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.neo4j.ogm.annotation.PostLoad;
-import org.neo4j.ogm.annotation.Properties;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.Transient;
+import org.neo4j.ogm.annotation.*;
 import util.MapWithListeners;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Like {@link ProjectDependency}, but also stores remote version names for each version
  */
 @RelationshipEntity("PomDependency")
-public final class PomDependencyInformation extends RelationshipInformation<ProjectInformation> {
+public final class PomDependencyInformation implements Purgeable {
+    @StartNode
+    @NotNull
+    private final ProjectInformation from;
+
+    @EndNode
+    @NotNull
+    private final ProjectInformation to;
+
     @Properties(prefix = "remoteVersions")
     private final Map<String, String> remoteVersionMapInternal = new HashMap<>();
 
@@ -26,59 +32,87 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
 
     @Transient
     private final MapWithListeners<VersionInformation, VersionInformation> remoteVersionMap = new MapWithListeners<>(remoteVersionMapBacking,
-            (k, v) -> remoteVersionMapInternal.put(k.getName(), v.getName()),
+            (k, v) -> remoteVersionMapInternal.put(k.getName(), v == null ? "null" : v.getName()),
             (k, v) -> remoteVersionMapInternal.remove(k.getName())
     );
+
+    @Id
+    @GeneratedValue
+    private Long id;
 
     /**
      * Neo4j init
      */
-    @SuppressWarnings("unused")
-    private PomDependencyInformation() {
-        super();
+    @SuppressWarnings({"unused", "java:S2637", "ConstantConditions"} /* neo4jInit */)
+    PomDependencyInformation() {
+        this.from = null;
+        this.to = null;
     }
 
     /**
-     * Creates a new pom dependency.
+     * Creates a new pom dependency. This dependency has to be added to a project
      *
      * @param from the node which has the dependency
      * @param to   the dependency
      * @see ProjectInformation#addPomDependency(VersionInformation, VersionInformation)
      * @see ProjectInformation#getPomDependencies(VersionInformation)
      */
-    PomDependencyInformation(@NotNull Information<?> from, @NotNull ProjectInformation to) {
-        super(from, to);
+    PomDependencyInformation(@NotNull ProjectInformation from, @NotNull VersionInformation to) {
+        this.from = from;
+        this.to = to.getProject();
+    }
+
+    /**
+     * @return the edge start
+     * @see PomDependencyInformation#getTo()
+     */
+    @NotNull
+    public ProjectInformation getFrom() {
+        return from;
+    }
+
+    /**
+     * @return the edge end
+     * @see PomDependencyInformation#getFrom()
+     */
+    @NotNull
+    public ProjectInformation getTo() {
+        return to;
     }
 
     /**
      * Initializes {@link PomDependencyInformation#remoteVersionMap} after database initialization
      */
-    @Override
     @PostLoad
     void postLoad() {
-        super.postLoad();
-        remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, getFrom().getProject()), new VersionInformation(r, getTo().getProject())));
+        remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, from.getProject()), r.equals("null") ? null : new VersionInformation(r, to.getProject())));
     }
 
     /**
-     * Adds a remote version marker at given version
-     * @param version       the version to add the marker
-     * @param remoteVersion the version this marker points to
+     * ensured that at a given version the dependency points to parameter 'aim', setting a marker if needed
+     *
+     * @param version the version to potentially set the aim if needed
+     * @param aim     the aimed remote version
+     * @see RelationshipInformation#setExists(VersionInformation, boolean) same logic
      */
-    public void addVersionMarker(@NotNull VersionInformation version, @NotNull VersionInformation remoteVersion) {
-        if (!remoteVersion.getProject().equals(getTo().getProject()))
-            throw new IllegalArgumentException("Project of remoteVersion (" + remoteVersion.getProject().getName() + ") does not fit to dependency project (" + getTo().getProject().toString() + ")");
-        remoteVersionMap.put(version, remoteVersion);
+    public void setVersionAt(@NotNull VersionInformation version, @Nullable VersionInformation aim) {
+        if (!Objects.equals(getVersionAt(version), aim)) remoteVersionMap.put(version, aim);
     }
 
     /**
      * Retrieves a remote version marker at given version
-     * @param at the version to query
-     * @return the remote version
+     *
+     * @param at the version to query. If null latest version will be queried
+     * @return the remote version the project depends at that version
+     * @see RelationshipInformation#exists(VersionInformation) same logic
      */
     @Nullable
-    public VersionInformation getVersionAt(@NotNull VersionInformation at) {
-        return remoteVersionMap.get(at);
+    public VersionInformation getVersionAt(@Nullable VersionInformation at) {
+        VersionInformation curr = at == null ? from.getLatestVersion() : at;
+        do {
+            if (remoteVersionMap.containsKey(at)) return remoteVersionMap.get(at);
+        } while ((curr = curr.previous()) != null);
+        return null;
     }
 
     // overrides
@@ -86,11 +120,11 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("java:S2159" /* wrong, types might be related */)
-    @Contract(value = "null -> false", pure = true)
     @Override
     public boolean equals(Object o) {
-        return o instanceof PomDependencyInformation && super.equals(o) && remoteVersionMap.equals(((PomDependencyInformation) o).remoteVersionMap);
+        if (!(o instanceof PomDependencyInformation)) return false;
+        PomDependencyInformation ro = (PomDependencyInformation) o;
+        return from.equals(ro.from) && to.equals(ro.to) && remoteVersionMap.equals(ro.remoteVersionMap);
     }
 
     /**
@@ -98,6 +132,24 @@ public final class PomDependencyInformation extends RelationshipInformation<Proj
      */
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), remoteVersionMap);
+        return Objects.hash(remoteVersionMap, from, to);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void purgeIds() {
+        id = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NotNull
+    @Override
+    public String toString() {
+        String vi = remoteVersionMap.entrySet().stream().map(e -> e.getKey().getName() + "->" + (e.getValue() == null ? "removed" : e.getValue().getName())).collect(Collectors.joining(","));
+        return "(" + from.getPath() + ")->[" + vi + "]->(" + to.getPath() + ")";
     }
 }

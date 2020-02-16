@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import util.LogInspector;
+import util.Utils;
+import util.log.CapturedOutputLogInspector;
+import util.log.LogInspector;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -123,7 +125,7 @@ public class ConfigTest {
             System.setProperty("adcl.e", "a b");
             System.getProperties().put("adcl.x", new Object());
             System.getProperties().put(new Object(), "x");
-            Config.load(new String[0]);
+            Config.load();
 
             assertThat(Config.get("a", 0)).isEqualTo(1);
             assertThat(Config.get("b", false)).isTrue();
@@ -148,7 +150,7 @@ public class ConfigTest {
                     "g=\""
             ));
 
-            Config.load(new String[]{"configPath=myconf.properties"});
+            Config.load("configPath=myconf.properties");
 
             assertThat(Config.get("a", 0)).isEqualTo(1);
             assertThat(Config.get("b", false)).isTrue();
@@ -158,7 +160,7 @@ public class ConfigTest {
             assertThat(Config.get("f", null)).isEqualTo("=\"");
             assertThat(Config.get("g", null)).isEqualTo("\"");
         } finally {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
         }
     }
 
@@ -176,7 +178,7 @@ public class ConfigTest {
                     "g=\""
             ));
 
-            Config.load(new String[0]);
+            Config.load();
 
             assertThat(Config.get("a", 0)).isEqualTo(1);
             assertThat(Config.get("b", false)).isTrue();
@@ -186,34 +188,34 @@ public class ConfigTest {
             assertThat(Config.get("f", null)).isEqualTo("=\"");
             assertThat(Config.get("g", null)).isEqualTo("\"");
         } finally {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
         }
     }
 
     @Test
     void testInputPathFailing(@NotNull CapturedOutput output) throws IOException {
-        LogInspector log = new LogInspector(output);
+        LogInspector log = new CapturedOutputLogInspector(output);
         Path path = Paths.get("config.properties");
 
         try {
-            Files.deleteIfExists(path);
-            Config.load(new String[]{"configPath=config.properties"});
+            Utils.delete(path);
+            Config.load("configPath=config.properties");
             assertThat(log.getNewErr()).contains("configPath points to a non-existent file");
-            Config.load(new String[]{"configPath=\0"});
+            Config.load("configPath=\0");
             assertThat(log.getNewErr()).contains("configPath is present but invalid");
             Files.createDirectory(path);
-            Config.load(new String[0]); // load default config while config is folder
+            Config.load(); // load default config while config is folder
             assertThat(log.getNewOut()).contains("Configuration loaded");
-            Config.load(new String[]{"configPath=config.properties"});
+            Config.load("configPath=config.properties");
             assertThat(log.getNewErr()).contains("configPath points to a directory");
         } finally {
-            Files.deleteIfExists(path);
+            Utils.delete(path);
         }
     }
 
     @Test
     void testOther() {
-        Config.load(new String[0]);
+        Config.load();
         assertThat(Config.get(null, 5)).isEqualTo(5);
     }
 

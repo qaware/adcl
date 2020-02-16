@@ -12,9 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -94,7 +93,7 @@ public class Utils {
         map.forEach((k, v) -> {
             String key = prefix == null ? k : (prefix + '.' + k);
             if (valueType.isInstance(v)) result.put(key, (T) v);
-            else if (v instanceof Map) resolveNestedMaps(valueType, key, (Map<String, Object>) v);
+            else if (v instanceof Map) result.putAll(resolveNestedMaps(valueType, key, (Map<String, Object>) v));
             else
                 throw new IllegalStateException("versionInfoInternal contains invalid element of type " + (v == null ? Void.class : v.getClass()));
         });
@@ -159,17 +158,22 @@ public class Utils {
         return Pair.of(mvnResult.getExitCode(), sw.toString());
     }
 
-    /**
-     * @param pom a maven pom.xml
-     * @return the resolved version specified in pom
-     */
-    @Nullable
-    public static String getVersion(Path pom) {
-        try {
-            Pair<Integer, String> result = callMaven(pom, null, "help:evaluate", "-q", Pair.of("expression", "project.version"), Pair.of("forceStdout", "true"));
-            return result.getKey() != 0 ? null : result.getValue();
-        } catch (MavenInvocationException e) {
-            return null;
-        }
+    public static void delete(Path path) throws IOException {
+        if (!Files.exists(path)) return;
+        if (Files.isDirectory(path)) {
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } else Files.delete(path);
     }
 }

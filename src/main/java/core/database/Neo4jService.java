@@ -1,7 +1,6 @@
 package core.database;
 
 import core.information.Information;
-import core.information.RelationshipInformation;
 import core.information.RootInformation;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.session.Session;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -66,15 +64,13 @@ public class Neo4jService {
     public void saveRoot() {
         Set<Information<?>> all = root.getAllChildren(null);
         all.add(root);
-        all.forEach(Information::purgeId);
-        Set<RelationshipInformation<?>> rels = all.stream().flatMap(Information::getOutgoingRelations).collect(Collectors.toSet());
-        rels.forEach(RelationshipInformation::purgeId);
+        all.forEach(Purgeable::purgeIds);
 
         Session session = sessionFactory.openSession();
         session.purgeDatabase();
         Transaction transaction = session.beginTransaction();
-        all.forEach(i -> session.save(i, 0));
-        rels.forEach(i -> session.save(i, 0));
+        session.save(all, 0);
+        all.stream().flatMap(Information::getOutgoingRelations).forEach(r -> session.save(r, 0));
         transaction.commit();
         transaction.close();
     }

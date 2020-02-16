@@ -1,5 +1,6 @@
 package core.information;
 
+import core.database.Purgeable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings({"unused", "java:S1452" /* Wildcards are needed */})
 @NodeEntity
-public abstract class Information<P extends Information<?>> implements Comparable<Information<?>>, DeepComparable<Information<?>> {
+public abstract class Information<P extends Information<?>> implements Comparable<Information<?>>, DeepComparable<Information<?>>, Purgeable {
     @Relationship(type = "Parent")
     @Nullable
     final ParentInformation<P> parent;
@@ -193,7 +194,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     public final Set<ProjectInformation> getAllProjectDependenciesAggregated(@Nullable VersionInformation at, boolean includeInternal) {
         return Stream.concat(
                 getAllProjectDependencies(at, includeInternal).stream(),
-                getAllPackageDependencies(at, includeInternal).stream().map(mi -> mi.getParent(ProjectInformation.class))
+                getAllPackageDependenciesAggregated(at, includeInternal).stream().map(mi -> mi.getParent(ProjectInformation.class))
         ).distinct().filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
@@ -664,18 +665,23 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     }
 
     /**
-     * For use by {@link core.database.Neo4jService only}
-     * deletes the id so the object gets stored in db as new object
+     * {@inheritDoc}
      */
-    public void purgeId() {
+    @Override
+    public void purgeIds() {
         id = null;
+        projectDependencies.forEach(Purgeable::purgeIds);
+        packageDependencies.forEach(Purgeable::purgeIds);
+        classDependencies.forEach(Purgeable::purgeIds);
+        methodDependencies.forEach(Purgeable::purgeIds);
+        if (parent != null) parent.purgeIds();
     }
 
     /**
-     * @return all {@link RelationshipInformation} that starts from this object
+     * @return all edges that start from this object
      */
-    public Stream<RelationshipInformation<?>> getOutgoingRelations() {
-        Stream<RelationshipInformation<?>> result = Utils.concatStreams(projectDependencies.stream(), packageDependencies.stream(), classDependencies.stream(), methodDependencies.stream());
+    public Stream<Purgeable> getOutgoingRelations() {
+        Stream<Purgeable> result = Utils.concatStreams(projectDependencies.stream(), packageDependencies.stream(), classDependencies.stream(), methodDependencies.stream());
         if (parent != null) result = Stream.concat(Stream.of(parent), result);
         return result;
     }

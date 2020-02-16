@@ -193,7 +193,7 @@ public class Config {
      *
      * @param args the program arguments of the main class
      */
-    static void load(@NotNull String[] args) {
+    static void load(String... args) {
         properties.clear();
         properties.putAll(argsToMap(args));
         properties.putAll(propertiesToMap()); // overrides options from args

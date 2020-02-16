@@ -1,7 +1,6 @@
 package core;
 
-
-import org.apache.maven.model.Dependency;
+import core.pm.Dependency;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import util.Utils;
@@ -9,7 +8,6 @@ import util.Utils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -32,11 +30,8 @@ public class IndexBuilder {
      * @throws IOException if dependency's system path is null or invalid (does not point to a valid jar file)
      */
     @NotNull
-    public static Map<String, String> index(@NotNull Dependency dependency, @Nullable Map<String, String> appendTo) throws IOException {
-        String rawPath = dependency.getSystemPath();
-        if (rawPath == null)
-            throw new IOException("Cannot index dependency " + dependency + " as path is null");
-        return indexJar(Paths.get(rawPath), dependency.getArtifactId(), appendTo);
+    public static Map<String, String> index(@NotNull Dependency dependency, @NotNull Path filePath, @Nullable Map<String, String> appendTo) throws IOException {
+        return indexJar(filePath, dependency.getName(), appendTo);
     }
 
     /**
