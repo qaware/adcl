@@ -122,13 +122,14 @@
     </style>
     <script>
         var scope = [
-            [true, false, false],
-            [false, true, false],
-            [false, false, true]
+            [true, false, false,  false],
+            [false, true, false, false],
+            [false, false, true, false]
         ];
         const PACKAGE = "PACKAGE";
         const CLASS = "CLASS";
         const METHOD = "METHOD";
+        const PROJECT = "PROJECT";
 
         function search() {
             // Declare variables
@@ -147,12 +148,15 @@
                     li[i].usedByType === PACKAGE && li[i].dependencyType === PACKAGE && scope[0][0] ||
                     li[i].usedByType === PACKAGE && li[i].dependencyType === CLASS && scope[0][1] ||
                     li[i].usedByType === PACKAGE && li[i].dependencyType === METHOD && scope[0][2] ||
+                    li[i].usedByType === PACKAGE && li[i].dependencyType === PROJECT && scope[0][3] ||
                     li[i].usedByType === CLASS && li[i].dependencyType === PACKAGE && scope[1][0] ||
                     li[i].usedByType === CLASS && li[i].dependencyType === CLASS && scope[1][1] ||
                     li[i].usedByType === CLASS && li[i].dependencyType === METHOD && scope[1][2] ||
+                    li[i].usedByType === CLASS && li[i].dependencyType === PROJECT && scope[1][3] ||
                     li[i].usedByType === METHOD && li[i].dependencyType === PACKAGE && scope[2][0] ||
                     li[i].usedByType === METHOD && li[i].dependencyType === CLASS && scope[2][1] ||
-                    li[i].usedByType === METHOD && li[i].dependencyType === METHOD && scope[2][2]
+                    li[i].usedByType === METHOD && li[i].dependencyType === METHOD && scope[2][2] ||
+                    li[i].usedByType === METHOD && li[i].dependencyType === PROJECT && scope[2][3]
                 ) {
                     txtValue = spanDep.textContent + " " + spanUsedBy.textContent;
                     if (txtValue.toUpperCase().indexOf(filter) > -1) {
@@ -500,11 +504,11 @@ var data_dependencies = [ {
   "changeStatus" : true
 } ];
 var data_pom = [ {
-  "newVersion" : "5.2.3.RELEASE",
-  "toProject" : "org-springframework:spring"
-}, {
   "newVersion" : "3.5.14",
   "toProject" : "org-neo4j:neo4j"
+}, {
+  "newVersion" : "5.2.3.RELEASE",
+  "toProject" : "org-springframework:spring"
 } ];
     </script>
 </head>
@@ -521,24 +525,28 @@ var data_pom = [ {
                         <th>Package</th>
                         <th>Class</th>
                         <th>Method</th>
+                        <th>Project</th>
                     </tr>
                     <tr>
                         <th>Package</th>
                         <td onclick="toggleScope(this,0,0)" class="greenBackground"> 🗸</td>
                         <td onclick="toggleScope(this,0,1)"></td>
                         <td onclick="toggleScope(this,0,2)"></td>
+                        <td onclick="toggleScope(this,0,3)"></td>
                     </tr>
                     <tr>
                         <th>Class</th>
                         <td onclick="toggleScope(this,1,0)" ></td>
                         <td onclick="toggleScope(this,1,1)" class="greenBackground">🗸</td>
                         <td onclick="toggleScope(this,1,2)"></td>
+                        <td onclick="toggleScope(this,1,3)"></td>
                     </tr>
                     <tr>
                         <th>Method</th>
                         <td onclick="toggleScope(this,2,0)"></td>
                         <td onclick="toggleScope(this,2,1)"></td>
                         <td onclick="toggleScope(this,2,2)" class="greenBackground">🗸</td>
+                        <td onclick="toggleScope(this,2,3)"></td>
                     </tr>
                 </table>
             </div>

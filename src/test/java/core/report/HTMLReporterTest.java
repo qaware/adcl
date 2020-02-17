@@ -21,7 +21,7 @@ class HTMLReporterTest {
     void setUp() throws IOException, URISyntaxException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         diff = new ObjectMapper().readValue(Objects.requireNonNull(classloader.getResourceAsStream("./report/diff.json")), DiffExtractor.Diff.class);
-        expected = new File(Objects.requireNonNull(classloader.getResource("./report/adcl_report_de-fhbingen_epro_1.1-SNAPSHOT.html")).toURI());
+        expected = new File(Objects.requireNonNull(classloader.getResource("./report/adcl_report_expected.html")).toURI());
 
     }
 
