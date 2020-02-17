@@ -270,7 +270,7 @@
             divDep.appendChild(b);
             span = document.createElement("SPAN");
             span.setAttribute("id", "highlight");
-            span.innerHTML = dependencyPath;
+            span.innerText = dependencyPath;
             divDep.appendChild(span);
             fieldSet.appendChild(divDep);
 
@@ -280,7 +280,7 @@
             divUsedBy.appendChild(b);
             span = document.createElement("SPAN");
             span.setAttribute("id", "highlight");
-            span.innerHTML = usedByPath;
+            span.innerText = usedByPath;
             divUsedBy.appendChild(span);
             fieldSet.appendChild(divUsedBy);
             return fieldSet;
