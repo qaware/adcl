@@ -54,12 +54,12 @@ public class HTMLReporter {
                 }
             }
         }
-        try (BufferedWriter writer = Files.newBufferedWriter(outputPath.resolve("adcl_report_" + diff.projectName.replace(":", "_") + "_" + diff.projectVersion + ".html"))) {
+        String fileName = diff.projectName.replace(":", "_") + "_" + diff.projectVersion + ".html";
+        try (BufferedWriter writer = Files.newBufferedWriter(outputPath.resolve("adcl_report_" + fileName))) {
             writer.write(report.toString());
         } catch (IOException e) {
             LOGGER.error("Unable to resolve report path: {}", outputPath);
-            e.printStackTrace();
         }
-        LOGGER.info("to {}:", outputPath);
+        LOGGER.info("to {}/{}", outputPath, fileName);
     }
 }
