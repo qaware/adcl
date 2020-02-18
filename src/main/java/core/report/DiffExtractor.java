@@ -6,17 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import core.information.Information;
 import core.information.VersionInformation;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import util.Utils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -135,7 +130,6 @@ public class DiffExtractor {
         return  objectMapper.writeValueAsString(generateDependencyDiff(aggregateDepStart, aggregateDepEnd));
     }
 
-
     /**
      * @return a set describing the pom differences between the specified versions in constructor
      */
@@ -145,8 +139,9 @@ public class DiffExtractor {
                 from == null ? Collections.emptySet() : from.getProject().getPomDependencies(from),
                 to.getProject().getPomDependencies(to)
         ).entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getProject().getName(),
-                Collectors.reducing(null, e -> new PomDependencyEntry(e.getKey(), e.getValue()), (c, n) -> c != null && n.newVersion == null ? c : n))).values());
+                Collectors.reducing(null, e -> new PomDependencyEntry(e.getKey(), e.getValue()), (c, n) -> c != null && n.newVersion == null ? c.flagUpdated() : n))).values());
     }
+
     /**
      * @return a set describing the pom differences between the specified versions in constructor as json string
      * @throws JsonProcessingException on json generation failure
@@ -164,17 +159,6 @@ public class DiffExtractor {
      */
     public Diff generateDiff(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
         return new Diff(generateDependencyDiffAsJson(aggregateDepStart, aggregateDepEnd), generatePomDiffAsJson(), to.getProject().getName(), to.getName());
-    }
-
-    /**
-     * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
-     * @param aggregateDepEnd   whether a dependency ending at a level should be displayed for higher levels
-     * @return a json serialized form of {@link DiffExtractor#generateDiff(boolean, boolean)}
-     * @throws JsonProcessingException on json generation failure
-     * @see DiffExtractor#generateDiff(boolean, boolean)
-     */
-    public String generateJson(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(generateDiff(aggregateDepStart, aggregateDepEnd));
     }
 
     /**
@@ -291,7 +275,10 @@ public class DiffExtractor {
         @JsonProperty("toProject")
         @NotNull
         public final String toProject;
+        @JsonProperty("updated")
+        public boolean updated;
 
+        @Contract(pure = true)
         public PomDependencyEntry(@Nullable String newVersion, @NotNull String toProject) {
             this.newVersion = newVersion;
             this.toProject = toProject;
@@ -304,6 +291,11 @@ public class DiffExtractor {
         @Override
         public String toString() {
             return "-> " + newVersion + '@' + toProject;
+        }
+
+        public PomDependencyEntry flagUpdated() {
+            updated = true;
+            return this;
         }
     }
 
