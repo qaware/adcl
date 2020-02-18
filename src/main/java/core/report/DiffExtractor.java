@@ -3,13 +3,20 @@ package core.report;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import core.information.Information;
 import core.information.VersionInformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import util.Utils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,6 +28,7 @@ public class DiffExtractor {
     private final VersionInformation from;
     @NotNull
     private final VersionInformation to;
+    private final ObjectMapper objectMapper;
 
     /**
      * Creates a new diff extractor. Does not take version order into consideration
@@ -31,6 +39,7 @@ public class DiffExtractor {
     public DiffExtractor(@Nullable VersionInformation from, @NotNull VersionInformation to) {
         this.from = from;
         this.to = to;
+        this.objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     /**
@@ -115,6 +124,17 @@ public class DiffExtractor {
         result.entrySet().stream().filter(Map.Entry::getValue).forEach(e -> e.getKey().change = true);
         return result.keySet();
     }
+    /**
+     * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
+     * @param aggregateDepEnd   whether a dependency ending at a level should be displayed for higher levels
+     * @return a set describing the code differences between the specified versions in constructor as json string
+     * @throws  JsonProcessingException on json generation failure
+     */
+    @NotNull
+    public String generateDependencyDiffAsJson(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
+        return  objectMapper.writeValueAsString(generateDependencyDiff(aggregateDepStart, aggregateDepEnd));
+    }
+
 
     /**
      * @return a set describing the pom differences between the specified versions in constructor
@@ -127,14 +147,23 @@ public class DiffExtractor {
         ).entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getProject().getName(),
                 Collectors.reducing(null, e -> new PomDependencyEntry(e.getKey(), e.getValue()), (c, n) -> c != null && n.newVersion == null ? c : n))).values());
     }
+    /**
+     * @return a set describing the pom differences between the specified versions in constructor as json string
+     * @throws JsonProcessingException on json generation failure
+     */
+    @NotNull
+    public String generatePomDiffAsJson() throws JsonProcessingException {
+        return objectMapper.writeValueAsString(generatePomDiff());
+    }
 
     /**
      * @param aggregateDepStart whether a dependency starting at a level should be displayed for higher levels
      * @param aggregateDepEnd   whether a dependency starting at a level should be displayed for higher levels
      * @return a diff describing the differences between the specified versions in constructor
+     * @throws JsonProcessingException on json generation failure
      */
-    public Diff generateDiff(boolean aggregateDepStart, boolean aggregateDepEnd) {
-        return new Diff(generateDependencyDiff(aggregateDepStart, aggregateDepEnd), generatePomDiff());
+    public Diff generateDiff(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
+        return new Diff(generateDependencyDiffAsJson(aggregateDepStart, aggregateDepEnd), generatePomDiffAsJson(), to.getProject().getName(), to.getName());
     }
 
     /**
@@ -145,7 +174,7 @@ public class DiffExtractor {
      * @see DiffExtractor#generateDiff(boolean, boolean)
      */
     public String generateJson(boolean aggregateDepStart, boolean aggregateDepEnd) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(generateDiff(aggregateDepStart, aggregateDepEnd));
+        return objectMapper.writeValueAsString(generateDiff(aggregateDepStart, aggregateDepEnd));
     }
 
     /**
@@ -284,15 +313,25 @@ public class DiffExtractor {
     public static class Diff {
         @JsonProperty("dependencies")
         @NotNull
-        public final Set<DependencyEntry> changedDependencies;
+        public final String changedDependencies;
 
         @JsonProperty("pomDependencies")
         @NotNull
-        public final Set<PomDependencyEntry> changedPomDependencies;
+        public final String changedPomDependencies;
 
-        public Diff(@NotNull Set<DependencyEntry> changedDependencies, @NotNull Set<PomDependencyEntry> changedPomDependencies) {
+        @JsonProperty("projectName")
+        @NotNull
+        public final String projectName;
+
+        @JsonProperty("projectVersion")
+        @NotNull
+        public final String projectVersion;
+
+        public Diff(@JsonProperty("dependencies") @NotNull String changedDependencies,  @JsonProperty("pomDependencies") @NotNull String changedPomDependencies, @NotNull  @JsonProperty("projectName") String projectName, @NotNull @JsonProperty("projectVersion") String projectVersion) {
             this.changedDependencies = changedDependencies;
             this.changedPomDependencies = changedPomDependencies;
+            this.projectName  = projectName;
+            this.projectVersion = projectVersion;
         }
 
         @Override
