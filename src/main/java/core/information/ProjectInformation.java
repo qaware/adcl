@@ -32,7 +32,7 @@ public class ProjectInformation extends Information<RootInformation> {
     private final boolean isInternal;
 
     @Relationship(type = "PomDependency")
-    private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
+    final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
 
     @Transient
     @Properties

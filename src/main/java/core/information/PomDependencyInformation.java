@@ -64,6 +64,13 @@ public final class PomDependencyInformation implements Purgeable {
         this.to = to.getProject();
     }
 
+    public PomDependencyInformation(@NotNull RootInformation root, @NotNull PomDependencyInformation dep) {
+        from = (ProjectInformation) root.findOrCreate(dep.from);
+        to = (ProjectInformation) root.findOrCreate(dep.to);
+        remoteVersionMapInternal.putAll(dep.remoteVersionMapInternal);
+        postLoad();
+    }
+
     /**
      * @return the edge start
      * @see PomDependencyInformation#getTo()
