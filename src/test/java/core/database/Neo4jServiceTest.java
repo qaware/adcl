@@ -1,9 +1,12 @@
 package core.database;
 
 import core.Application;
+import core.PomDependencyExtractor;
 import core.depex.DependencyExtractor;
 import core.information.*;
+import core.pm.MavenProjectManager;
 import core.report.DiffExtractor;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,6 +32,7 @@ import util.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -193,6 +197,54 @@ public class Neo4jServiceTest {
     private VersionInformation runDepEx(@NotNull ProjectInformation project, String folderName, String versionName) throws IOException {
         VersionInformation result = project.addVersion(versionName);
         new DependencyExtractor(Paths.get("src", "test", "resources", "testclassfiles2", folderName, "target", "classes"), result, null).runAnalysis();
+        return result;
+    }
+
+
+    @Test
+    void pomDependencyTest() throws MavenInvocationException {
+        SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
+        Session newSession = sessionFactory.openSession();
+        newSession.purgeDatabase();
+
+        RootInformation root = new RootInformation();
+        ProjectInformation project = new ProjectInformation(root, "proj", true, "<unknown>");
+        runPomAnalysis(project, "testproject", "0.0.1");
+        runPomAnalysis(project, "testproject2", "0.0.2");
+        runPomAnalysis(project, "testproject3", "0.0.3");
+
+        neo4jService.overrideRoot(root);
+
+        try (Transaction ignored = newSession.beginTransaction()) {
+            newSession.loadAll(Information.class);
+            newSession.loadAll(ProjectInformation.class);
+            RootInformation loaded = newSession.loadAll(RootInformation.class).iterator().next();
+
+            ProjectInformation proj = (ProjectInformation) loaded.find("proj", null);
+            assertThat(proj).isNotNull();
+            VersionInformation v1 = proj.getVersion("0.0.1");
+            assertThat(v1).isNotNull();
+            VersionInformation v2 = proj.getVersion("0.0.2");
+            assertThat(v2).isNotNull();
+            VersionInformation v3 = proj.getVersion("0.0.3");
+            assertThat(v3).isNotNull();
+
+            assertThat(new DiffExtractor(v1, v2).generatePomDiff().stream().map(Object::toString)).containsExactlyInAnyOrder(
+                    "-> null@org-springframework:spring-context",
+                    "-> 18.0.0@org-jetbrains:annotations"
+            );
+            assertThat(new DiffExtractor(v2, v3).generatePomDiff().stream().map(Object::toString)).containsExactlyInAnyOrder(
+                    "-> 5.2.1.RELEASE@org-springframework:spring-context",
+                    "-> null@org-jetbrains:annotations"
+            );
+        }
+    }
+
+    @NotNull
+    private VersionInformation runPomAnalysis(@NotNull ProjectInformation project, String folderName, String versionName) throws MavenInvocationException {
+        VersionInformation result = project.addVersion(versionName);
+        Path basedir = Paths.get("src", "test", "resources", "testclassfiles2", folderName);
+        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(basedir, basedir.resolve("pom.xml")), result);
         return result;
     }
 
