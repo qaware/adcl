@@ -50,12 +50,14 @@ public class Neo4jServiceTest {
     @Autowired
     Neo4jService neo4jService;
     private RootInformation dm;
+    private static RootInformation pomRoot = new RootInformation();
+    private static RootInformation depExRoot = new RootInformation();
 
     @Autowired
     ApplicationContext ctx;
 
     @BeforeAll
-    static void setUpDatabase() {
+    static void setUpDatabase() throws MavenInvocationException, IOException {
         try {
             BoltConnector bolt = new BoltConnector("0");
             dbService = new GraphDatabaseFactory()
@@ -67,6 +69,16 @@ public class Neo4jServiceTest {
         } catch (Exception ignored) {
 
         }
+
+        ProjectInformation depExProj = new ProjectInformation(depExRoot, "proj", true, "<unknown>");
+        runDepEx(depExProj, "testproject", "0.0.1");
+        runDepEx(depExProj, "testproject2", "0.0.2");
+        runDepEx(depExProj, "testproject3", "0.0.3");
+
+        ProjectInformation pomProj = new ProjectInformation(pomRoot, "proj", true, "<unknown>");
+        runPomAnalysis(pomProj, "testproject", "0.0.1");
+        runPomAnalysis(pomProj, "testproject2", "0.0.2");
+        runPomAnalysis(pomProj, "testproject3", "0.0.3");
     }
 
     @AfterAll
@@ -148,19 +160,28 @@ public class Neo4jServiceTest {
         }
     }
 
+    @NotNull
+    private static VersionInformation runDepEx(@NotNull ProjectInformation project, String folderName, String versionName) throws IOException {
+        VersionInformation result = project.addVersion(versionName);
+        new DependencyExtractor(Paths.get("src", "test", "resources", "testclassfiles2", folderName, "target", "classes"), result, null).runAnalysis();
+        return result;
+    }
+
+    @NotNull
+    private static VersionInformation runPomAnalysis(@NotNull ProjectInformation project, String folderName, String versionName) throws MavenInvocationException {
+        VersionInformation result = project.addVersion(versionName);
+        Path basedir = Paths.get("src", "test", "resources", "testclassfiles2", folderName);
+        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(basedir, basedir.resolve("pom.xml")), result);
+        return result;
+    }
+
     @Test
-    public void versionsTest() throws IOException {
+    public void versionsTest() {
         SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
         Session newSession = sessionFactory.openSession();
         newSession.purgeDatabase();
 
-        RootInformation root = new RootInformation();
-        ProjectInformation project = new ProjectInformation(root, "proj", true, "<unknown>");
-        runDepEx(project, "testproject", "0.0.1");
-        runDepEx(project, "testproject2", "0.0.2");
-        runDepEx(project, "testproject3", "0.0.3");
-
-        neo4jService.overrideRoot(root);
+        neo4jService.overrideRoot(depExRoot);
 
         try (Transaction ignored = newSession.beginTransaction()) {
             newSession.loadAll(Information.class);
@@ -193,27 +214,12 @@ public class Neo4jServiceTest {
         }
     }
 
-    @NotNull
-    private VersionInformation runDepEx(@NotNull ProjectInformation project, String folderName, String versionName) throws IOException {
-        VersionInformation result = project.addVersion(versionName);
-        new DependencyExtractor(Paths.get("src", "test", "resources", "testclassfiles2", folderName, "target", "classes"), result, null).runAnalysis();
-        return result;
-    }
-
-
     @Test
-    void pomDependencyTest() throws MavenInvocationException {
+    void pomDependencyWriteTest() {
         SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
         Session newSession = sessionFactory.openSession();
         newSession.purgeDatabase();
-
-        RootInformation root = new RootInformation();
-        ProjectInformation project = new ProjectInformation(root, "proj", true, "<unknown>");
-        runPomAnalysis(project, "testproject", "0.0.1");
-        runPomAnalysis(project, "testproject2", "0.0.2");
-        runPomAnalysis(project, "testproject3", "0.0.3");
-
-        neo4jService.overrideRoot(root);
+        neo4jService.overrideRoot(pomRoot);
 
         try (Transaction ignored = newSession.beginTransaction()) {
             newSession.loadAll(Information.class);
@@ -240,12 +246,31 @@ public class Neo4jServiceTest {
         }
     }
 
-    @NotNull
-    private VersionInformation runPomAnalysis(@NotNull ProjectInformation project, String folderName, String versionName) throws MavenInvocationException {
-        VersionInformation result = project.addVersion(versionName);
-        Path basedir = Paths.get("src", "test", "resources", "testclassfiles2", folderName);
-        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(basedir, basedir.resolve("pom.xml")), result);
-        return result;
+    @Test
+    void pomDependencyReadTest() {
+        SessionFactory sessionFactory = ctx.getBean(SessionFactory.class);
+        Session newSession = sessionFactory.openSession();
+        newSession.purgeDatabase();
+        neo4jService.overrideRoot(pomRoot);
+        neo4jService.loadRoot();
+
+        ProjectInformation proj = (ProjectInformation) neo4jService.getRoot().find("proj", null);
+        assertThat(proj).isNotNull();
+        VersionInformation v1 = proj.getVersion("0.0.1");
+        assertThat(v1).isNotNull();
+        VersionInformation v2 = proj.getVersion("0.0.2");
+        assertThat(v2).isNotNull();
+        VersionInformation v3 = proj.getVersion("0.0.3");
+        assertThat(v3).isNotNull();
+
+        assertThat(new DiffExtractor(v1, v2).generatePomDiff().stream().map(Object::toString)).containsExactlyInAnyOrder(
+                "-> null@org-springframework:spring-context",
+                "-> 18.0.0@org-jetbrains:annotations"
+        );
+        assertThat(new DiffExtractor(v2, v3).generatePomDiff().stream().map(Object::toString)).containsExactlyInAnyOrder(
+                "-> 5.2.1.RELEASE@org-springframework:spring-context",
+                "-> null@org-jetbrains:annotations"
+        );
     }
 
     @TestConfiguration
