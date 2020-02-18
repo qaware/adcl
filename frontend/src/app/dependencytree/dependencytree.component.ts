@@ -52,6 +52,12 @@ class GraphItem {
     }
     return this.children.some(child => child.shouldBeDisplayed());
   }
+
+  isInChildrenTransitive(id: number): boolean {
+    return this.children.some(value => {
+      return value.id === id || value.isInChildrenTransitive(id);
+    });
+  }
 }
 
 class IdGenerator {
@@ -379,6 +385,7 @@ export class DependencyTreeDatabase {
     obj.forEach(node => {
       this.generateNodesFromString(node.code, node.filterType, idG, nodeMap, node.path);
     });
+    const idMap = this.generateIDMap(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
     const container = document.getElementById('dataview');
     const options = {
@@ -399,8 +406,57 @@ export class DependencyTreeDatabase {
       net.on('afterDrawing', () => {
         document.body.style.cursor = 'default';
       });
+      this.setClusterRules(net, idMap);
+
       resolve(net);
     });
+  }
+
+  private setClusterRules(net: Network, idMap: Map<number, GraphItem>) {
+    net.on('doubleClick', o => {
+
+      if (o.nodes.toString().startsWith('cluster:')) {
+        net.openCluster(o.nodes);
+      } else {
+        o.nodes.forEach(entry => {
+          const node = idMap.get(entry);
+          const option = {
+            clusterNodeProperties: {
+              label: node.name,
+              title: node.tooltip,
+              color: {
+                background: this.colorForType(node.type),
+                border: '#000000'
+              }
+            },
+            joinCondition(nodeOptions) {
+              if (nodeOptions.id.toString().startsWith('cluster:')) {
+                return net.getNodesInCluster(nodeOptions.id).some(value => {
+                  return node.isInChildrenTransitive(value as number);
+                });
+              }
+              return entry === nodeOptions.id || node.isInChildrenTransitive(nodeOptions.id);
+            }
+          };
+          net.cluster(option);
+
+        });
+      }
+    });
+  }
+
+
+  /**
+   * Generates a map of all node ids
+   *
+   * @param nodeMap map of all nodes
+   */
+  private generateIDMap(nodeMap: Map<string, GraphItem>): Map<number, GraphItem> {
+    const res = new Map<number, GraphItem>();
+    nodeMap.forEach(value => {
+      res.set(value.id, value);
+    });
+    return res;
   }
 
   /**
