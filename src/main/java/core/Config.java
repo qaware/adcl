@@ -204,7 +204,7 @@ public class Config {
         properties.putAll(argsToMap(args));
         properties.putAll(propertiesToMap()); // overrides options from args
 
-        loadBasedir();
+        basedir = loadBasedir();
 
         Path configPath = getPath("configPath", null);
         String raw = get("configPath", null);
@@ -227,6 +227,7 @@ public class Config {
 
     @NotNull
     private static Path loadBasedir() {
+        basedir = Paths.get(".");
         Path result = getPath("basedir", null);
         if (result == null) {
             String raw = get("basedir", null);
