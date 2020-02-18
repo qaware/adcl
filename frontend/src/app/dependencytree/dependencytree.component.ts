@@ -58,6 +58,15 @@ class GraphItem {
       return value.id === id || value.isInChildrenTransitive(id);
     });
   }
+
+  hasChildrenInCluster(net: Network, cluster: string): boolean {
+    return net.getNodesInCluster(cluster).some(value => {
+      if (value.toString().startsWith('cluster:')) {
+        return this.hasChildrenInCluster(net, value.toString());
+      }
+      return this.isInChildrenTransitive(value as number);
+    });
+  }
 }
 
 class IdGenerator {
@@ -178,15 +187,10 @@ export class DependencyTreeDatabase {
     const dependencyMethod: any[] = [];
 
     // Query fetching all nodes with contain changes
-    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
-      '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
+    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
       'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
-      'return distinct i.path, i.name, labels(i) as labels ' +
-      'union ' +
-      'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
-      '(i:Information)<-[:Parent *]-()-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
-      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
-      'return distinct i.path, i.name, labels(i) as labels';
+      'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
+      'return i.path, i.name, labels(i) as labels';
 
     // Query fetching all dependencies
     const queryDependencies = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
@@ -381,15 +385,29 @@ export class DependencyTreeDatabase {
    *
    * @param obj TreeData which will be displayed as a Graph
    * @param displayOption how the graph should be generated
+   * @param selectedProject name of the selected project
    *
    * @return a Promise that builds the graph
    */
-  async buildGraphView(obj: any[], displayOption: DisplayOption): Promise<Network> {
+  async buildGraphView(obj: any[], displayOption: DisplayOption, selectedProject: string): Promise<Network> {
     const idG = new IdGenerator();
     const nodeMap = new Map<string, GraphItem>();
     obj.forEach(node => {
       this.generateNodesFromString(node.code, node.filterType, idG, nodeMap, node.path);
     });
+    const projectNode = new GraphItem();
+    projectNode.id = idG.getNextId();
+    projectNode.name = selectedProject;
+    projectNode.tooltip = selectedProject;
+    projectNode.type = FilterType.Package;
+    for (const key of nodeMap.keys()) {
+      if (key.indexOf('.') === -1 && nodeMap.get(key).type === FilterType.Package) {
+        projectNode.children.push(nodeMap.get(key));
+      }
+    }
+    nodeMap.set(selectedProject, projectNode);
+
+    console.log(nodeMap);
     const idMap = this.generateIDMap(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
     const container = document.getElementById('dataview');
@@ -412,46 +430,61 @@ export class DependencyTreeDatabase {
         document.body.style.cursor = 'default';
       });
       this.setClusterRules(net, idMap);
-
+      this.clusterChildren(net, nodeMap.get(selectedProject));
       resolve(net);
     });
   }
 
   private setClusterRules(net: Network, idMap: Map<number, GraphItem>) {
     net.on('doubleClick', o => {
-
       if (o.nodes.toString().startsWith('cluster:')) {
-        net.openCluster(o.nodes);
+        this.openCluster(o.nodes, net);
+
       } else {
         o.nodes.forEach(entry => {
-          const node = idMap.get(entry);
-          const option = {
-            clusterNodeProperties: {
-              label: node.name,
-              title: node.tooltip,
-              color: {
-                background: this.colorForType(node.type),
-                border: '#000000'
-              }
-            },
-            joinCondition(nodeOptions) {
-              if (nodeOptions.id.toString().startsWith('cluster:')) {
-                return net.getNodesInCluster(nodeOptions.id).some(value => {
-                  return node.isInChildrenTransitive(value as number);
-                });
-              }
-              return entry === nodeOptions.id || node.isInChildrenTransitive(nodeOptions.id);
-            }
-          };
-          net.cluster(option);
-
+          this.clusterChildren(net, idMap.get(entry));
         });
       }
     });
   }
 
-  clusterChildren(net: Network, node: GraphItem) {
+  private openCluster(nodes: string, net: Network) {
+    const list = net.getNodesInCluster(nodes);
 
+    if (list.length > 2) {
+      net.openCluster(nodes);
+      return;
+    }
+
+    net.openCluster(nodes);
+    list.forEach(value => {
+      if (value.toString().startsWith('cluster:')) {
+        this.openCluster(value.toString(), net);
+      }
+    });
+  }
+
+  clusterChildren(net: Network, node: GraphItem) {
+    node.children.forEach(value => {
+      this.clusterChildren(net, value);
+    });
+    const option = {
+      clusterNodeProperties: {
+        label: node.name,
+        title: node.tooltip,
+        color: {
+          background: this.colorForType(node.type),
+          border: '#000000'
+        }
+      },
+      joinCondition(nodeOptions) {
+        if (nodeOptions.id.toString().startsWith('cluster:')) {
+          return node.hasChildrenInCluster(net, nodeOptions.id.toString());
+        }
+        return node.id === nodeOptions.id || node.isInChildrenTransitive(nodeOptions.id);
+      }
+    };
+    net.cluster(option);
   }
 
 
@@ -842,7 +875,7 @@ export class DependencytreeComponent implements OnInit {
   async generateGraphView(displayOption: DisplayOption) {
     if (this.graph === undefined || this.graph === null) {
       document.body.style.cursor = 'wait';
-      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption);
+      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption, this.selectedProject);
     }
 
     const options = new MatSnackBarConfig();
