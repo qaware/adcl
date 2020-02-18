@@ -70,6 +70,7 @@ Download the fat jar from the releases page. You need to specify more startup op
 | configPath                 | a path to a .properties file to load further options from        | ./config.properties                                                |          |                    | X        |
 | nomaven                    | disable maven pom analysis even if a pom is found                | false                                                              |          |                    | X        |
 | local                      | only generate a changelog artifact, don't create a new version   | false                                                              |          |                    | X        |
+| basedir                    | the working directory for the project                            | .                                                                  |          |                    | X        |
 ### Configuration methods
 **Note**: Configuration methods shown below are ordered in priority
 #### (Maven) pom.xml
