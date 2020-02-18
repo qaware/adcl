@@ -187,14 +187,7 @@ export class DependencyTreeDatabase {
     const dependencyMethod: any[] = [];
 
     // Query fetching all nodes with contain changes
-    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
-      '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
-      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
-      'return distinct i.path, i.name, labels(i) as labels ' +
-      'union ' +
-      'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
-      '(i:Information)<-[:Parent *]-()-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
-      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
+    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
       'return distinct i.path, i.name, labels(i) as labels';
 
     // Query fetching all dependencies
@@ -412,7 +405,6 @@ export class DependencyTreeDatabase {
     }
     nodeMap.set(selectedProject, projectNode);
 
-    console.log(nodeMap);
     const idMap = this.generateIDMap(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
     const container = document.getElementById('dataview');
