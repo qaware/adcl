@@ -7,6 +7,7 @@ import {environment} from '../../environments/environment';
 import {CookieService} from 'ngx-cookie-service';
 import {Network} from 'vis-network';
 import {MatSnackBar, MatSnackBarConfig, MatSnackBarRef, SimpleSnackBar} from '@angular/material/snack-bar';
+import {MatTable} from '@angular/material';
 
 /**
  * Base Node for Tree item nodes
@@ -101,11 +102,13 @@ export enum Label {
 export class DependencyTreeDatabase {
   dataChange = new BehaviorSubject<TreeItemNode[]>([]);
   treeData: any[];
+  pomChanges: any[] = [];
   changelogIds: any[];
   projectNames: string[];
   selectedProject: string;
-  root = 'root';
+  selectedVersion: string;
   selectedDisplayOption: DisplayOption;
+  root = 'root';
 
   constructor(private neo4j: AngularNeo4jService) {
     this.initialize();
@@ -571,6 +574,22 @@ export class DependencyTreeDatabase {
     });
   }
 
+  async loadPomChanges() {
+      this.pomChanges = [];
+      const params = {pName: this.selectedProject.toString(), version: 'remoteVersions.' + this.selectedVersion};
+      const queryPomChanges = 'MATCH (r:ProjectInformation{name: {pName}})-[pd:PomDependency]->(i:ProjectInformation)' +
+        'where any(x in keys(pd) where x = {version}) return pd[{version}], i.name';
+      await this.neo4j.run(queryPomChanges, params).then(pomChanges => {
+
+        pomChanges.forEach(pChange => {
+          const obj: { [k: string]: any } = {};
+          obj.project = pChange[1];
+          obj.version = (pChange[0].toString() === 'null') ? 'DELETED' : pChange[0];
+          this.pomChanges.push(obj);
+        });
+      });
+  }
+
   private addParentNodes(filteredTreeData: any[], codeString: string) {
     while (codeString.lastIndexOf('.') > -1) {
       const index = codeString.lastIndexOf('.');
@@ -607,23 +626,6 @@ export class DependencyTreeDatabase {
 })
 export class DependencytreeComponent implements OnInit {
 
-
-  /** Map from flat node to nested node. This helps us finding the nested node to be modified */
-  flatNodeMap = new Map<TreeItemFlatNode, TreeItemNode>();
-  /** Map from nested node to flattened node. This helps us to keep the same object for selection */
-  nestedNodeMap = new Map<TreeItemNode, TreeItemFlatNode>();
-  treeControl: FlatTreeControl<TreeItemFlatNode>;
-  treeFlattener: MatTreeFlattener<TreeItemNode, TreeItemFlatNode>;
-  dataSource: MatTreeFlatDataSource<TreeItemNode, TreeItemFlatNode>;
-  @ViewChild('searchField', {static: false}) searchField;
-  selectedProject: string;
-  projectVersion: string;
-  filterText = '';
-  private db: DependencyTreeDatabase;
-  graph: Network;
-  graphVisible = false;
-  graphWarning: MatSnackBarRef<SimpleSnackBar>;
-
   constructor(public snackbar: MatSnackBar, private database: DependencyTreeDatabase, private cookieService: CookieService) {
 
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
@@ -644,6 +646,25 @@ export class DependencytreeComponent implements OnInit {
   get DisplayOption() {
     return DisplayOption;
   }
+
+
+  /** Map from flat node to nested node. This helps us finding the nested node to be modified */
+  flatNodeMap = new Map<TreeItemFlatNode, TreeItemNode>();
+  /** Map from nested node to flattened node. This helps us to keep the same object for selection */
+  nestedNodeMap = new Map<TreeItemNode, TreeItemFlatNode>();
+  treeControl: FlatTreeControl<TreeItemFlatNode>;
+  treeFlattener: MatTreeFlattener<TreeItemNode, TreeItemFlatNode>;
+  dataSource: MatTreeFlatDataSource<TreeItemNode, TreeItemFlatNode>;
+  @ViewChild('searchField', {static: false}) searchField;
+  @ViewChild(MatTable, {static: false}) table: MatTable<any>;
+  selectedProject: string;
+  projectVersion: string;
+  filterText = '';
+  private db: DependencyTreeDatabase;
+  graph: Network;
+  graphVisible = false;
+  graphWarning: MatSnackBarRef<SimpleSnackBar>;
+  pomColumnsToDisplay = ['project', 'version'];
 
   ngOnInit() {
     this.loadCookies();
@@ -678,7 +699,9 @@ export class DependencytreeComponent implements OnInit {
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
+    this.db.selectedVersion = value;
     this.db.loadChangelogFromDatabase(this.database.selectedProject, value);
+    this.db.loadPomChanges().then(() => this.table.renderRows());
   }
 
   /** Event-Handler triggered then input text in search field changes */
@@ -725,6 +748,7 @@ export class DependencytreeComponent implements OnInit {
     if (this.cookieService.check('projectName')) {
       const pName = this.cookieService.get('projectName').toString();
       if (pName !== undefined) {
+        this.db.selectedProject = pName;
         this.selectedProject = pName;
         this.loadProjectVersion(this.selectedProject);
       }
@@ -745,8 +769,12 @@ export class DependencytreeComponent implements OnInit {
       const pVersion = this.cookieService.get('projectVersion');
       if (pVersion !== undefined) {
         this.projectVersion = pVersion;
+        this.db.selectedVersion = pVersion;
+        this.db.loadPomChanges().then(() => this.table.renderRows());
         this.db.loadChangelogFromDatabase(this.db.selectedProject, pVersion)
-          .then(() => this.searchField.nativeElement.dispatchEvent(new Event('input')));
+          .then(() => {
+            this.searchField.nativeElement.dispatchEvent(new Event('input'));
+            });
       }
     }
 
@@ -798,4 +826,3 @@ export class DependencytreeComponent implements OnInit {
     }
   }
 }
-

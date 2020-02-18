@@ -539,11 +539,11 @@ var data_dependencies = [ {
   "changeStatus" : true
 } ];
 var data_pom = [ {
-  "newVersion" : "5.2.3.RELEASE",
-  "toProject" : "org-springframework:spring"
-}, {
   "newVersion" : "3.5.14",
   "toProject" : "org-neo4j:neo4j"
+}, {
+  "newVersion" : "5.2.3.RELEASE",
+  "toProject" : "org-springframework:spring"
 } ];
     </script>
 </head>
@@ -629,7 +629,7 @@ var data_pom = [ {
         tr.appendChild(td);
 
         td = document.createElement("TD");
-        td.innerText = (pdep.newVersion === null)? "DELETED": pdep.newVersion;
+        td.innerText = (pdep.newVersion === null)? "DELETED": (pdep.updated === false)? "[NEW] " + pdep.newVersion: pdep.newVersion;
         tr.appendChild(td);
         pomTable.appendChild(tr);
     });

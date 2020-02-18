@@ -305,7 +305,7 @@
         tr.appendChild(td);
 
         td = document.createElement("TD");
-        td.innerText = (pdep.newVersion === null)? "DELETED": pdep.newVersion;
+        td.innerText = (pdep.newVersion === null)? "DELETED": (pdep.updated === false)? "[NEW] " + pdep.newVersion: pdep.newVersion;
         tr.appendChild(td);
         pomTable.appendChild(tr);
     });
