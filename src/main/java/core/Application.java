@@ -55,7 +55,7 @@ public class Application {
      * @param args CLI args
      * @return the exit code
      */
-    public static int launch(String[] args) {
+    public static int launch(String... args) {
         ConfigurableApplicationContext ctx = null;
         try {
             ApplicationConfig appConfig = loadConfig(args);
