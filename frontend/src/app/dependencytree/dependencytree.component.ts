@@ -187,10 +187,15 @@ export class DependencyTreeDatabase {
     const dependencyMethod: any[] = [];
 
     // Query fetching all nodes with contain changes
-    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
+    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
+      '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
       'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
-      'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
-      'return i.path, i.name, labels(i) as labels';
+      'return distinct i.path, i.name, labels(i) as labels ' +
+      'union ' +
+      'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
+      '(i:Information)<-[:Parent *]-()-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]->(di)' +
+      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
+      'return distinct i.path, i.name, labels(i) as labels';
 
     // Query fetching all dependencies
     const queryDependencies = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
