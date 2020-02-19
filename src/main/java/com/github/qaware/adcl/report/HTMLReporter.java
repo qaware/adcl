@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -56,7 +57,7 @@ public class HTMLReporter {
             }
         }
         String fileName = diff.projectName.replace(":", "_") + "_" + diff.projectVersion + ".html";
-        try (BufferedWriter writer = Files.newBufferedWriter(outputPath.resolve("adcl_report_" + fileName))) {
+        try (BufferedWriter writer = Files.newBufferedWriter(outputPath.resolve("adcl_report_" + fileName), StandardCharsets.UTF_8)) {
             writer.write(report.toString());
         } catch (IOException e) {
             LOGGER.error("Unable to resolve report path: {}", outputPath);
