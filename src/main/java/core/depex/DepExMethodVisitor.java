@@ -125,7 +125,13 @@ class DepExMethodVisitor extends MethodVisitor {
      */
     @Override
     public void visitTypeInsn(int opcode, String type) {
-        if (opcode != NEW) addDependency(type); // new handled with constructor call (MethodInsn)
+        if (opcode != NEW) { // new handled with constructor call (MethodInsn)
+            if (type.startsWith("[")) {
+                Utils.getTypesFromDescriptor(type).forEach(this::addDependency);
+            } else {
+                addDependency(type);
+            }
+        }
     }
 
     /*
