@@ -53,12 +53,23 @@ class GraphItem {
     return this.children.some(child => child.shouldBeDisplayed());
   }
 
+  /**
+   * Searches in children
+   *
+   * @param id child id
+   */
   isInChildrenTransitive(id: number): boolean {
     return this.children.some(value => {
       return value.id === id || value.isInChildrenTransitive(id);
     });
   }
 
+  /**
+   * Searches if cluster has a child of this GraphItem
+   *
+   * @param net Network in which the cluster is
+   * @param cluster cluster in which should be searched
+   */
   hasChildrenInCluster(net: Network, cluster: string): boolean {
     return net.getNodesInCluster(cluster).some(value => {
       if (value.toString().startsWith('cluster:')) {
@@ -413,7 +424,7 @@ export class DependencyTreeDatabase {
     const options = {
       clickToUse: true,
       layout: {
-        improvedLayout: false
+        //improvedLayout: false
       },
       interaction: {
         tooltipDelay: 200
@@ -425,37 +436,48 @@ export class DependencyTreeDatabase {
     };
     return new Promise<Network>((resolve) => {
       const net = new Network(container, resultData, options);
-      net.on('afterDrawing', () => {
+      net.once('afterDrawing', () => {
         document.body.style.cursor = 'default';
+        this.clusterToProjects(net, nodeMap);
       });
       this.setClusterRules(net, idMap);
-      this.clusterChildren(net, nodeMap.get(selectedProject));
       resolve(net);
     });
   }
 
+  /**
+   * Set the event for collapsing the nodes
+   *
+   * @param net Network
+   * @param idMap map with all node ids
+   */
   private setClusterRules(net: Network, idMap: Map<number, GraphItem>) {
     net.on('doubleClick', o => {
       if (o.nodes.toString().startsWith('cluster:')) {
         this.openCluster(o.nodes, net);
-
       } else {
         o.nodes.forEach(entry => {
-          this.clusterChildren(net, idMap.get(entry));
+          this.clusterWithChildren(net, idMap.get(entry));
         });
       }
     });
   }
 
-  private openCluster(nodes: string, net: Network) {
-    const list = net.getNodesInCluster(nodes);
+  /**
+   * Open the given cluster node
+   *
+   * @param node the cluster node that should be opened
+   * @param net Network
+   */
+  private openCluster(node: string, net: Network) {
+    const list = net.getNodesInCluster(node);
 
     if (list.length > 2) {
-      net.openCluster(nodes);
+      net.openCluster(node);
       return;
     }
 
-    net.openCluster(nodes);
+    net.openCluster(node);
     list.forEach(value => {
       if (value.toString().startsWith('cluster:')) {
         this.openCluster(value.toString(), net);
@@ -463,9 +485,15 @@ export class DependencyTreeDatabase {
     });
   }
 
-  clusterChildren(net: Network, node: GraphItem) {
+  /**
+   * Cluster the node and its children
+   *
+   * @param net Network
+   * @param node the node that should be clustered
+   */
+  private clusterWithChildren(net: Network, node: GraphItem) {
     node.children.forEach(value => {
-      this.clusterChildren(net, value);
+      this.clusterWithChildren(net, value);
     });
     const option = {
       clusterNodeProperties: {
@@ -689,6 +717,15 @@ export class DependencyTreeDatabase {
           filteredTreeData.push(child);
         }
       });
+    }
+  }
+
+  private clusterToProjects(net: Network, nodeMap: Map<string, GraphItem>) {
+    const list: string[] = [];
+    for (const key of nodeMap.keys()) {
+      if (key.indexOf('.') === -1) {
+        this.clusterWithChildren(net, nodeMap.get(key));
+      }
     }
   }
 }
