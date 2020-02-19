@@ -3,7 +3,6 @@
 *.iml
 
 # Output
-*.class
 target
 
 # Log file
