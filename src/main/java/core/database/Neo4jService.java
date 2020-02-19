@@ -1,6 +1,7 @@
 package core.database;
 
 import core.information.Information;
+import core.information.PomDependencyInformation;
 import core.information.RootInformation;
 import org.jetbrains.annotations.NotNull;
 import org.neo4j.ogm.session.Session;
@@ -20,6 +21,7 @@ import java.util.stream.StreamSupport;
 @Service
 public class Neo4jService {
     private final InformationRepository infoRepo;
+    private final PomDependencyRepository pomDepRepo;
     private final SessionFactory sessionFactory;
 
     @SuppressWarnings("NotNullFieldNotInitialized" /* gets initialized in constructor */)
@@ -33,8 +35,9 @@ public class Neo4jService {
      * @param sessionFactory the neo4j driver session factory
      */
     @SuppressWarnings("java:S2637" /* gets initialized in constructor */)
-    public Neo4jService(InformationRepository infoRepo, SessionFactory sessionFactory) {
+    public Neo4jService(InformationRepository infoRepo, PomDependencyRepository pomDepRepo, SessionFactory sessionFactory) {
         this.infoRepo = infoRepo;
+        this.pomDepRepo = pomDepRepo;
         this.sessionFactory = sessionFactory;
         loadRoot();
     }
@@ -55,6 +58,7 @@ public class Neo4jService {
         root = StreamSupport.stream(infoRepo.findAll().spliterator(), true)
                 .filter(RootInformation.class::isInstance).findAny()
                 .map(RootInformation.class::cast).orElseGet(RootInformation::new);
+        pomDepRepo.findAll().forEach(root::addPomDependencyRaw);
     }
 
     /**
@@ -91,6 +95,14 @@ public class Neo4jService {
      */
     @Repository
     public interface InformationRepository extends Neo4jRepository<Information<?>, Long> {
+
+    }
+
+    /**
+     * Information repository DAO
+     */
+    @Repository
+    public interface PomDependencyRepository extends Neo4jRepository<PomDependencyInformation, Long> {
 
     }
 }

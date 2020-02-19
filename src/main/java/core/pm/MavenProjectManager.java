@@ -36,13 +36,13 @@ public class MavenProjectManager implements ProjectManager {
     @NotNull
     private final Set<Dependency> dependencies;
 
-    public MavenProjectManager(@NotNull Path pomFile) throws MavenInvocationException {
+    public MavenProjectManager(@NotNull Path basedir, @NotNull Path pomFile) throws MavenInvocationException {
         this.pomFile = pomFile;
         String[] vars = getVars("project.groupId", "project.artifactId", "project.version", "project.build.outputDirectory", "project.build.directory");
         projectName = vars[0].replace('.', '-') + ':' + vars[1];
         projectVersion = vars[2];
-        classesOutput = Paths.get(vars[3]);
-        artifactOutput = Paths.get(vars[4]);
+        classesOutput = basedir.resolve(vars[3]);
+        artifactOutput = basedir.resolve(vars[4]);
         dependencies = getDependencies0();
         compileDependencies = getCompileDependencies0();
     }
@@ -121,7 +121,7 @@ public class MavenProjectManager implements ProjectManager {
         Map<Dependency, Path> result = new HashMap<>();
         while (matcher.find()) {
             Dependency dep = new Dependency(matcher.group("group") + ':' + matcher.group("artifact"), matcher.group("version"), "compile");
-            result.put(dep, Paths.get(matcher.group("path")));
+            result.put(dep, Paths.get(matcher.group("path"))); // absolute path assumed
         }
         return result;
     }

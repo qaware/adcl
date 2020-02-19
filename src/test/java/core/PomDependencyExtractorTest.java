@@ -8,6 +8,7 @@ import core.pm.MavenProjectManager;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,7 +18,8 @@ public class PomDependencyExtractorTest {
     void test() throws MavenInvocationException {
         RootInformation root = new RootInformation();
         ProjectInformation proj = new ProjectInformation(root, "proj", true, "v1");
-        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(Paths.get("src", "test", "resources", "pom", "pom.xml")), proj.getLatestVersion());
+        Path basedir = Paths.get("src", "test", "resources", "pom");
+        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(basedir, basedir.resolve("pom.xml")), proj.getLatestVersion());
 
         assertThat(proj.getPomDependencies(proj.getLatestVersion()).stream().map(VersionInformation::toString)).containsExactlyInAnyOrder(
                 "org-javassist:javassist@3.26.0-GA",
