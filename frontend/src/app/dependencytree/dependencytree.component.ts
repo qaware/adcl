@@ -632,11 +632,19 @@ export class DependencyTreeDatabase {
         });
 
         node.addedDependency.forEach(dep => {
-          edgeSet.push({from: node.id, to: dep.id, label: 'Added', arrows: 'to', color: '#cc2222', width: 3});
+          edgeSet.push({
+            from: node.id, to: dep.id, label: '+', arrows: 'to', color: '#cc2222', width: 3, font: {
+              size: 30,
+            }
+          });
         });
 
         node.deletedDependency.forEach(dep => {
-          edgeSet.push({from: node.id, to: dep.id, label: 'Deleted', arrows: 'to', color: '#22cc22', width: 3});
+          edgeSet.push({
+            from: node.id, to: dep.id, label: '-', arrows: 'to', color: '#22cc22', width: 3, font: {
+              size: 30,
+            }
+          });
         });
 
         nodeSet.push({id: node.id, label: node.name, title: node.tooltip, color: this.colorForType(node.type)});
