@@ -575,19 +575,39 @@ export class DependencyTreeDatabase {
   }
 
   async loadPomChanges() {
-      this.pomChanges = [];
-      const params = {pName: this.selectedProject.toString(), version: 'remoteVersions.' + this.selectedVersion};
-      const queryPomChanges = 'MATCH (r:ProjectInformation{name: {pName}})-[pd:PomDependency]->(i:ProjectInformation)' +
-        'where any(x in keys(pd) where x = {version}) return pd[{version}], i.name';
-      await this.neo4j.run(queryPomChanges, params).then(pomChanges => {
+    this.pomChanges = [];
+    const params = {pName: this.selectedProject.toString(), version: 'remoteVersions.' + this.selectedVersion};
+    const queryPomChanges = 'MATCH (r:ProjectInformation{name: {pName}})-[pd:PomDependency]->(i:ProjectInformation)' +
+      'UNWIND keys(pd) as n ' +
+      'WITH n, i, pd ' +
+      'where any(x in keys(pd) where x = {version}) ' +
+      'return pd[n], i.name, n';
 
-        pomChanges.forEach(pChange => {
+    await this.neo4j.run(queryPomChanges, params).then(pomChanges => {
+      let entry;
+      let nextPrevious = false;
+      pomChanges.forEach(pChange => {
+
+        if (pChange[2].toString() === params.version.toString()) {
+          if (nextPrevious) {
+            entry.version = '[NEW] ' + entry.version;
+          }
+          nextPrevious = true;
           const obj: { [k: string]: any } = {};
           obj.project = pChange[1];
           obj.version = (pChange[0].toString() === 'null') ? 'DELETED' : pChange[0];
+          entry = obj;
           this.pomChanges.push(obj);
-        });
+        } else {
+          if (nextPrevious) {
+            nextPrevious = false;
+            if (pChange[0].toString() === 'null') {
+              entry.version = '[NEW] ' + entry.version;
+            }
+          }
+        }
       });
+    });
   }
 
   private addParentNodes(filteredTreeData: any[], codeString: string) {
