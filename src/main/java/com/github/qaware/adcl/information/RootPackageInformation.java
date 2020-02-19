@@ -9,7 +9,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public class RootPackageInformation extends PackageInformation<ProjectInformation> {
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private RootPackageInformation() {

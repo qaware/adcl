@@ -17,6 +17,9 @@ import java.util.Scanner;
 public class HTMLReporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HTMLReporter.class);
 
+    /**
+     * Should not be initialized.
+     */
     private HTMLReporter() {
 
     }

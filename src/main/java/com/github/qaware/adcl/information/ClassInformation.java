@@ -20,7 +20,7 @@ public abstract class ClassInformation<P extends Information<?>> extends Informa
     private boolean isService;
 
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     ClassInformation() {
         super();

@@ -83,6 +83,12 @@ public class Application {
         }
     }
 
+    /**
+     * Loads the available project data from the neo4j database
+     * @param ctx the configurableApplicationContext to retrieve the Neo4jService bean
+     * @param appConfig containing the configured options
+     * @return the project data
+     */
     @NotNull
     @Contract("_, _ -> new")
     private static ExecutionData queryData(@NotNull ConfigurableApplicationContext ctx, @NotNull ApplicationConfig appConfig) {
@@ -101,6 +107,11 @@ public class Application {
         return new ExecutionData(runAnalysis, currentVersion, neo4jService);
     }
 
+    /**
+     * Launches Spring for the neo4jService
+     * @param appConfig containing the configured options
+     * @return the configurableApplicationContext
+     */
     @Nullable
     private static ConfigurableApplicationContext launchSpring(ApplicationConfig appConfig) {
         LOGGER.info("Launching Spring");
@@ -119,23 +130,44 @@ public class Application {
         }
     }
 
+    /**
+     * Initiates the analysis of the pom and code dependencies
+     * @param appConfig containing the configured options
+     * @param currentVersion current VersionInformation
+     * @return true if successful
+     */
     private static boolean analyse(@NotNull ApplicationConfig appConfig, @NotNull VersionInformation currentVersion) {
         if (appConfig.projectManager != null) analysePomDependencies(appConfig.projectManager, currentVersion);
         return analyseCodeDependencies(appConfig, currentVersion);
     }
 
+    /**
+     * Persists the current analysis into the neo4j database
+     * @param neo4jService the neo4jService
+     */
     private static void save(@NotNull Neo4jService neo4jService) {
         LOGGER.info("Saving collected data");
         neo4jService.saveRoot();
         LOGGER.info("Saved collected data");
     }
 
+    /**
+     * Initiates the analysis of the pom dependencies.
+     * @param projectManager the projectManager
+     * @param currentVersion the current versionInformation
+     */
     private static void analysePomDependencies(@NotNull ProjectManager projectManager, VersionInformation currentVersion) {
         LOGGER.info("Analysing pom dependencies");
         PomDependencyExtractor.updatePomDependencies(projectManager, currentVersion);
         LOGGER.info("Analysed pom dependencies");
     }
 
+    /**
+     * Initiates the analysis of the code dependencies
+     * @param appConfig containing the configured options
+     * @param currentVersion the current versionInformation
+     * @return true if successful
+     */
     private static boolean analyseCodeDependencies(@NotNull ApplicationConfig appConfig, VersionInformation currentVersion) {
         LOGGER.info("Analysing code dependencies");
         try {
@@ -148,6 +180,11 @@ public class Application {
         return true;
     }
 
+    /**
+     *Initiates the generation of the static HTML report for the current version
+     * @param appConfig appConfig containing the configured options
+     * @param currentVersion the current versionInformation
+     */
     private static void generateReport(@NotNull ApplicationConfig appConfig, VersionInformation currentVersion) {
         LOGGER.info("Generating static report artifact");
         try {
@@ -159,6 +196,11 @@ public class Application {
         }
     }
 
+    /**
+     * Loads the applicationConfig containing the configured options
+     * @param args the CLI args
+     * @return the applicationConfig containing the configured options
+     */
     @Nullable
     private static ApplicationConfig loadConfig(String[] args) {
         LOGGER.info("Loading configuration");
@@ -182,12 +224,19 @@ public class Application {
     public Configuration configuration() {
         return neo4jConfig;
     }
-
+    /**
+     * Holds the all data retrieved from the database
+     */
     private static class ExecutionData {
         public final boolean runAnalysis;
         public final VersionInformation currentVersion;
         private final Neo4jService neo4jService;
-
+        /**
+         * constructor
+         * @param runAnalysis false if current version is already contained in the database
+         * @param currentVersion the current version
+         * @param neo4jService the neo4jService
+         */
         private ExecutionData(boolean runAnalysis, VersionInformation currentVersion, Neo4jService neo4jService) {
             this.runAnalysis = runAnalysis;
             this.currentVersion = currentVersion;

@@ -8,7 +8,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Property;
+import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.Transient;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,7 +68,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Nullable Long id;
 
     /**
-     * neo4j init
+     *Needed for neo4j initialization
      */
     Information() {
         this("<neo4jInit>");

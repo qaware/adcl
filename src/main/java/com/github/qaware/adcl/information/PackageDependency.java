@@ -9,7 +9,7 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 @RelationshipEntity("PackageDependency")
 public final class PackageDependency extends RelationshipInformation<PackageInformation<?>> {
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private PackageDependency() {
