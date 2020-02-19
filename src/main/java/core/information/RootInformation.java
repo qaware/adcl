@@ -144,4 +144,13 @@ public class RootInformation extends Information<RootInformation> {
     public @NotNull ProjectInformation getProject() {
         throw new UnsupportedOperationException("root is super project");
     }
+
+    public void addPomDependencyRaw(@NotNull PomDependencyInformation dep) {
+        ((ProjectInformation) findOrCreate(dep.getFrom().getPath(), null, Type.PROJECT)).pomDependencies.add(new PomDependencyInformation(this, dep));
+    }
+
+    @SuppressWarnings("java:S1452" /* Wildcards are needed */)
+    Information<?> findOrCreate(@NotNull Information<?> copy) {
+        return findOrCreate(copy.getPath(), null, copy.getType());
+    }
 }

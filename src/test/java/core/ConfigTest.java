@@ -48,7 +48,7 @@ public class ConfigTest {
         assertThat(Config.get("b", '0')).isEqualTo('3');
         assertThat(Config.get("a", null)).isEqualTo("Hello World");
         assertThat(Config.getStringList("d", null)).containsExactly("a", "b", "c");
-        assertThat(Config.getPath("e", null)).isEqualTo(Paths.get("."));
+        assertThat(Utils.isSamePath(Config.getPath("e", null), Paths.get("."))).isTrue();
     }
 
     @Test

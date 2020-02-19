@@ -50,7 +50,7 @@ public class Utils {
         try {
             String raw = new BufferedReader(new InputStreamReader(new ProcessBuilder(SystemUtils.IS_OS_WINDOWS ? "where" : "which", cmd).start().getInputStream())).readLine();
             if (raw == null) return null;
-            return Paths.get(raw);
+            return Paths.get(raw); // absolute path assumed
         } catch (IOException | InvalidPathException e) {
             LOGGER.error("Exception while searching for {} in PATH", cmd, e);
             return null;
@@ -175,5 +175,9 @@ public class Utils {
                 }
             });
         } else Files.delete(path);
+    }
+
+    public static boolean isSamePath(Path path1, Path path2) {
+        return path1 == null ? path2 == null : path1.toAbsolutePath().normalize().equals(path2.toAbsolutePath().normalize());
     }
 }

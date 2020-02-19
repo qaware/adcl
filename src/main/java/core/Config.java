@@ -36,7 +36,13 @@ public class Config {
     private static final Pattern stringToArgsPattern = Pattern.compile("(?<key>[^=\\s]+)=?(?:(?<quoted>\".+?\")|(?<unquoted>[^\\s]+))?\\s");
     private static final String PREFIX = "adcl.";
 
+    private static Path basedir = loadBasedir();
+
     private Config() {
+    }
+
+    public static Path getBasedir() {
+        return basedir;
     }
 
     /**
@@ -181,7 +187,7 @@ public class Config {
     public static Path getPath(String key, Path def) {
         return tryParse(key, s -> {
             try {
-                return Paths.get(s);
+                return basedir.resolve(s);
             } catch (InvalidPathException e) {
                 return null;
             }
@@ -198,6 +204,8 @@ public class Config {
         properties.putAll(argsToMap(args));
         properties.putAll(propertiesToMap()); // overrides options from args
 
+        basedir = loadBasedir();
+
         Path configPath = getPath("configPath", null);
         String raw = get("configPath", null);
         if (configPath == null && raw != null) {
@@ -208,13 +216,26 @@ public class Config {
             logger.error("configPath points to a directory");
         } else {
             if (configPath == null) {
-                Path alternate = Paths.get("config.properties");
+                Path alternate = basedir.resolve("config.properties");
                 if (Files.exists(alternate) && !Files.isDirectory(alternate)) configPath = alternate;
             }
             if (configPath != null) fileToMap(configPath).forEach(properties::putIfAbsent); // does not override
         }
 
         logger.info("Configuration loaded: {}", properties);
+    }
+
+    @NotNull
+    private static Path loadBasedir() {
+        basedir = Paths.get(".");
+        Path result = getPath("basedir", null);
+        if (result == null) {
+            String raw = get("basedir", null);
+            if (raw != null) logger.error("basedir not valid. Is: {}", raw);
+        } else if (!Files.isDirectory(result)) {
+            logger.error("basedir does not point to a directory. Is: {}", result);
+        }
+        return result == null ? Paths.get(".") : result;
     }
 
     /**
