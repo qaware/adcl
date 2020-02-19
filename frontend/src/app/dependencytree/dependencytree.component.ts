@@ -53,6 +53,32 @@ class GraphItem {
     }
     return this.children.some(child => child.shouldBeDisplayed());
   }
+
+  /**
+   * Searches in children
+   *
+   * @param id child id
+   */
+  isInChildrenTransitive(id: number): boolean {
+    return this.children.some(value => {
+      return value.id === id || value.isInChildrenTransitive(id);
+    });
+  }
+
+  /**
+   * Searches if cluster has a child of this GraphItem
+   *
+   * @param net Network in which the cluster is
+   * @param cluster cluster in which should be searched
+   */
+  hasChildrenInCluster(net: Network, cluster: string): boolean {
+    return net.getNodesInCluster(cluster).some(value => {
+      if (value.toString().startsWith('cluster:')) {
+        return this.hasChildrenInCluster(net, value.toString());
+      }
+      return this.isInChildrenTransitive(value as number);
+    });
+  }
 }
 
 class IdGenerator {
@@ -65,11 +91,11 @@ class IdGenerator {
 
 /** Filter types */
 export enum FilterType {
+  Project = 'pr',
   Package = 'p',
   Class = 'c',
   Method = 'm',
-  Dependency = 'd',
-  Undefined = 'u'
+  Dependency = 'd'
 }
 
 /** Display options */
@@ -87,6 +113,7 @@ reverseDisplayOption.set('Flat Packages', DisplayOption.FlattenPackages);
 
 /** Display Label */
 export enum Label {
+  Project = 'Project',
   Package = 'Package',
   Class = 'Class',
   Method = 'Method',
@@ -175,10 +202,10 @@ export class DependencyTreeDatabase {
     const dependencyMethod: any[] = [];
 
     // Query fetching all nodes with contain changes
-    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-(i:Information)' +
-      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '")) ' +
-      'or all (r in relationships(p) where none(x in keys(r) where x starts with "versionInfo"))' +
-      'return i.path, i.name, labels(i) as labels';
+    const queryTree = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
+      '(i:Information)-[:MethodDependency|ClassDependency|PackageDependency|ProjectDependency]-(di) ' +
+      'where single (r in relationships(p) where any(x in keys(r) where x = "versionInfo.' + version + '"))' +
+      ' UNWIND nodes(p) AS x WITH DISTINCT x RETURN x.path, x.name, labels(x) as labels ';
 
     // Query fetching all dependencies
     const queryDependencies = 'match p=(r:ProjectInformation{name: {pName}})<-[:Parent *]-' +
@@ -190,7 +217,7 @@ export class DependencyTreeDatabase {
 
     const treeResult = this.neo4j.run(queryTree, params).then(nodes => {
       nodes.forEach(node => {
-        const path: string = (node[0] as string).substr((projectName.toString()).length + 1);
+        const path: string = node[0] as string;
         const name: string = node[1];
         const type = this.resolveType(node[2]);
         const obj: { [k: string]: any } = {};
@@ -224,17 +251,24 @@ export class DependencyTreeDatabase {
           }
         }
       });
+      const project: { [k: string]: any } = {};
+      project.text = projectName.toString();
+      project.path = projectName.toString();
+      project.code = this.root + '.' + project.path;
+      project.label = Label.Project;
+      project.filterType = FilterType.Project;
+      packageInformation.push(project);
     });
 
     const dependencyResult = this.neo4j.run(queryDependencies, params).then(nodes => {
       nodes.forEach(node => {
-        const path = (node[0] as string).substr((projectName.toString()).length + 1);
+        const path = node[0] as string;
         const name = node[1];
         const type = this.resolveType(node[2]);
         const usedByType = this.resolveType(node[5]);
         const usedByName = node[6];
         const status = (node[3] === true) ? 'added' : 'deleted';
-        const usedByPath = (node[4] as string).substr((projectName.toString()).length + 1);
+        const usedByPath = node[4] as string;
         const obj: { [k: string]: any } = {};
         obj.text = name;
         obj.path = path;
@@ -318,12 +352,12 @@ export class DependencyTreeDatabase {
    * Build the structure tree. The `value` is the Json object, or a sub-tree of a Json object.
    * The return value is the list of `TreeItemNode`.
    */
-
   buildDependencyTree(obj: any[], level: string, displayOption: DisplayOption): TreeItemNode[] {
     const treeItemNodes: TreeItemNode[] = [];
+    const expLength = (level.replace(/\([^)]*\)/g, '').match(/\./g) || []).length + 1;
     obj.filter(o =>
       (o.code as string).startsWith(level + '.')
-      && (o.code.replace(/\([^)]*\)/g, '').match(/\./g) || []).length === (level.replace(/\([^)]*\)/g, '').match(/\./g) || []).length + 1
+      && (o.code.replace(/\([^)]*\)/g, '').match(/\./g) || []).length === expLength
     )
       .forEach(o => {
         const node = new TreeItemNode();
@@ -373,20 +407,30 @@ export class DependencyTreeDatabase {
    *
    * @param obj TreeData which will be displayed as a Graph
    * @param displayOption how the graph should be generated
+   * @param selectedProject name of the selected project
    *
    * @return a Promise that builds the graph
    */
-  async buildGraphView(obj: any[], displayOption: DisplayOption): Promise<Network> {
+  async buildGraphView(obj: any[], displayOption: DisplayOption, selectedProject: string): Promise<Network> {
     const idG = new IdGenerator();
     const nodeMap = new Map<string, GraphItem>();
     obj.forEach(node => {
       this.generateNodesFromString(node.code, node.filterType, idG, nodeMap, node.path);
     });
+    const projectNode = nodeMap.get(selectedProject);
+    for (const key of nodeMap.keys()) {
+      if (key.indexOf('.', key.indexOf('.')) === 1 && nodeMap.get(key).type === FilterType.Package) {
+        projectNode.children.push(nodeMap.get(key));
+      }
+    }
+
+    const idMap = this.generateIDMap(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
     const container = document.getElementById('dataview');
     const options = {
       clickToUse: true,
       layout: {
+        randomSeed: 42,
         improvedLayout: false
       },
       interaction: {
@@ -395,15 +439,105 @@ export class DependencyTreeDatabase {
       edges: {},
       nodes: {
         shape: 'box'
+      },
+      physics: {
+        stabilization: {},
+        maxVelocity: 20,
+        barnesHut: {
+          damping: 0.5
+        }
       }
     };
     return new Promise<Network>((resolve) => {
       const net = new Network(container, resultData, options);
-      net.on('afterDrawing', () => {
+      this.clusterToProjects(net, nodeMap);
+      net.once('afterDrawing', () => {
         document.body.style.cursor = 'default';
       });
+      this.setClusterRules(net, idMap);
       resolve(net);
     });
+  }
+
+  /**
+   * Set the event for collapsing the nodes
+   *
+   * @param net Network
+   * @param idMap map with all node ids
+   */
+  private setClusterRules(net: Network, idMap: Map<number, GraphItem>) {
+    net.on('doubleClick', o => {
+      if (o.nodes.toString().startsWith('cluster:')) {
+        this.openCluster(o.nodes, idMap, net);
+      } else {
+        o.nodes.forEach(entry => {
+          this.cluster(net, idMap.get(entry));
+        });
+      }
+    });
+  }
+
+  /**
+   * Open the given cluster node
+   *
+   * @param node the cluster node that should be opened
+   * @param idMap the id map
+   * @param net Network
+   */
+  private openCluster(node: string, idMap: Map<number, GraphItem>, net: Network) {
+    const origId = node.toString().substr(8);
+    net.openCluster(node);
+    const closeIfNeeded = (item: GraphItem, self: DependencyTreeDatabase) => {
+      if (item.children.length > 1) {
+        item.children.forEach(child => self.cluster(net, child));
+      } else if (item.children.length === 1) {
+        closeIfNeeded(item.children[0], self);
+      }
+    };
+    closeIfNeeded(idMap.get(parseInt(origId, 10)), this);
+  }
+
+  /**
+   * Cluster the node and its children
+   *
+   * @param net Network
+   * @param node the node that should be clustered
+   */
+  private cluster(net: Network, node: GraphItem) {
+    // noinspection JSUnusedGlobalSymbols // joinCondition needed by vis
+    const option = {
+      clusterNodeProperties: {
+        id: 'cluster:' + node.id,
+        borderWidth: 3,
+        label: node.name,
+        title: node.tooltip,
+        color: {
+          background: this.colorForType(node.type),
+          border: '#000000'
+        }
+      },
+      joinCondition(nodeOptions) {
+        if (nodeOptions.id.toString().startsWith('cluster:')) {
+          return node.hasChildrenInCluster(net, nodeOptions.id.toString());
+        }
+        return node.id === nodeOptions.id || node.isInChildrenTransitive(nodeOptions.id);
+      }
+    };
+    net.cluster(option);
+  }
+
+
+  /**
+   * Generates a map of all node ids
+   *
+   * @param nodeMap map of all nodes
+   */
+  private generateIDMap(nodeMap: Map<string, GraphItem>): Map<number, GraphItem> {
+    const res = new Map<number, GraphItem>();
+    nodeMap.forEach(value => {
+      res.set(value.id, value);
+    });
+    return res;
   }
 
   /**
@@ -499,16 +633,30 @@ export class DependencyTreeDatabase {
     const nodeSet = [];
     nodeMap.forEach(node => {
       if (node.name !== undefined && node.shouldBeDisplayed()) {
+        const dependencyEdgeOptions = {
+          width: 3, font: {
+            size: 30,
+          },
+          physics: false,
+          smooth: {
+            enabled: false
+          },
+        };
+
         node.children.forEach(child => {
-          edgeSet.push({from: child.id, to: node.id, label: 'Parent', arrows: 'to'});
+          edgeSet.push({from: child.id, to: node.id, arrows: 'to', physics: true});
         });
 
         node.addedDependency.forEach(dep => {
-          edgeSet.push({from: node.id, to: dep.id, label: 'Added', arrows: 'to', color: '#000000', width: 3});
+          edgeSet.push({
+            from: node.id, to: dep.id, label: '+', arrows: 'to', color: '#cc2222', ...dependencyEdgeOptions
+          });
         });
 
         node.deletedDependency.forEach(dep => {
-          edgeSet.push({from: node.id, to: dep.id, label: 'Deleted', arrows: 'to', color: '#000000', width: 3});
+          edgeSet.push({
+            from: node.id, to: dep.id, label: '-', arrows: 'to', color: '#22cc22', ...dependencyEdgeOptions
+          });
         });
 
         nodeSet.push({id: node.id, label: node.name, title: node.tooltip, color: this.colorForType(node.type)});
@@ -527,6 +675,8 @@ export class DependencyTreeDatabase {
    */
   colorForType(type: FilterType): string {
     switch (type) {
+      case FilterType.Project:
+        return '#ffdf70';
       case FilterType.Package:
         return '#57c7e3';
       case FilterType.Class:
@@ -538,7 +688,6 @@ export class DependencyTreeDatabase {
     }
     return '#c990c0';
   }
-
 
   public filter(filterText: string) {
     let filteredTreeData;
@@ -632,6 +781,10 @@ export class DependencyTreeDatabase {
         }
       });
     }
+  }
+
+  private clusterToProjects(net: Network, nodeMap: Map<string, GraphItem>) {
+    Array.from(nodeMap.keys()).filter(key => key.indexOf('.') === -1).forEach(key => this.cluster(net, nodeMap.get(key)));
   }
 }
 
@@ -758,8 +911,8 @@ export class DependencytreeComponent implements OnInit {
     this.db.loadChangelogIds(projectName);
   }
 
-  @HostListener('window:beforeunload', ['$event'])
-  unloadNotification($event: any) {
+  @HostListener('window:beforeunload')
+  unloadNotification() {
     this.saveToCookies();
   }
 
@@ -825,7 +978,7 @@ export class DependencytreeComponent implements OnInit {
   async generateGraphView(displayOption: DisplayOption) {
     if (this.graph === undefined || this.graph === null) {
       document.body.style.cursor = 'wait';
-      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption);
+      this.graph = await this.database.buildGraphView(this.database.treeData, displayOption, this.selectedProject);
     }
 
     const options = new MatSnackBarConfig();
