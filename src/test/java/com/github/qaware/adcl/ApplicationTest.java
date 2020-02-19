@@ -73,7 +73,7 @@ public class ApplicationTest {
     void integrationTest() throws Exception {
         try (MojoTestUtil testUtil = new MojoTestUtil(Paths.get("pom.xml"))) {
             Pair<Integer, String> result = testUtil.runAdclOnPom(Paths.get("src", "test", "resources", "testclassfiles2", "testproject", "pom.xml"), Pair.of("adcl.spring.data.neo4j.password", "test"));
-            assertThat(result.getKey()).isEqualTo(0);
+            assertThat(result.getKey()).withFailMessage(result.getValue()).isEqualTo(0);
             assertThat(Paths.get("src", "test", "resources", "testclassfiles2", "testproject", "target")).isDirectoryContaining("regex:.*html");
         }
     }
