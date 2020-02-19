@@ -150,9 +150,9 @@ public class MavenProjectManager implements ProjectManager {
      */
     @NotNull
     private String[] getVars(@NotNull String... vars) throws MavenInvocationException {
-        String input = Stream.of(vars).map(var -> String.format("${%s}", var)).collect(Collectors.joining("\uFEFF", "", "\n0\n"));
+        String input = Stream.of(vars).map(var -> String.format("${%s}", var)).collect(Collectors.joining("&&&split&&&", "", "\n0\n"));
         String output = callMaven(input, "-q", "help:evaluate", Pair.of("forceStdout", "true"));
-        return trimEndingNewline(output).split("\uFEFF");
+        return trimEndingNewline(output).split("&&&split&&&");
     }
 
     @NotNull
