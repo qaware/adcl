@@ -484,14 +484,14 @@ export class DependencyTreeDatabase {
   private openCluster(node: string, idMap: Map<number, GraphItem>, net: Network) {
     const origId = node.toString().substr(8);
     net.openCluster(node);
-    const closeIfNeeded = function (item: GraphItem, self: DependencyTreeDatabase) {
+    const closeIfNeeded = (item: GraphItem, self: DependencyTreeDatabase) => {
       if (item.children.length > 1) {
         item.children.forEach(child => self.cluster(net, child));
       } else if (item.children.length === 1) {
         closeIfNeeded(item.children[0], self);
       }
     };
-    closeIfNeeded(idMap.get(parseInt(origId)), this);
+    closeIfNeeded(idMap.get(parseInt(origId, 10)), this);
   }
 
   /**
