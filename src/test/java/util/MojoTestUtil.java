@@ -40,8 +40,10 @@ public class MojoTestUtil implements AutoCloseable {
         Utils.callMaven(adclPom, null, null, "versions:revert");
     }
 
-    public Pair<Integer, String> runAdclOnPom(Path pomPath) throws MavenInvocationException {
+    @NotNull
+    @SafeVarargs
+    public final Pair<Integer, String> runAdclOnPom(Path pomPath, @NotNull Pair<String, String>... options) throws MavenInvocationException {
         logger.info("Executing adcl:start");
-        return Utils.callMaven(pomPath, null, null, "adcl:start");
+        return Utils.callMaven(pomPath, null, null, "adcl:start", options);
     }
 }
