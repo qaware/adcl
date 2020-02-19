@@ -137,8 +137,8 @@ class Utils {
             return (className.length() == 1 && PRIMITIVES_SHORT.indexOf(className.charAt(0)) >= 0) || isJRE(Class.forName(className));
         } catch (ClassNotFoundException e) {
             return false;
-        } catch (ExceptionInInitializerError e) {
-            LOGGER.warn("ExceptionInInitializerError while loading class {}. Assuming it's not JRE as JRE files should be loadable.", className);
+        } catch (LinkageError e) {
+            LOGGER.warn("{} while loading class {}. Assuming it's not JRE as JRE files should be loadable.", e.getClass().getSimpleName(), className);
             return false;
         }
     }
