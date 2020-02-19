@@ -90,6 +90,7 @@ class IdGenerator {
 
 /** Filter types */
 export enum FilterType {
+  Project = 'pr',
   Package = 'p',
   Class = 'c',
   Method = 'm',
@@ -253,8 +254,8 @@ export class DependencyTreeDatabase {
       project.path = projectName.toString();
       project.code = this.root + '.' + project.path;
       project.label = Label.Project;
-      project.filterType = FilterType.Undefined;
-      packageInformation.push(project)
+      project.filterType = FilterType.Project;
+      packageInformation.push(project);
     });
 
     const dependencyResult = this.neo4j.run(queryDependencies, params).then(nodes => {
@@ -428,7 +429,7 @@ export class DependencyTreeDatabase {
     const options = {
       clickToUse: true,
       layout: {
-        //improvedLayout: false
+        improvedLayout: false
       },
       interaction: {
         tooltipDelay: 200
@@ -501,6 +502,7 @@ export class DependencyTreeDatabase {
     });
     const option = {
       clusterNodeProperties: {
+        borderWidth: 3,
         label: node.name,
         title: node.tooltip,
         color: {
@@ -653,6 +655,8 @@ export class DependencyTreeDatabase {
    */
   colorForType(type: FilterType): string {
     switch (type) {
+      case FilterType.Project:
+        return '#ffdf70';
       case FilterType.Package:
         return '#57c7e3';
       case FilterType.Class:
@@ -812,7 +816,7 @@ export class DependencytreeComponent implements OnInit {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  };
+  }
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
