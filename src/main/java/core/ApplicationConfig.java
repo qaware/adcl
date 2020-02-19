@@ -15,12 +15,16 @@ import util.Utils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
 public class ApplicationConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfig.class);
+
+    /**
+     * the base directory for project analysis. All further relative path configurations start from there
+     */
+    public final Path basedir = Config.getBasedir();
 
     /**
      * The name of the previous version of the project, if given. Does not load from database
@@ -78,7 +82,7 @@ public class ApplicationConfig {
         if (result == null) {
             String raw = Config.get("report.path", null);
             if (raw == null) {
-                result = projectManager == null ? Paths.get(".") : projectManager.getArtifactOutput();
+                result = projectManager == null ? basedir : projectManager.getArtifactOutput();
             } else {
                 throw new ConfigurationException("report.path not valid. Is: {}", raw);
             }
@@ -102,7 +106,7 @@ public class ApplicationConfig {
         if (result == null) {
             String raw = Config.get("project.pom", null);
             if (raw == null) {
-                result = Paths.get("pom.xml");
+                result = basedir.resolve("pom.xml");
             } else {
                 throw new ConfigurationException("project.pom not valid. Is: {}", raw);
             }
@@ -119,7 +123,7 @@ public class ApplicationConfig {
         if (pomPath != null) {
             LOGGER.info("Loading maven project data...");
             try {
-                MavenProjectManager result = new MavenProjectManager(pomPath);
+                MavenProjectManager result = new MavenProjectManager(basedir, pomPath);
                 LOGGER.info("Done");
                 return result;
             } catch (Exception e /* generalized to catch RuntimeException like InvalidPathException */) {

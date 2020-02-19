@@ -32,7 +32,7 @@ public class ProjectInformation extends Information<RootInformation> {
     private final boolean isInternal;
 
     @Relationship(type = "PomDependency")
-    private final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
+    final Set<PomDependencyInformation> pomDependencies = new HashSet<>();
 
     @Transient
     @Properties
@@ -69,12 +69,15 @@ public class ProjectInformation extends Information<RootInformation> {
     /**
      * Returns all *own* Pom Dependencies at a given version.
      *
-     * @param at The version to check.
+     * @param at The version to check. If null all pom dependencies with their latest used version (name might be "null") will be returned
      * @return the pom dependencies at given version
      */
     @NotNull
-    public final Set<VersionInformation> getPomDependencies(@NotNull VersionInformation at) {
-        return pomDependencies.stream().map(d -> d.getVersionAt(at)).filter(Objects::nonNull).collect(Collectors.toSet());
+    public final Set<VersionInformation> getPomDependencies(@Nullable VersionInformation at) {
+        return pomDependencies.stream().map(d -> {
+            VersionInformation result = d.getVersionAt(at);
+            return result == null && at == null ? new VersionInformation("null", d.getTo()) : result;
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     public final Set<PomDependencyInformation> getPomDependenciesRaw() {
@@ -186,5 +189,11 @@ public class ProjectInformation extends Information<RootInformation> {
     @Override
     public Stream<Purgeable> getOutgoingRelations() {
         return Stream.concat(super.getOutgoingRelations(), pomDependencies.stream());
+    }
+
+    @Override
+    protected void deepCompareElements(@NotNull CompareHelper<Information<?>> cmp) {
+        super.deepCompareElements(cmp);
+        cmp.casted(ProjectInformation.class).add(i -> i.getPomDependencies(null), CompareHelper.collectionComparator());
     }
 }

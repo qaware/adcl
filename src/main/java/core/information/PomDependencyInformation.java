@@ -4,7 +4,9 @@ import core.database.Purgeable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.ogm.annotation.*;
+import util.MapTool;
 import util.MapWithListeners;
+import util.Utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +27,7 @@ public final class PomDependencyInformation implements Purgeable {
     private final ProjectInformation to;
 
     @Properties(prefix = "remoteVersions")
-    private final Map<String, String> remoteVersionMapInternal = new HashMap<>();
+    private final Map<String, Object> remoteVersionMapInternal = new HashMap<>();
 
     @Transient
     private final Map<VersionInformation, VersionInformation> remoteVersionMapBacking = new HashMap<>();
@@ -62,6 +64,13 @@ public final class PomDependencyInformation implements Purgeable {
         this.to = to.getProject();
     }
 
+    public PomDependencyInformation(@NotNull RootInformation root, @NotNull PomDependencyInformation dep) {
+        from = (ProjectInformation) root.findOrCreate(dep.from);
+        to = (ProjectInformation) root.findOrCreate(dep.to);
+        remoteVersionMapInternal.putAll(dep.remoteVersionMapInternal);
+        postLoad();
+    }
+
     /**
      * @return the edge start
      * @see PomDependencyInformation#getTo()
@@ -85,7 +94,7 @@ public final class PomDependencyInformation implements Purgeable {
      */
     @PostLoad
     void postLoad() {
-        remoteVersionMapInternal.forEach((v, r) -> remoteVersionMapBacking.put(new VersionInformation(v, from.getProject()), r.equals("null") ? null : new VersionInformation(r, to.getProject())));
+        new MapTool<>(Utils.resolveNestedMaps(String.class, null, remoteVersionMapInternal)).mapKeys(k -> new VersionInformation(k, from.getProject())).mapValues(v -> v.equals("null") ? null : new VersionInformation(v, to.getProject())).overrideTo(remoteVersionMapBacking);
     }
 
     /**
@@ -96,7 +105,13 @@ public final class PomDependencyInformation implements Purgeable {
      * @see RelationshipInformation#setExists(VersionInformation, boolean) same logic
      */
     public void setVersionAt(@NotNull VersionInformation version, @Nullable VersionInformation aim) {
-        if (!Objects.equals(getVersionAt(version), aim)) remoteVersionMap.put(version, aim);
+        if (!Objects.equals(getVersionAt(version), aim)) {
+            if (remoteVersionMap.containsKey(version) && Objects.equals(getVersionAt(version.previous()), aim)) {
+                remoteVersionMap.remove(version);
+            } else {
+                remoteVersionMap.put(version, aim);
+            }
+        }
     }
 
     /**
@@ -110,7 +125,7 @@ public final class PomDependencyInformation implements Purgeable {
     public VersionInformation getVersionAt(@Nullable VersionInformation at) {
         VersionInformation curr = at == null ? from.getLatestVersion() : at;
         do {
-            if (remoteVersionMap.containsKey(at)) return remoteVersionMap.get(at);
+            if (remoteVersionMap.containsKey(curr)) return remoteVersionMap.get(curr);
         } while ((curr = curr.previous()) != null);
         return null;
     }

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -138,7 +139,8 @@ public class DatamodelVersioningTest {
     @NotNull
     private VersionInformation runPomAnalysis(@NotNull ProjectInformation project, String folderName, String versionName) throws MavenInvocationException {
         VersionInformation result = project.addVersion(versionName);
-        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(Paths.get("src", "test", "resources", "testclassfiles2", folderName, "pom.xml")), result);
+        Path basedir = Paths.get("src", "test", "resources", "testclassfiles2", folderName);
+        PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(basedir, basedir.resolve("pom.xml")), result);
         return result;
     }
 
