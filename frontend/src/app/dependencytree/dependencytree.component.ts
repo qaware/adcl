@@ -94,8 +94,7 @@ export enum FilterType {
   Package = 'p',
   Class = 'c',
   Method = 'm',
-  Dependency = 'd',
-  Undefined = 'u'
+  Dependency = 'd'
 }
 
 /** Display options */
@@ -350,7 +349,6 @@ export class DependencyTreeDatabase {
    * Build the structure tree. The `value` is the Json object, or a sub-tree of a Json object.
    * The return value is the list of `TreeItemNode`.
    */
-
   buildDependencyTree(obj: any[], level: string, displayOption: DisplayOption): TreeItemNode[] {
     const treeItemNodes: TreeItemNode[] = [];
     const expLength = (level.replace(/\([^)]*\)/g, '').match(/\./g) || []).length + 1;
@@ -500,6 +498,7 @@ export class DependencyTreeDatabase {
     node.children.forEach(value => {
       this.clusterWithChildren(net, value);
     });
+    // noinspection JSUnusedGlobalSymbols // joinCondition needed by vis
     const option = {
       clusterNodeProperties: {
         borderWidth: 3,
@@ -677,7 +676,6 @@ export class DependencyTreeDatabase {
     return '#c990c0';
   }
 
-
   public filter(filterText: string) {
     let filteredTreeData;
     const splitFilterText = filterText.split(':');
@@ -737,7 +735,6 @@ export class DependencyTreeDatabase {
   }
 
   private clusterToProjects(net: Network, nodeMap: Map<string, GraphItem>) {
-    const list: string[] = [];
     for (const key of nodeMap.keys()) {
       if (key.indexOf('.') === -1) {
         this.clusterWithChildren(net, nodeMap.get(key));
@@ -824,7 +821,7 @@ export class DependencytreeComponent implements OnInit {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  }
+  };
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
@@ -865,8 +862,8 @@ export class DependencytreeComponent implements OnInit {
     this.db.loadChangelogIds(projectName);
   }
 
-  @HostListener('window:beforeunload', ['$event'])
-  unloadNotification($event: any) {
+  @HostListener('window:beforeunload')
+  unloadNotification() {
     this.saveToCookies();
   }
 
