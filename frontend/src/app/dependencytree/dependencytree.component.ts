@@ -481,9 +481,7 @@ export class DependencyTreeDatabase {
    * @param net Network
    */
   private openCluster(node: string, idMap: Map<number, GraphItem>, net: Network) {
-    console.log("Opening cluster " + node);
     const origId = node.toString().substr(8);
-    console.log("origid " + origId);
     net.openCluster(node);
     const closeIfNeeded = function (item: GraphItem, self: DependencyTreeDatabase) {
       if (item.children.length > 1) {
