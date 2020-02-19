@@ -427,6 +427,7 @@ export class DependencyTreeDatabase {
     const options = {
       clickToUse: true,
       layout: {
+        randomSeed: 42,
         improvedLayout: false
       },
       interaction: {
@@ -503,7 +504,7 @@ export class DependencyTreeDatabase {
     // noinspection JSUnusedGlobalSymbols // joinCondition needed by vis
     const option = {
       clusterNodeProperties: {
-        id: "cluster:" + node.id,
+        id: 'cluster:' + node.id,
         borderWidth: 3,
         label: node.name,
         title: node.tooltip,
@@ -629,23 +630,29 @@ export class DependencyTreeDatabase {
     const nodeSet = [];
     nodeMap.forEach(node => {
       if (node.name !== undefined && node.shouldBeDisplayed()) {
+        const dependencyEdgeOptions = {
+          width: 3, font: {
+            size: 30,
+          },
+          physics: false,
+          smooth: {
+            enabled: false
+          },
+        };
+
         node.children.forEach(child => {
-          edgeSet.push({from: child.id, to: node.id, arrows: 'to'});
+          edgeSet.push({from: child.id, to: node.id, arrows: 'to', physics: true});
         });
 
         node.addedDependency.forEach(dep => {
           edgeSet.push({
-            from: node.id, to: dep.id, label: '+', arrows: 'to', color: '#cc2222', width: 3, font: {
-              size: 30,
-            }
+            from: node.id, to: dep.id, label: '+', arrows: 'to', color: '#cc2222', ...dependencyEdgeOptions
           });
         });
 
         node.deletedDependency.forEach(dep => {
           edgeSet.push({
-            from: node.id, to: dep.id, label: '-', arrows: 'to', color: '#22cc22', width: 3, font: {
-              size: 30,
-            }
+            from: node.id, to: dep.id, label: '-', arrows: 'to', color: '#22cc22', ...dependencyEdgeOptions
           });
         });
 
@@ -820,7 +827,7 @@ export class DependencytreeComponent implements OnInit {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  };
+  }
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
