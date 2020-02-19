@@ -41,4 +41,13 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.qaware</groupId>
+                <artifactId>adcl</artifactId>
+                <version>debug</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

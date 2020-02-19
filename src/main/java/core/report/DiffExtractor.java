@@ -139,7 +139,13 @@ public class DiffExtractor {
                 from == null ? Collections.emptySet() : from.getProject().getPomDependencies(from),
                 to.getProject().getPomDependencies(to)
         ).entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getProject().getName(),
-                Collectors.reducing(null, e -> new PomDependencyEntry(e.getKey(), e.getValue()), (c, n) -> c != null && n.newVersion == null ? c.flagUpdated() : n))).values());
+                Collectors.reducing(null, e -> new PomDependencyEntry(e.getKey(), e.getValue()), (c, n) -> {
+                    if (c != null) {
+                        return c.newVersion != null ? c.flagUpdated() : n.flagUpdated();
+                    } else {
+                        return n;
+                    }
+                }))).values());
     }
 
     /**

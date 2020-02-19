@@ -71,7 +71,7 @@
         #content:hover {
             overflow: visible;
             white-space: normal;
-            height: auto; /* just added this line */
+            height: auto;
         }
 
         b {
@@ -79,6 +79,7 @@
             background-color: #f6f6f6;
             height: 100%;
         }
+
         #search {
             display: flex;
         }
@@ -95,9 +96,11 @@
             text-align: left;
             padding: 2px;
         }
+
         td {
             text-align: center;
         }
+
         .greenBackground {
             background-color: lightgreen;
         }
@@ -106,9 +109,8 @@
             background-color: #dddddd;
         }
 
-        th.diagonalFalling
-        {
-            background: linear-gradient(to right top, #ffffff 0%,#ffffff 49.9%,#000000 50%,#000000 51%,#ffffff 51.1%,#ffffff 100%);
+        th.diagonalFalling {
+            background: linear-gradient(to right top, #ffffff 0%, #ffffff 49.9%, #000000 50%, #000000 51%, #ffffff 51.1%, #ffffff 100%);
         }
         #thLowLeft {
             font-size:5pt;
@@ -119,10 +121,44 @@
             margin-top:-2px;
             text-align:right;
         }
+
+        #pomDiv {
+            position: absolute;
+            top: 142px;
+            left: 80%;
+            width: 15%;
+            max-width: 20%;
+            border: 1px solid gray;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-align: center;
+        }
+        #pomTable {
+            font-size: 14px;
+            width: 100%;
+            text-align: center;
+            table-layout:fixed;
+        }
+        #pomTable th {
+            text-align: center;
+        }
+        #pomTable td {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 20ch;
+            text-align: left;
+        }
+        #pomTable td:hover {
+            overflow: visible;
+            white-space: normal;
+        }
+        #pomNewVersion {
+            width: 35%;
+        }
     </style>
     <script>
         var scope = [
-            [true, false, false,  false],
+            [true, false, false, false],
             [false, true, false, false],
             [false, false, true, false]
         ];
@@ -172,7 +208,7 @@
 
         function toggleScope(element, row, col) {
             scope[row][col] = !scope[row][col];
-            if(scope[row][col]) {
+            if (scope[row][col]) {
                 element.setAttribute("CLASS", "greenBackground");
                 element.innerHTML = "🗸";
             } else {
@@ -195,96 +231,120 @@
         <input type="text" id="inputField" onkeyup="search()"
                placeholder="Search for Packages, Classes, Methods or Dependencies">
         <div style="margin-bottom: 12px">
-                <table>
-                    <tr>
-                        <th class="diagonalFalling" ><div id="thHighRight">to</div><div id="thLowLeft" >from</div> </th>
-                        <th>Package</th>
-                        <th>Class</th>
-                        <th>Method</th>
-                        <th>Project</th>
-                    </tr>
-                    <tr>
-                        <th>Package</th>
-                        <td onclick="toggleScope(this,0,0)" class="greenBackground"> 🗸</td>
-                        <td onclick="toggleScope(this,0,1)"></td>
-                        <td onclick="toggleScope(this,0,2)"></td>
-                        <td onclick="toggleScope(this,0,3)"></td>
-                    </tr>
-                    <tr>
-                        <th>Class</th>
-                        <td onclick="toggleScope(this,1,0)" ></td>
-                        <td onclick="toggleScope(this,1,1)" class="greenBackground">🗸</td>
-                        <td onclick="toggleScope(this,1,2)"></td>
-                        <td onclick="toggleScope(this,1,3)"></td>
-                    </tr>
-                    <tr>
-                        <th>Method</th>
-                        <td onclick="toggleScope(this,2,0)"></td>
-                        <td onclick="toggleScope(this,2,1)"></td>
-                        <td onclick="toggleScope(this,2,2)" class="greenBackground">🗸</td>
-                        <td onclick="toggleScope(this,2,3)"></td>
-                    </tr>
-                </table>
-            </div>
+            <table>
+                <tr>
+                    <th class="diagonalFalling">
+                        <div id="thHighRight">to</div>
+                        <div id="thLowLeft">from</div>
+                    </th>
+                    <th>Package</th>
+                    <th>Class</th>
+                    <th>Method</th>
+                    <th>Project</th>
+                </tr>
+                <tr>
+                    <th>Package</th>
+                    <td onclick="toggleScope(this,0,0)" class="greenBackground"> 🗸</td>
+                    <td onclick="toggleScope(this,0,1)"></td>
+                    <td onclick="toggleScope(this,0,2)"></td>
+                    <td onclick="toggleScope(this,0,3)"></td>
+                </tr>
+                <tr>
+                    <th>Class</th>
+                    <td onclick="toggleScope(this,1,0)"></td>
+                    <td onclick="toggleScope(this,1,1)" class="greenBackground">🗸</td>
+                    <td onclick="toggleScope(this,1,2)"></td>
+                    <td onclick="toggleScope(this,1,3)"></td>
+                </tr>
+                <tr>
+                    <th>Method</th>
+                    <td onclick="toggleScope(this,2,0)"></td>
+                    <td onclick="toggleScope(this,2,1)"></td>
+                    <td onclick="toggleScope(this,2,2)" class="greenBackground">🗸</td>
+                    <td onclick="toggleScope(this,2,3)"></td>
+                </tr>
+            </table>
         </div>
-        <ul id="dependencyList"></ul>
     </div>
+    <ul id="dependencyList"></ul>
+</div>
+<div id="pomDiv">
+    <label> <b>Pom Changes</b> </label>
+    <table id="pomTable">
+        <tr>
+            <th>Project</th>
+            <th id="pomNewVersion">new Version</th>
+        </tr>
+    </table>
+</div>
+<script>
+    var dependencyList = document.getElementById("dependencyList");
+    var li;
 
-    <script>
-        var dependencyList = document.getElementById("dependencyList");
-        var li;
+    data_dependencies.forEach(dep => {
+        li = document.createElement("LI");
 
-        data_dependencies.forEach(dep => {
-            li = document.createElement("LI");
+        if (dep.changeStatus === true) {
+            li.appendChild(createListEntry("Added dependency on ", " to ", dep.dependencyPath, dep.usedByPath, dep.usedByType.toLowerCase(), dep.dependencyType.toLowerCase()));
 
-            if (dep.changeStatus === true) {
-                li.appendChild(createListEntry("Added dependency on ", " to ", dep.dependencyPath, dep.usedByPath, dep.usedByType.toLowerCase(), dep.dependencyType.toLowerCase()));
-
-            } else {
-                li.appendChild(createListEntry("Removed dependency on ", " from ", dep.dependencyPath, dep.usedByPath, dep.usedByType.toLowerCase(), dep.dependencyType.toLowerCase()));
-            }
-            li.usedByType = dep.usedByType;
-            li.dependencyType = dep.dependencyType;
-            dependencyList.appendChild(li);
-        });
-
-        // to apply initial scope selection
-        search();
-
-        function createListEntry(firstText, secondText, dependencyPath, usedByPath, usedByType, dependencyType) {
-            var fieldSet = document.createElement("FIELDSET");
-            var b;
-            var divDep = document.createElement("DIV");
-            var divUsedBy = document.createElement("DIV");
-            var span;
-            var legend = document.createElement("LEGEND");
-
-            legend.innerHTML = usedByType + " >>>>> " + dependencyType;
-            fieldSet.appendChild(legend);
-            divDep.setAttribute("ID", "content");
-            divUsedBy.setAttribute("ID", "content");
-
-            b = document.createElement("B");
-            b.innerHTML = firstText;
-
-            divDep.appendChild(b);
-            span = document.createElement("SPAN");
-            span.setAttribute("id", "highlight");
-            span.innerText = dependencyPath;
-            divDep.appendChild(span);
-            fieldSet.appendChild(divDep);
-
-            b = document.createElement("B");
-            b.innerHTML = secondText;
-
-            divUsedBy.appendChild(b);
-            span = document.createElement("SPAN");
-            span.setAttribute("id", "highlight");
-            span.innerText = usedByPath;
-            divUsedBy.appendChild(span);
-            fieldSet.appendChild(divUsedBy);
-            return fieldSet;
+        } else {
+            li.appendChild(createListEntry("Removed dependency on ", " from ", dep.dependencyPath, dep.usedByPath, dep.usedByType.toLowerCase(), dep.dependencyType.toLowerCase()));
         }
-    </script>
+        li.usedByType = dep.usedByType;
+        li.dependencyType = dep.dependencyType;
+        dependencyList.appendChild(li);
+    });
+
+    // to apply initial scope selection
+    search();
+
+    var pomTable = document.getElementById("pomTable");
+    data_pom.forEach(pdep => {
+        var tr = document.createElement(("TR"));
+        var td = document.createElement("TD");
+        td.innerText = pdep.toProject;
+        tr.appendChild(td);
+
+        td = document.createElement("TD");
+        td.innerText = (pdep.newVersion === null)? "DELETED": (pdep.updated === false)? "[NEW] " + pdep.newVersion: pdep.newVersion;
+        tr.appendChild(td);
+        pomTable.appendChild(tr);
+    });
+
+    function createListEntry(firstText, secondText, dependencyPath, usedByPath, usedByType, dependencyType) {
+        var fieldSet = document.createElement("FIELDSET");
+        var b;
+        var divDep = document.createElement("DIV");
+        var divUsedBy = document.createElement("DIV");
+        var span;
+        var legend = document.createElement("LEGEND");
+
+        legend.innerHTML = usedByType + " >>>>> " + dependencyType;
+        fieldSet.appendChild(legend);
+        divDep.setAttribute("ID", "content");
+        divUsedBy.setAttribute("ID", "content");
+
+        b = document.createElement("B");
+        b.innerHTML = firstText;
+
+        divDep.appendChild(b);
+        span = document.createElement("SPAN");
+        span.setAttribute("id", "highlight");
+        span.innerText = dependencyPath;
+        divDep.appendChild(span);
+        fieldSet.appendChild(divDep);
+
+        b = document.createElement("B");
+        b.innerHTML = secondText;
+
+        divUsedBy.appendChild(b);
+        span = document.createElement("SPAN");
+        span.setAttribute("id", "highlight");
+        span.innerText = usedByPath;
+        divUsedBy.appendChild(span);
+        fieldSet.appendChild(divUsedBy);
+        return fieldSet;
+    }
+</script>
 </body>
 </html>

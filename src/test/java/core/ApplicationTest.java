@@ -1,6 +1,7 @@
 package core;
 
 import core.database.Neo4jService;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bouncycastle.util.Arrays;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import util.MojoTestUtil;
 import util.Utils;
 
 import java.io.File;
@@ -65,6 +67,15 @@ public class ApplicationTest {
         assertThat(changelog.getChangelog()).isNotEmpty();
         assertThat(changelog.getAfter().getVersionName()).isEqualTo(after.getVersionName());
         assertThat(changelog.getBefore().getVersionName()).isEqualTo(before.getVersionName());*/
+    }
+
+    @Test
+    void integrationTest() throws Exception {
+        try (MojoTestUtil testUtil = new MojoTestUtil(Paths.get("pom.xml"))) {
+            Pair<Integer, String> result = testUtil.runAdclOnPom(Paths.get("src", "test", "resources", "testclassfiles2", "testproject", "pom.xml"), Pair.of("adcl.spring.data.neo4j.password", "test"));
+            assertThat(result.getKey()).isEqualTo(0);
+            assertThat(Paths.get("src", "test", "resources", "testclassfiles2", "testproject", "target")).isDirectoryContaining("regex:.*html");
+        }
     }
 
     @BeforeAll

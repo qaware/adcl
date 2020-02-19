@@ -28,9 +28,7 @@ public class HTMLReporter {
      * @param outputPath the location there the generated report should be placed at.
      */
     public static void generateReport(DiffExtractor.Diff diff, Path outputPath) {
-
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        InputStream is = classloader.getResourceAsStream("./report/adcl_template.html");
+        InputStream is = HTMLReporter.class.getResourceAsStream("/report/adcl_template.html");
 
         StringBuilder report = new StringBuilder();
 
