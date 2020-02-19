@@ -607,6 +607,10 @@ export class DependencyTreeDatabase {
           }
         }
       });
+      // no previous version and last in list
+      if (nextPrevious) {
+        entry.version = '[NEW] ' + entry.version;
+      }
     });
   }
 
