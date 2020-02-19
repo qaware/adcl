@@ -3,6 +3,8 @@ package core.depex;
 import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +15,7 @@ import java.util.function.Consumer;
  * Utility Methods to work with ASM or for general dependency analysis
  */
 class Utils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
     private static final String PRIMITIVES_SHORT = "ZBCSIJFD";
 
     private Utils() {
@@ -133,6 +136,9 @@ class Utils {
         try {
             return (className.length() == 1 && PRIMITIVES_SHORT.indexOf(className.charAt(0)) >= 0) || isJRE(Class.forName(className));
         } catch (ClassNotFoundException e) {
+            return false;
+        } catch (LinkageError e) {
+            LOGGER.warn("{} while loading class {}. Assuming it's not JRE as JRE files should be loadable.", e.getClass().getSimpleName(), className);
             return false;
         }
     }
