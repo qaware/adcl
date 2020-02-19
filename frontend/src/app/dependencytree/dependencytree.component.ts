@@ -576,41 +576,37 @@ export class DependencyTreeDatabase {
 
   async loadPomChanges() {
     this.pomChanges = [];
+    let proj;
+    await this.neo4j.run("MATCH (r:ProjectInformation{name: {pName}}) return r;", {pName: this.selectedProject.toString()}).then(pomChanges => {
+      proj = pomChanges[0]
+    });
+    const versions: Array<string> = proj[0].properties.versions;
+    const selVersionIndex = versions.indexOf(this.selectedVersion);
+
     const params = {pName: this.selectedProject.toString(), version: 'remoteVersions.' + this.selectedVersion};
     const queryPomChanges = 'MATCH (r:ProjectInformation{name: {pName}})-[pd:PomDependency]->(i:ProjectInformation)' +
-      'UNWIND keys(pd) as n ' +
-      'WITH n, i, pd ' +
+      'WITH i, pd ' +
       'where any(x in keys(pd) where x = {version}) ' +
-      'return pd[n], i.name, n';
+      'return pd, i.name';
 
     await this.neo4j.run(queryPomChanges, params).then(pomChanges => {
-      let entry;
-      let nextPrevious = false;
       pomChanges.forEach(pChange => {
-
-        if (pChange[2].toString() === params.version.toString()) {
-          if (nextPrevious) {
-            entry.version = '[NEW] ' + entry.version;
+        const obj: { [k: string]: any } = {};
+        obj.project = pChange[1];
+        const currRemoteVersion = pChange[0].properties["remoteVersions." + this.selectedVersion];
+        let isNew = true;
+        let latestBeforeIndex = -1;
+        Object.entries(pChange[0].properties).forEach(e => {
+          const versionName = e[0].substr(e[0].indexOf(".") + 1);
+          const versionIndex = versions.indexOf(versionName);
+          if (versionIndex < selVersionIndex && versionIndex > latestBeforeIndex) {
+            latestBeforeIndex = versionIndex;
+            isNew = e[1] == 'null';
           }
-          nextPrevious = true;
-          const obj: { [k: string]: any } = {};
-          obj.project = pChange[1];
-          obj.version = (pChange[0].toString() === 'null') ? 'DELETED' : pChange[0];
-          entry = obj;
-          this.pomChanges.push(obj);
-        } else {
-          if (nextPrevious) {
-            nextPrevious = false;
-            if (pChange[0].toString() === 'null') {
-              entry.version = '[NEW] ' + entry.version;
-            }
-          }
-        }
+        });
+        obj.version = (currRemoteVersion === 'null') ? 'DELETED' : ((isNew ? "[NEW] " : "") + currRemoteVersion);
+        this.pomChanges.push(obj);
       });
-      // no previous version and last in list
-      if (nextPrevious) {
-        entry.version = '[NEW] ' + entry.version;
-      }
     });
   }
 
@@ -719,7 +715,7 @@ export class DependencytreeComponent implements OnInit {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  }
+  };
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
