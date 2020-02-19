@@ -138,8 +138,8 @@ class DepExMethodVisitor extends MethodVisitor {
      * - DEP()
      */
     @Override
-    public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) { // method calls
-        addDependency(owner, name + Utils.convertDescriptor(descriptor));
+    public void visitMethodInsn(int opcode, @NotNull String owner, String name, String descriptor, boolean isInterface) { // method calls
+        addDependency(owner.startsWith("[") ? Utils.getTypesFromDescriptor(owner).iterator().next() : owner, name + Utils.convertDescriptor(descriptor));
     }
 
     /*
