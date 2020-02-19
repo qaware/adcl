@@ -112,6 +112,7 @@ reverseDisplayOption.set('Flat Packages', DisplayOption.FlattenPackages);
 
 /** Display Label */
 export enum Label {
+  Project = 'Project',
   Package = 'Package',
   Class = 'Class',
   Method = 'Method',
@@ -213,7 +214,7 @@ export class DependencyTreeDatabase {
 
     const treeResult = this.neo4j.run(queryTree, params).then(nodes => {
       nodes.forEach(node => {
-        const path: string = (node[0] as string).substr((projectName.toString()).length + 1);
+        const path: string = node[0] as string;
         const name: string = node[1];
         const type = this.resolveType(node[2]);
         const obj: { [k: string]: any } = {};
@@ -247,17 +248,24 @@ export class DependencyTreeDatabase {
           }
         }
       });
+      const project: { [k: string]: any } = {};
+      project.text = projectName.toString();
+      project.path = projectName.toString();
+      project.code = this.root + '.' + project.path;
+      project.label = Label.Project;
+      project.filterType = FilterType.Undefined;
+      packageInformation.push(project)
     });
 
     const dependencyResult = this.neo4j.run(queryDependencies, params).then(nodes => {
       nodes.forEach(node => {
-        const path = (node[0] as string).substr((projectName.toString()).length + 1);
+        const path = node[0] as string;
         const name = node[1];
         const type = this.resolveType(node[2]);
         const usedByType = this.resolveType(node[5]);
         const usedByName = node[6];
         const status = (node[3] === true) ? 'added' : 'deleted';
-        const usedByPath = (node[4] as string).substr((projectName.toString()).length + 1);
+        const usedByPath = node[4] as string;
         const obj: { [k: string]: any } = {};
         obj.text = name;
         obj.path = path;
@@ -344,9 +352,10 @@ export class DependencyTreeDatabase {
 
   buildDependencyTree(obj: any[], level: string, displayOption: DisplayOption): TreeItemNode[] {
     const treeItemNodes: TreeItemNode[] = [];
+    const expLength = (level.replace(/\([^)]*\)/g, '').match(/\./g) || []).length + 1;
     obj.filter(o =>
       (o.code as string).startsWith(level + '.')
-      && (o.code.replace(/\([^)]*\)/g, '').match(/\./g) || []).length === (level.replace(/\([^)]*\)/g, '').match(/\./g) || []).length + 1
+      && (o.code.replace(/\([^)]*\)/g, '').match(/\./g) || []).length === expLength
     )
       .forEach(o => {
         const node = new TreeItemNode();
@@ -406,17 +415,12 @@ export class DependencyTreeDatabase {
     obj.forEach(node => {
       this.generateNodesFromString(node.code, node.filterType, idG, nodeMap, node.path);
     });
-    const projectNode = new GraphItem();
-    projectNode.id = idG.getNextId();
-    projectNode.name = selectedProject;
-    projectNode.tooltip = selectedProject;
-    projectNode.type = FilterType.Package;
+    const projectNode = nodeMap.get(selectedProject);
     for (const key of nodeMap.keys()) {
-      if (key.indexOf('.') === -1 && nodeMap.get(key).type === FilterType.Package) {
+      if (key.indexOf('.', key.indexOf('.')) === 1 && nodeMap.get(key).type === FilterType.Package) {
         projectNode.children.push(nodeMap.get(key));
       }
     }
-    nodeMap.set(selectedProject, projectNode);
 
     const idMap = this.generateIDMap(nodeMap);
     const resultData = this.generateGraphData(nodeMap);
@@ -808,7 +812,7 @@ export class DependencytreeComponent implements OnInit {
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
     return flatNode;
-  }
+  };
 
   /** Event-Handler changes displayed Changelog */
   changeDependencyTree(value) {
