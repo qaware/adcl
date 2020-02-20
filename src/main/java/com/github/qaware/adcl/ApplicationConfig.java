@@ -244,7 +244,7 @@ public class ApplicationConfig {
 
     /**
      * Retrieves the neo4j configuration.
-     * @return the the neo4j configuration.
+     * @return the neo4j configuration.
      * @throws ConfigurationException if the neo4j configuration is invalid.
      */
     @NotNull
