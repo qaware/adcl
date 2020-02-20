@@ -233,7 +233,7 @@ public class DiffExtractor {
         }
 
         /**
-         * * Serialization class. Represents in a code dependency
+         * Serialization class. Represents a code dependency
          */
         private static class DependencyNode {
             private final boolean synthetic;
