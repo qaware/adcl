@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 import static com.github.qaware.adcl.util.DataGenerationUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -144,5 +145,54 @@ public class DatamodelVersioningTest {
         return result;
     }
 
-    //TODO all (@1.0.17)
+    @Test
+    void versionTest() {
+        VersionInformation v1 = proj.getStored().addVersion("2.0.0");
+        VersionInformation vx = null;
+        proj.getStored().addClassDependency(ce.getStored(), v1);
+        assertThat(proj.getStored().getLatestVersion().getName().equals(v1.getName())).isTrue();
+
+        Set<ClassInformation<?>> classInformation = proj.getStored().getClassDependencies(v1);
+        for (ClassInformation<?> information : classInformation) {
+            if (information.getName().equals(ce.getStored().getName())) {
+                classInformation.remove(information);
+                vx = proj.getStored().addVersion("3.0.0");
+            }
+        }
+        assert (vx != null);
+        assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
+
+        proj.getStored().addMethodDependency(new MethodInformation(cc.getStored(), "what()"), vx);
+        Set<MethodInformation> mInformation = proj.getStored().getMethodDependencies(vx);
+        for (MethodInformation del : mInformation) {
+            if (del.getParent().getName().equals(cc.getStored().getName())) {
+                mInformation.remove(del);
+                vx = proj.getStored().addVersion("4.0.0");
+            }
+        }
+
+        assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
+
+        proj.getStored().addPackageDependency(pa.getStored(), vx);
+        Set<PackageInformation<?>> pInformation = proj.getStored().getPackageDependencies(vx);
+        for (PackageInformation<?> packageInformation : pInformation) {
+            if (packageInformation.getName().equals(pa.getStored().getName())) {
+                pInformation.remove(packageInformation);
+                vx = proj.getStored().addVersion("5.0.0");
+            }
+        }
+
+        assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
+
+        ProjectInformation px = new ProjectInformation(dm, "testproj", true, vx.getName());
+        proj.getStored().addProjectDependency(px, vx);
+        Set<ProjectInformation> paInformation = proj.getStored().getProjectDependencies(vx);
+        for (ProjectInformation del : paInformation) {
+            if (del.getName().equals(px.getName())) {
+                paInformation.remove(del);
+                vx = proj.getStored().addVersion("6.0.0");
+            }
+        }
+        assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
+    }
 }
