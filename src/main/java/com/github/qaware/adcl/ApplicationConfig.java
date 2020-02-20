@@ -121,6 +121,10 @@ public class ApplicationConfig {
      */
     @Nullable
     private Path getProjectPom() throws ConfigurationException {
+        if (Config.get("nomaven", false)) {
+            LOGGER.info("Skipping search for pom file as maven PM got disabled by flag");
+            return null;
+        }
         Path result = Config.getPath("project.pom", null);
         if (result == null) {
             String raw = Config.get("project.pom", null);
