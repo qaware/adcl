@@ -9,7 +9,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public class SubPackageInformation extends PackageInformation<PackageInformation<?>> {
     /**
-     *Needed for neo4j initialization
+     * Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private SubPackageInformation() {
