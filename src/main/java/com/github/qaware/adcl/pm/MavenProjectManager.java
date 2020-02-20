@@ -150,13 +150,15 @@ public class MavenProjectManager implements ProjectManager {
      */
     @NotNull
     private String[] getVars(@NotNull String... vars) throws MavenInvocationException {
-        String input = Stream.of(vars).map(var -> String.format("${%s}", var)).collect(Collectors.joining("\n", "", "\n0\n"));
-        String output = callMaven(input, null, "help:evaluate");
-        return Stream.of(output.substring(output.indexOf("or 0 to exit")).split("\n")).filter(l -> !l.startsWith("[INFO]")).map(this::trimEndRollback).toArray(String[]::new);
+        String input = Stream.of(vars).map(var -> String.format("${%s}", var)).collect(Collectors.joining("&&&split&&&", "", "\n0\n"));
+        String output = callMaven(input, "-q", "help:evaluate", Pair.of("forceStdout", "true"));
+        return trimEndingNewline(output).split("&&&split&&&");
     }
 
     @NotNull
-    private String trimEndRollback(@NotNull String s) {
-        return s.endsWith("\r") ? s.substring(0, s.length() - 1) : s;
+    private String trimEndingNewline(@NotNull String s) {
+        if (s.endsWith("\r\n")) return s.substring(0, s.length() - 2);
+        if (s.endsWith("\n")) return s.substring(0, s.length() - 1);
+        return s;
     }
 }
