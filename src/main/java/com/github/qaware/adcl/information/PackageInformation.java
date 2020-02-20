@@ -11,7 +11,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public abstract class PackageInformation<P extends Information<?>> extends Information<P> {
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     PackageInformation() {
         super();

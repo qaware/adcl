@@ -12,7 +12,7 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 @RelationshipEntity("Parent")
 public final class ParentInformation<P extends Information<?>> extends RelationshipInformation<P> {
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private ParentInformation() {

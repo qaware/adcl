@@ -9,7 +9,7 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 @RelationshipEntity("ProjectDependency")
 public final class ProjectDependency extends RelationshipInformation<ProjectInformation> {
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private ProjectDependency() {
