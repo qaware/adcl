@@ -87,14 +87,14 @@ This would translate to
 ```sh
 mvn adcl:start -Dadcl.spring.data.neo4j.password=neo4j
 ```
-when calling from CLI
+when called from the CLI
 #### Program arguments (w/o maven)
 Options can be set as program arguments
 ```sh
 java -jar adcl-fat.jar spring.data.neo4j.password="password with spaces"
 ```
 #### Properties file
-ADCL searches for a file specified by the option `configPath` (or default `./config.properties`). If found it loads them as additional options.
+ADCL searches for a file specified by the option `configPath` (or default `./config.properties`). If found it loads the options specified in the file as additional options.
 
 #### Notes:
 - Option values can be quoted for the case you want to add spaces into the value
