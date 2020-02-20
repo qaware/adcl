@@ -68,7 +68,7 @@ public abstract class Information<P extends Information<?>> implements Comparabl
     @Nullable Long id;
 
     /**
-     *Needed for neo4j initialization
+     * Needed for neo4j initialization
      */
     Information() {
         this("<neo4jInit>");
