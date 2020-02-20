@@ -10,7 +10,6 @@ import com.github.qaware.adcl.pm.ProjectManager;
 import com.github.qaware.adcl.report.DiffExtractor;
 import com.github.qaware.adcl.report.HTMLReporter;
 import com.github.qaware.adcl.util.Utils;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.neo4j.driver.exceptions.AuthenticationException;
@@ -28,6 +27,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Application is a SpringBootApplication and the main Class for ADCL, which configures itself and handles everything from configuration loading to database accessing.
@@ -67,10 +67,11 @@ public class Application {
             if (ctx == null) return 1;
 
             ExecutionData executionData = queryData(ctx, appConfig);
+            if (executionData == null) return 1;
 
             if (executionData.runAnalysis && !analyse(appConfig, executionData.currentVersion)) return 1;
 
-            generateReport(appConfig, executionData.currentVersion);
+            generateReport(appConfig.reportPath, executionData.currentVersion, executionData.previousVersion);
 
             if (!appConfig.localOnly) save(executionData.neo4jService);
 
@@ -89,8 +90,7 @@ public class Application {
      * @param appConfig containing the configured options
      * @return the project data
      */
-    @NotNull
-    @Contract("_, _ -> new")
+    @Nullable
     private static ExecutionData queryData(@NotNull ConfigurableApplicationContext ctx, @NotNull ApplicationConfig appConfig) {
         LOGGER.info("Querying project data");
         Neo4jService neo4jService = ctx.getBean(Neo4jService.class);
@@ -103,8 +103,13 @@ public class Application {
         VersionInformation currentVersion = project.getVersion(appConfig.currentVersionName);
         boolean runAnalysis = currentVersion == null;
         if (currentVersion == null) currentVersion = project.addVersion(appConfig.currentVersionName);
+        VersionInformation previousVersion = appConfig.previousVersionName == null ? currentVersion.previous() : project.getVersion(appConfig.previousVersionName);
+        if (previousVersion == null) {
+            LOGGER.error("Specified previous version ({}) does not exist!", appConfig.previousVersionName);
+            return null;
+        }
         LOGGER.info("Queried project data");
-        return new ExecutionData(runAnalysis, currentVersion, neo4jService);
+        return new ExecutionData(runAnalysis, currentVersion, previousVersion, neo4jService);
     }
 
     /**
@@ -181,15 +186,15 @@ public class Application {
     }
 
     /**
-     *Initiates the generation of the static HTML report for the current version
-     * @param appConfig appConfig containing the configured options
+     * Initiates the generation of the static HTML report for the current version
+     *
+     * @param reportPath     the directory to store the report file
      * @param currentVersion the current versionInformation
      */
-    private static void generateReport(@NotNull ApplicationConfig appConfig, VersionInformation currentVersion) {
+    private static void generateReport(Path reportPath, VersionInformation currentVersion, VersionInformation previousVersion) {
         LOGGER.info("Generating static report artifact");
         try {
-            VersionInformation previousVersion = appConfig.previousVersionName == null ? currentVersion.previous() : currentVersion.getProject().getOrCreateVersion(appConfig.previousVersionName);
-            HTMLReporter.generateReport(new DiffExtractor(previousVersion, currentVersion).generateDiff(true, true), appConfig.reportPath);
+            HTMLReporter.generateReport(new DiffExtractor(previousVersion, currentVersion).generateDiff(true, true), reportPath);
             LOGGER.info("Generated static report artifact");
         } catch (JsonProcessingException e) {
             LOGGER.error("Could not generate static report", e);
@@ -224,22 +229,31 @@ public class Application {
     public Configuration configuration() {
         return neo4jConfig;
     }
+
     /**
      * Holds all the data retrieved from the database
      */
     private static class ExecutionData {
         public final boolean runAnalysis;
+        @NotNull
         public final VersionInformation currentVersion;
+        @NotNull
+        public final VersionInformation previousVersion;
+        @NotNull
         private final Neo4jService neo4jService;
+
         /**
          * constructor
-         * @param runAnalysis false if current version is already contained in the database
-         * @param currentVersion the current version
-         * @param neo4jService the neo4jService
+         *
+         * @param runAnalysis     false if current version is already contained in the database
+         * @param currentVersion  the current version
+         * @param previousVersion the previous version
+         * @param neo4jService    the neo4jService
          */
-        private ExecutionData(boolean runAnalysis, VersionInformation currentVersion, Neo4jService neo4jService) {
+        private ExecutionData(boolean runAnalysis, @NotNull VersionInformation currentVersion, @NotNull VersionInformation previousVersion, @NotNull Neo4jService neo4jService) {
             this.runAnalysis = runAnalysis;
             this.currentVersion = currentVersion;
+            this.previousVersion = previousVersion;
             this.neo4jService = neo4jService;
         }
     }
