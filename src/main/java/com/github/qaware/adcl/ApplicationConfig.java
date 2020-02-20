@@ -234,7 +234,8 @@ public class ApplicationConfig {
 
     /**
      * Retrieves the previous version name.
-     * @return the previousName if its set otherwise null.
+     * @return the previousName if it is set otherwise null.
+```
      */
     @Nullable
     private String getPreviousVersionName() {
