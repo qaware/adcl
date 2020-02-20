@@ -5,7 +5,7 @@ package com.github.qaware.adcl.information;
  */
 public class RootClassInformation extends ClassInformation<ProjectInformation> {
     /**
-     *Needed for neo4j initialization
+     * Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private RootClassInformation() {
