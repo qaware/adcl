@@ -167,77 +167,78 @@ public class DatamodelNodesTest {
     void versionTest() {
         assertThat(dm.getProjects(null).iterator().next().getLatestVersion().toString()).isEqualTo("proj@v1.0.0");
     }
+
     @Test
-    void informationClassExistsTest(){
+    void informationClassExistsTest() {
         ProjectInformation p = (ProjectInformation) dm.find("proj", null);
-        assert(p!=null);
+        assert (p != null);
         assertTrue(p.exists(p.getLatestVersion()));
     }
 
 
     @Test
-    void packageDependencyClassGetAimTest(){
+    void packageDependencyClassGetAimTest() {
         PackageInformation p1 = pa.getStored();
         PackageInformation p2 = pb.getStored();
-        PackageDependency pd=new PackageDependency(p1,p2);
-        assertEquals(pd.getAim(),p2);
+        PackageDependency pd = new PackageDependency(p1, p2);
+        assertEquals(pd.getAim(), p2);
     }
 
     @Test
-    void ProjectDependencyClassGetAimTest(){
-        ProjectInformation p1=proj.getStored();
-        ProjectInformation p2=new ProjectInformation(dm,"proj2",true,"v1.0.1");
-        ProjectDependency pd=new ProjectDependency(p1,p2);
-        assertEquals(pd.getAim(),p2);
+    void ProjectDependencyClassGetAimTest() {
+        ProjectInformation p1 = proj.getStored();
+        ProjectInformation p2 = new ProjectInformation(dm, "proj2", true, "v1.0.1");
+        ProjectDependency pd = new ProjectDependency(p1, p2);
+        assertEquals(pd.getAim(), p2);
     }
 
     @Test
-    void rootInformationClassSetExistsTest(){
-        assertThatThrownBy(() -> dm.setExists(new VersionInformation("proj",proj.getStored()),false)).isInstanceOf(UnsupportedOperationException.class);
+    void rootInformationClassSetExistsTest() {
+        assertThatThrownBy(() -> dm.setExists(new VersionInformation("proj", proj.getStored()), false)).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
-    void relationShipInformationClassToStringTest(){
+    void relationShipInformationClassToStringTest() {
         PackageInformation p1 = pa.getStored();
         PackageInformation p2 = pb.getStored();
-        PackageDependency pd=new PackageDependency(p1,p2);
+        PackageDependency pd = new PackageDependency(p1, p2);
         assertThat(pd.toString()).contains("packageA");
         assertThat(pd.toString()).contains("packageB");
     }
 
     @Test
-    void relationShipInformationClassSetExistsTest(){
+    void relationShipInformationClassSetExistsTest() {
         PackageInformation p1 = pa.getStored();
         PackageInformation p2 = pb.getStored();
         ProjectInformation p = (ProjectInformation) dm.find("proj", null);
-        PackageDependency pd=new PackageDependency(p1,p2);
+        PackageDependency pd = new PackageDependency(p1, p2);
         assert p != null;
-        VersionInformation vi=p.getLatestVersion();
-        pd.setExists(vi,true);
+        VersionInformation vi = p.getLatestVersion();
+        pd.setExists(vi, true);
         assertThat(pd.exists(vi)).isTrue();
     }
 
     @Test
-    void ProjectInformationClassGetPomDependenciesTest(){
-        proj.getStored().addPomDependency(proj.getStored().getLatestVersion(),null);
-        Set<VersionInformation> set=proj.getStored().getPomDependencies(proj.getStored().getLatestVersion());
+    void ProjectInformationClassGetPomDependenciesTest() {
+        proj.getStored().addPomDependency(proj.getStored().getLatestVersion(), null);
+        Set<VersionInformation> set = proj.getStored().getPomDependencies(proj.getStored().getLatestVersion());
         assertThat(set.size()).isNotZero();
     }
 
     @Test
-    void ProjectInformationClassAddPomDependency(){
-        int beforeAdd=proj.getStored().getPomDependencies(proj.getStored().getLatestVersion()).size();
-        ProjectInformation remote = (ProjectInformation) dm.findOrCreate("proj",null, Information.Type.PROJECT);
-        proj.getStored().addPomDependency(remote.getLatestVersion(),null);
-        int afterAdd=proj.getStored().getPomDependencies(proj.getStored().getLatestVersion()).size();
-        assertThat(beforeAdd).isEqualTo(afterAdd-1);
+    void ProjectInformationClassAddPomDependency() {
+        int beforeAdd = proj.getStored().getPomDependencies(proj.getStored().getLatestVersion()).size();
+        ProjectInformation remote = (ProjectInformation) dm.findOrCreate("proj", null, Information.Type.PROJECT);
+        proj.getStored().addPomDependency(remote.getLatestVersion(), null);
+        int afterAdd = proj.getStored().getPomDependencies(proj.getStored().getLatestVersion()).size();
+        assertThat(beforeAdd).isEqualTo(afterAdd - 1);
     }
 
     @Test
-    void pomDependencyInformationClassHashCode(){
-        ProjectInformation myRemote = (ProjectInformation) dm.findOrCreate("proj",null, Information.Type.PROJECT);
-        proj.getStored().addPomDependency(myRemote.getLatestVersion(),null);
-        assertEquals(proj.getStored().hashCode(),myRemote.hashCode());
+    void pomDependencyInformationClassHashCode() {
+        ProjectInformation myRemote = (ProjectInformation) dm.findOrCreate("proj", null, Information.Type.PROJECT);
+        proj.getStored().addPomDependency(myRemote.getLatestVersion(), null);
+        assertEquals(proj.getStored().hashCode(), myRemote.hashCode());
     }
 
 }

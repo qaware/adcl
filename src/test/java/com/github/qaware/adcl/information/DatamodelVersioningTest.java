@@ -144,14 +144,15 @@ public class DatamodelVersioningTest {
         PomDependencyExtractor.updatePomDependencies(new MavenProjectManager(basedir, basedir.resolve("pom.xml")), result);
         return result;
     }
+
     @Test
-    void versionTest(){
+    void versionTest() {
         VersionInformation v1 = proj.getStored().addVersion("2.0.0");
         VersionInformation vx = null;
-        proj.getStored().addClassDependency(ce.getStored(),v1);
+        proj.getStored().addClassDependency(ce.getStored(), v1);
         assertThat(proj.getStored().getLatestVersion().getName().equals(v1.getName())).isTrue();
 
-        Set<ClassInformation<?>> classInformation=proj.getStored().getClassDependencies(v1);
+        Set<ClassInformation<?>> classInformation = proj.getStored().getClassDependencies(v1);
         for (ClassInformation<?> information : classInformation) {
             if (information.getName().equals(ce.getStored().getName())) {
                 classInformation.remove(information);
@@ -161,8 +162,8 @@ public class DatamodelVersioningTest {
         assert (vx != null);
         assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
 
-        proj.getStored().addMethodDependency(new MethodInformation(cc.getStored(),"what()"),vx);
-        Set<MethodInformation> mInformation=proj.getStored().getMethodDependencies(vx);
+        proj.getStored().addMethodDependency(new MethodInformation(cc.getStored(), "what()"), vx);
+        Set<MethodInformation> mInformation = proj.getStored().getMethodDependencies(vx);
         for (MethodInformation del : mInformation) {
             if (del.getParent().getName().equals(cc.getStored().getName())) {
                 mInformation.remove(del);
@@ -172,8 +173,8 @@ public class DatamodelVersioningTest {
 
         assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
 
-        proj.getStored().addPackageDependency(pa.getStored(),vx);
-        Set<PackageInformation<?>> pInformation=proj.getStored().getPackageDependencies(vx);
+        proj.getStored().addPackageDependency(pa.getStored(), vx);
+        Set<PackageInformation<?>> pInformation = proj.getStored().getPackageDependencies(vx);
         for (PackageInformation<?> packageInformation : pInformation) {
             if (packageInformation.getName().equals(pa.getStored().getName())) {
                 pInformation.remove(packageInformation);
@@ -183,9 +184,9 @@ public class DatamodelVersioningTest {
 
         assertThat(proj.getStored().getLatestVersion().getName().equals(vx.getName())).isTrue();
 
-        ProjectInformation px=new ProjectInformation(dm,"testproj",true,vx.getName());
-        proj.getStored().addProjectDependency(px,vx);
-        Set<ProjectInformation> paInformation=proj.getStored().getProjectDependencies(vx);
+        ProjectInformation px = new ProjectInformation(dm, "testproj", true, vx.getName());
+        proj.getStored().addProjectDependency(px, vx);
+        Set<ProjectInformation> paInformation = proj.getStored().getProjectDependencies(vx);
         for (ProjectInformation del : paInformation) {
             if (del.getName().equals(px.getName())) {
                 paInformation.remove(del);

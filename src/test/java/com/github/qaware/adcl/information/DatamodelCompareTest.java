@@ -85,7 +85,7 @@ public class DatamodelCompareTest {
     }
 
     @Test
-    void compareTreeWithProperties(){
+    void compareTreeWithProperties() {
         assertThat(dm.getType().equals(Information.Type.ROOT)).isTrue();
         assertThat(dm.getType().equals(Information.Type.CLASS)).isFalse();
         assertThat(dm.getType().equals(Information.Type.PROJECT)).isFalse();
@@ -94,7 +94,7 @@ public class DatamodelCompareTest {
 
         ProjectInformation p1 = dm.getProjects(null).iterator().next();
         ProjectInformation p2 = dm.getProjects(null).iterator().next();
-        ProjectInformation p3 = new ProjectInformation(root(),"newNode",true,"v1.0.1");
+        ProjectInformation p3 = new ProjectInformation(root(), "newNode", true, "v1.0.1");
         assertThat(p1.directChildren.equals(p2.directChildren)).isTrue();
         assertThat(p1.directChildren.equals(p3.directChildren)).isFalse();
         assertThat(dm.equals(p1.getParent())).isTrue();
@@ -111,21 +111,21 @@ public class DatamodelCompareTest {
         assertThat(p1.getName().equals(p3.getName())).isFalse();
         assertThat(p1.getLatestVersion().equals(p3.getLatestVersion())).isFalse();
 
-        Set<VersionInformation> v1=p1.getPomDependencies(p1.getLatestVersion());
-        Set<VersionInformation> v2=p2.getPomDependencies(p2.getLatestVersion());
+        Set<VersionInformation> v1 = p1.getPomDependencies(p1.getLatestVersion());
+        Set<VersionInformation> v2 = p2.getPomDependencies(p2.getLatestVersion());
         assertThat(v1.equals(v2)).isTrue();
-        v2.add(new VersionInformation("test",p2));
+        v2.add(new VersionInformation("test", p2));
         assertThat(v1.equals(v2)).isFalse();
         v1.forEach(versionInformation -> assertThat(v2.contains(versionInformation)));
 
-        Set<PackageInformation<?>> pi1 =p1.getPackageDependencies(p1.getLatestVersion());
-        Set<PackageInformation<?>> pi2 =p2.getPackageDependencies(p2.getLatestVersion());
+        Set<PackageInformation<?>> pi1 = p1.getPackageDependencies(p1.getLatestVersion());
+        Set<PackageInformation<?>> pi2 = p2.getPackageDependencies(p2.getLatestVersion());
         pi1.forEach(packageInformation -> assertThat(pi2.contains(packageInformation)));
-        Iterator pa1=pi1.iterator();
-        Iterator pa2=pi2.iterator();
-        while(pa1.hasNext()){
-            PackageInformation packageInformation1=(PackageInformation) pa1.next();
-            PackageInformation packageInformation2=(PackageInformation) pa2.next();
+        Iterator pa1 = pi1.iterator();
+        Iterator pa2 = pi2.iterator();
+        while (pa1.hasNext() || pa2.hasNext()) {
+            PackageInformation packageInformation1 = (PackageInformation) pa1.next();
+            PackageInformation packageInformation2 = (PackageInformation) pa2.next();
             assertThat(packageInformation1.getParent().equals(packageInformation2.getParent())).isTrue();
             assertThat(packageInformation1.directChildren.equals(packageInformation2.directChildren)).isTrue();
             assertThat(packageInformation1.getName().equals(packageInformation2.getName())).isTrue();
@@ -136,14 +136,14 @@ public class DatamodelCompareTest {
             assertThat(packageInformation1.getType().equals(Information.Type.METHOD)).isFalse();
         }
 
-        Set<ClassInformation<?>> ci1 =p1.getClassDependencies(p1.getLatestVersion());
-        Set<ClassInformation<?>> ci2 =p2.getClassDependencies(p2.getLatestVersion());
+        Set<ClassInformation<?>> ci1 = p1.getClassDependencies(p1.getLatestVersion());
+        Set<ClassInformation<?>> ci2 = p2.getClassDependencies(p2.getLatestVersion());
         ci1.forEach(classInformation -> assertThat(ci2.contains(classInformation)));
-        Iterator c1=ci1.iterator();
-        Iterator c2=ci2.iterator();
-        while(c1.hasNext()){
-            OuterClassInformation classInformation1=(OuterClassInformation) c1.next();
-            OuterClassInformation classInformation2=(OuterClassInformation) c2.next();
+        Iterator c1 = ci1.iterator();
+        Iterator c2 = ci2.iterator();
+        while (c1.hasNext() || c2.hasNext()) {
+            OuterClassInformation classInformation1 = (OuterClassInformation) c1.next();
+            OuterClassInformation classInformation2 = (OuterClassInformation) c2.next();
             assertThat(classInformation1.getParent().equals(classInformation2.getParent())).isTrue();
             assertThat(classInformation1.directChildren.equals(classInformation2.directChildren)).isTrue();
             assertThat(classInformation1.getName().equals(classInformation2.getName())).isTrue();
@@ -154,14 +154,14 @@ public class DatamodelCompareTest {
             assertThat(classInformation1.getType().equals(Information.Type.METHOD)).isFalse();
         }
 
-        Set<MethodInformation> mi1 =p1.getMethodDependencies(p1.getLatestVersion());
-        Set<MethodInformation> mi2 =p2.getMethodDependencies(p2.getLatestVersion());
+        Set<MethodInformation> mi1 = p1.getMethodDependencies(p1.getLatestVersion());
+        Set<MethodInformation> mi2 = p2.getMethodDependencies(p2.getLatestVersion());
         mi1.forEach(methodInformation -> assertThat(mi2.contains(methodInformation)));
-        Iterator m1=mi1.iterator();
-        Iterator m2=mi2.iterator();
-        while(m1.hasNext()){
-            MethodInformation methodInformation1=(MethodInformation) m1.next();
-            MethodInformation methodInformation2=(MethodInformation) m2.next();
+        Iterator m1 = mi1.iterator();
+        Iterator m2 = mi2.iterator();
+        while (m1.hasNext() || m2.hasNext()) {
+            MethodInformation methodInformation1 = (MethodInformation) m1.next();
+            MethodInformation methodInformation2 = (MethodInformation) m2.next();
             assertThat(methodInformation1.getParent().equals(methodInformation2.getParent())).isTrue();
             assertThat(methodInformation1.getName().equals(methodInformation2.getName())).isTrue();
             assertThat(methodInformation1.getType().equals(Information.Type.ROOT)).isFalse();
@@ -173,36 +173,36 @@ public class DatamodelCompareTest {
     }
 
     @Test
-    public void testPomDependencies(){
+    public void testPomDependencies() {
         ProjectInformation p2 = dm.getProjects(null).iterator().next();
-        Set<VersionInformation> v1=proj.getStored().getPomDependencies(proj.getStored().getLatestVersion());
-        Set<VersionInformation> v2=p2.getPomDependencies(p2.getLatestVersion());
+        Set<VersionInformation> v1 = proj.getStored().getPomDependencies(proj.getStored().getLatestVersion());
+        Set<VersionInformation> v2 = p2.getPomDependencies(p2.getLatestVersion());
         assertThat(v1.equals(v2)).isTrue();
-        v1.add(new VersionInformation("test",proj.getStored()));
-        v2.add(new VersionInformation("test",p2));
-        Iterator iv1=v1.iterator();
-        Iterator iv2=v2.iterator();
+        v1.add(new VersionInformation("test", proj.getStored()));
+        v2.add(new VersionInformation("test", p2));
+        Iterator iv1 = v1.iterator();
+        Iterator iv2 = v2.iterator();
         assertThat(iv2.hasNext()).isTrue();
         assertThat(iv1.equals(iv2)).isFalse();
-        while(iv1.hasNext()){
-            VersionInformation versionInformation1=(VersionInformation)iv1.next();
-            VersionInformation versionInformation2=(VersionInformation)iv2.next();
+        while (iv1.hasNext() || iv2.hasNext()) {
+            VersionInformation versionInformation1 = (VersionInformation) iv1.next();
+            VersionInformation versionInformation2 = (VersionInformation) iv2.next();
             assertThat(versionInformation1.getName().equals(versionInformation2.getName())).isTrue();
         }
-        v2.add(new VersionInformation("test2",p2));
+        v2.add(new VersionInformation("test2", p2));
         assertThat(v1.equals(v2)).isFalse();
         v1.forEach(versionInformation -> assertThat(v2.contains(versionInformation)));
     }
 
     @Test
-    void compareInformationTypes(){
+    void compareInformationTypes() {
         ProjectInformation p1 = dm.getProjects(null).iterator().next();
         ProjectInformation p2 = dm.getProjects(null).iterator().next();
         assertThat(proj.getStored().compareTo(ca.getStored())).isNotEqualTo(0);
         assertThat(ca.getStored().compareTo(cb.getStored())).isNotEqualTo(0);
         assertThat(p1.compareTo(p2)).isZero();
-        Set<Information<?>> oci=p1.getDirectChildren(p1.getLatestVersion());
-        Set<Information<?>> oci2=p2.getDirectChildren(p2.getLatestVersion());
+        Set<Information<?>> oci = p1.getDirectChildren(p1.getLatestVersion());
+        Set<Information<?>> oci2 = p2.getDirectChildren(p2.getLatestVersion());
         assertThat(oci.iterator().next().compareTo(oci2.iterator().next())).isZero();
     }
 }
