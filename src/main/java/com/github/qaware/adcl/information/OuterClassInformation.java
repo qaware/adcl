@@ -8,7 +8,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public class OuterClassInformation extends ClassInformation<PackageInformation<?>> {
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     @SuppressWarnings("unused")
     private OuterClassInformation() {

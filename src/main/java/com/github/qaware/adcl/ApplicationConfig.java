@@ -18,6 +18,9 @@ import java.nio.file.Path;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
+/**
+ * Holds and retrieves all configuration options from the pom, cli and environment variables.
+ */
 public class ApplicationConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfig.class);
 
@@ -77,6 +80,11 @@ public class ApplicationConfig {
 
     // GETTERS ONLY
 
+    /**
+     * Retrieves the the location to place the static report.
+     * @return the report location.
+     * @throws ConfigurationException if configured path is invalid.
+     */
     private Path getReportPath() throws ConfigurationException {
         Path result = Config.getPath("report.path", null);
         if (result == null) {
@@ -92,6 +100,12 @@ public class ApplicationConfig {
         return result;
     }
 
+    /**
+     * Retrieves the package name of the class on the given path.
+     * @param classPath the path to the class.
+     * @return the package name.
+     * @throws IOException if the path is invalid.
+     */
     @NotNull
     private static String readPackageOfClass(Path classPath) throws IOException {
         ClassNode classNode = new ClassNode();
@@ -100,6 +114,11 @@ public class ApplicationConfig {
         return (index < 0 ? "" : classNode.name.substring(0, index)).replace('/', '.');
     }
 
+    /**
+     * Retrieves the location of the project pom.
+     * @return the path to the pom.
+     * @throws ConfigurationException if the configured path is invalid.
+     */
     @Nullable
     private Path getProjectPom() throws ConfigurationException {
         Path result = Config.getPath("project.pom", null);
@@ -117,6 +136,11 @@ public class ApplicationConfig {
         return result;
     }
 
+    /**
+     * Retrieves the selected project manager or null if none selected
+     * @return the selected project manager or null if none selected
+     * @throws ConfigurationException if project manager is configured but invalid.
+     */
     @Nullable
     private ProjectManager getProjectManager() throws ConfigurationException {
         Path pomPath = getProjectPom();
@@ -132,6 +156,11 @@ public class ApplicationConfig {
         } else return null;
     }
 
+    /**
+     * Validates the scan location.
+     * @param scanLocation the scan location.
+     * @throws ConfigurationException if the path is invalid.
+     */
     private void validateScanLocation(@NotNull Path scanLocation) throws ConfigurationException {
         try (Stream<Path> walker = Files.walk(scanLocation)) {
             Path classFile = walker.filter(p -> p.toString().endsWith(".class")).findAny().orElseThrow(() -> new ConfigurationException("project.uri contains no class files"));
@@ -145,6 +174,11 @@ public class ApplicationConfig {
         }
     }
 
+    /**
+     * Retrieves the scan location.
+     * @return the scan location.
+     * @throws ConfigurationException if the scan location is invalid.
+     */
     @NotNull
     private Path getScanLocation() throws ConfigurationException {
         Path result = Config.getPath("project.uri", null);
@@ -163,6 +197,11 @@ public class ApplicationConfig {
         return result;
     }
 
+    /**
+     * Retrieves the project name.
+     * @return the project name.
+     * @throws ConfigurationException if the project name is invalid.
+     */
     @NotNull
     private String getProjectName() throws ConfigurationException {
         String result = Config.get("project.name", null);
@@ -173,6 +212,11 @@ public class ApplicationConfig {
         return result;
     }
 
+    /**
+     * Retrieves the current version name.
+     * @return the version name.
+     * @throws ConfigurationException if the current version name is invalid.
+     */
     @NotNull
     private String getCurrentVersionName() throws ConfigurationException {
         String result = Config.get("project.commit.current", null);
@@ -188,11 +232,21 @@ public class ApplicationConfig {
         return result;
     }
 
+    /**
+     * Retrieves the previous version name.
+     * @return the previousName if it is set otherwise null.
+```
+     */
     @Nullable
     private String getPreviousVersionName() {
         return Config.get("project.commit.previous", null);
     }
 
+    /**
+     * Retrieves the neo4j configuration.
+     * @return the neo4j configuration.
+     * @throws ConfigurationException if the neo4j configuration is invalid.
+     */
     @NotNull
     private Configuration getNeo4jConfig() throws ConfigurationException {
         String uri = Config.get("spring.data.neo4j.uri", null);
