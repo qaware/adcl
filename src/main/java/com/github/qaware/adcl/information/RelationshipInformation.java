@@ -55,7 +55,7 @@ public abstract class RelationshipInformation<T extends Information<?>> implemen
     private Long id;
 
     /**
-     *Needed for neo4j initialization
+     * Needed for neo4j initialization
      */
     @SuppressWarnings({"unused", "java:S2637", "ConstantConditions"} /* neo4jInit */)
     RelationshipInformation() {
