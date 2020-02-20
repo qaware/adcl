@@ -152,7 +152,7 @@ public class MavenProjectManager implements ProjectManager {
     private String[] getVars(@NotNull String... vars) throws MavenInvocationException {
         String input = Stream.of(vars).map(var -> String.format("${%s}", var)).collect(Collectors.joining("\n", "", "\n0\n"));
         String output = callMaven(input, null, "help:evaluate");
-        return Stream.of(output.split("\n")).filter(l -> !l.startsWith("[INFO]")).map(this::trimEndRollback).toArray(String[]::new);
+        return Stream.of(output.substring(output.indexOf("or 0 to exit")).split("\n")).filter(l -> !l.startsWith("[INFO]")).map(this::trimEndRollback).toArray(String[]::new);
     }
 
     @NotNull
