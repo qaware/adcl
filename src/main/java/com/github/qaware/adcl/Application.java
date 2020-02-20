@@ -225,7 +225,7 @@ public class Application {
         return neo4jConfig;
     }
     /**
-     * Holds the all data retrieved from the database
+     * Holds all the data retrieved from the database
      */
     private static class ExecutionData {
         public final boolean runAnalysis;
