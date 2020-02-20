@@ -6,7 +6,14 @@ import com.github.qaware.adcl.util.MapWithListeners;
 import com.github.qaware.adcl.util.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.EndNode;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.PostLoad;
+import org.neo4j.ogm.annotation.Properties;
+import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.neo4j.ogm.annotation.StartNode;
+import org.neo4j.ogm.annotation.Transient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +50,7 @@ public final class PomDependencyInformation implements Purgeable {
     private Long id;
 
     /**
-     * Neo4j init
+     *Needed for neo4j initialization
      */
     @SuppressWarnings({"unused", "java:S2637", "ConstantConditions"} /* neo4jInit */)
     PomDependencyInformation() {
