@@ -99,3 +99,26 @@ ADCL searches for a file specified by the option `configPath` (or default `./con
 #### Notes:
 - Option values can be quoted for the case you want to add spaces into the value
 - The syntax of `.properties` files uses backslashes (`\`) for escaping characters like `\=` or `\n`. This causes invalid parsing with standard Windows paths like `C:\Users` (will be read as `C:Users`). Use `C:/Users` or `C:\\Users` instead.
+
+## Angular Frontend
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.21.
+
+### Requirements
+
+Install [Nodejs and npm](https://nodejs.org/en/download/) to download and install dependencies.
+ 
+### Before first usage
+
+Run `npm install` on `./frontend`
+
+### Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+
+### Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+
+### Neo4j Configuration
+Please provide the neo4j Connection data under src/environments/environment.ts;
